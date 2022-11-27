@@ -1545,7 +1545,7 @@ First we can simulate some binary data from a logistic regression model.
 
 ```{python}
 with open('stan_programs/simu_logistic_reg.stan', 'r') as file:
-  lines = file.readlines()[0:4]
+  lines = file.readlines()
   for line in lines:
     print(line),
 ```
@@ -1580,7 +1580,7 @@ those with `alpha + deltaX * beta <= 0` resulting in minus infinite outputs.
 
 ```{python}
 with open('stan_programs/bernoulli_linear.stan', 'r') as file:
-  lines = file.readlines()[0:4]
+  lines = file.readlines()
   for line in lines:
     print(line),
 ```

@@ -1505,7 +1505,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 -->
 <div class="cell" data-execution_count="32">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'stan_programs/simu_logistic_reg.stan'</span>, <span class="st">'r'</span>) <span class="im">as</span> <span class="bu">file</span>:</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  lines <span class="op">=</span> <span class="bu">file</span>.readlines()[<span class="dv">0</span>:<span class="dv">4</span>]</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  lines <span class="op">=</span> <span class="bu">file</span>.readlines()</span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> line <span class="kw">in</span> lines:</span>
 <span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(line),</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -1516,6 +1516,60 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   int&lt;lower=0&gt; N = 1000;      // Number of observations
 
   
+
+  vector[M] x0 = [-1, 0, 1]'; // Covariate baseline
+
+  vector[M] z0 = [-3, 1, 2]'; // Latent functional behavior baseline
+
+  real gamma0 = -2.6;                      // True intercept
+
+  vector[M] gamma1 = [0.2, -2.0, 0.33]';   // True slopes
+
+  matrix[M, M] gamma2 = [ [+0.40, -0.05, -0.20],
+
+                          [-0.05, -1.00, -0.05],
+
+                          [-0.20, -0.05, +0.50] ];
+
+}
+
+
+
+generated quantities {
+
+  matrix[N, M] X; // Covariate design matrix
+
+  real y[N];      // Variates
+
+
+
+  for (n in 1:N) {
+
+    real x2 = -5;
+
+    while (x2 &lt; x0[2] - 4 || x2 &gt; x0[2] + 4)
+
+      x2 = normal_rng(x0[2], 2);
+
+    
+
+    X[n, 2] = x2;
+
+    X[n, 1] = normal_rng(x0[1] + 1.0 * cos(1.5 * (X[n, 2] - x0[2])), 0.3);
+
+    X[n, 3] = normal_rng(x0[3] + 0.76 * (X[n, 1] - x0[1]), 0.5);
+
+
+
+    y[n] = bernoulli_logit_rng(  gamma0 
+
+                               + (X[n] - z0') * gamma1
+
+                               + (X[n] - z0') * gamma2 * (X[n] - z0')');
+
+  }
+
+}
 </code></pre>
 </div>
 </div>
@@ -1533,8 +1587,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 Iteration: 1 / 1 [100%]  (Sampling)
 
  Elapsed Time: 0 seconds (Warm-up)
-               0.001805 seconds (Sampling)
-               0.001805 seconds (Total)
+               0.001623 seconds (Sampling)
+               0.001623 seconds (Total)
 </code></pre>
 </div>
 </div>
@@ -1555,7 +1609,7 @@ Iteration: 1 / 1 [100%]  (Sampling)
 -->
 <div class="cell" data-execution_count="34">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'stan_programs/bernoulli_linear.stan'</span>, <span class="st">'r'</span>) <span class="im">as</span> <span class="bu">file</span>:</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  lines <span class="op">=</span> <span class="bu">file</span>.readlines()[<span class="dv">0</span>:<span class="dv">4</span>]</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  lines <span class="op">=</span> <span class="bu">file</span>.readlines()</span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> line <span class="kw">in</span> lines:</span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(line),</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -1566,6 +1620,70 @@ Iteration: 1 / 1 [100%]  (Sampling)
   int&lt;lower=0&gt; N; // Number of observations
 
   
+
+  vector[M] x0;   // Covariate baselines
+
+  matrix[N, M] X; // Covariate design matrix
+
+  
+
+  int&lt;lower=0, upper=1&gt; y[N]; // Variates
+
+}
+
+
+
+transformed data {
+
+  matrix[N, M] deltaX;
+
+  for (n in 1:N) {
+
+    deltaX[n,] = X[n] - x0';
+
+  }
+
+}
+
+
+
+parameters {
+
+  real alpha;      // Intercept
+
+  vector[M] beta;  // Linear slopes
+
+}
+
+
+
+model {
+
+  // Prior model
+
+  alpha ~ normal(0, 1);
+
+  beta ~ normal(0, 1);
+
+
+
+  // Vectorized observation model
+
+  y ~ bernoulli(alpha + deltaX * beta);
+
+}
+
+
+
+// Simulate a full observation from the current value of the parameters
+
+generated quantities {
+
+  vector[N] p = alpha + deltaX * beta;
+
+  int y_pred[N] = bernoulli_rng(p);
+
+}
 </code></pre>
 </div>
 </div>
@@ -1590,54 +1708,54 @@ Iteration: 1 / 1 [100%]  (Sampling)
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
-Gradient evaluation took 0.000253 seconds
-1000 transitions using 10 leapfrog steps per transition would take 2.53 seconds.
+Gradient evaluation took 0.00018 seconds
+1000 transitions using 10 leapfrog steps per transition would take 1.8 seconds.
 Adjust your expectations accordingly!
 
 
 
-Gradient evaluation took 0.000238 seconds
-1000 transitions using 10 leapfrog steps per transition would take 2.38 seconds.
+Gradient evaluation took 0.000188 seconds
+1000 transitions using 10 leapfrog steps per transition would take 1.88 seconds.
 Adjust your expectations accordingly!
 
 
 
-Gradient evaluation took 0.00021 seconds
-1000 transitions using 10 leapfrog steps per transition would take 2.1 seconds.
+Gradient evaluation took 0.000206 seconds
+1000 transitions using 10 leapfrog steps per transition would take 2.06 seconds.
 Adjust your expectations accordingly!
 
 
 
-Gradient evaluation took 0.000208 seconds
-1000 transitions using 10 leapfrog steps per transition would take 2.08 seconds.
+Gradient evaluation took 0.000196 seconds
+1000 transitions using 10 leapfrog steps per transition would take 1.96 seconds.
 Adjust your expectations accordingly!
 
 </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
- Elapsed Time: 0.675333 seconds (Warm-up)
-               0.511162 seconds (Sampling)
-               1.18649 seconds (Total)
+ Elapsed Time: 0.67776 seconds (Warm-up)
+               0.544102 seconds (Sampling)
+               1.22186 seconds (Total)
 
 
- Elapsed Time: 0.768039 seconds (Warm-up)
-               0.538958 seconds (Sampling)
-               1.307 seconds (Total)
+ Elapsed Time: 0.770656 seconds (Warm-up)
+               0.563513 seconds (Sampling)
+               1.33417 seconds (Total)
 </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
- Elapsed Time: 0.819684 seconds (Warm-up)
-               0.58328 seconds (Sampling)
-               1.40296 seconds (Total)
+ Elapsed Time: 0.830635 seconds (Warm-up)
+               0.605915 seconds (Sampling)
+               1.43655 seconds (Total)
 </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
- Elapsed Time: 0.801247 seconds (Warm-up)
-               3.52494 seconds (Sampling)
-               4.32619 seconds (Total)
+ Elapsed Time: 0.812312 seconds (Warm-up)
+               3.5812 seconds (Sampling)
+               4.39351 seconds (Total)
 </code></pre>
 </div>
 </div>
@@ -1865,7 +1983,7 @@ If hat{ESS} is too small then reliable Markov chain Monte Carlo estimators may s
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> watermark <span class="im">import</span> watermark</span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(watermark())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Last updated: 2022-11-26T23:40:08.042016-05:00
+<pre><code>Last updated: 2022-11-27T11:21:57.564364-05:00
 
 Python implementation: CPython
 Python version       : 3.9.6

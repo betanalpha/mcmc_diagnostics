@@ -189,7 +189,7 @@
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[boxrule=0pt, sharp corners, frame hidden, breakable, interior hidden, borderline west={3pt}{0pt}{shadecolor}, enhanced]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[enhanced, boxrule=0pt, borderline west={3pt}{0pt}{shadecolor}, breakable, sharp corners, interior hidden, frame hidden]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -1822,7 +1822,7 @@ First we can simulate some binary data from a logistic regression model.
 \begin{Shaded}
 \begin{Highlighting}[]
 \ControlFlowTok{with} \BuiltInTok{open}\NormalTok{(}\StringTok{\textquotesingle{}stan\_programs/simu\_logistic\_reg.stan\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}r\textquotesingle{}}\NormalTok{) }\ImportTok{as} \BuiltInTok{file}\NormalTok{:}
-\NormalTok{  lines }\OperatorTok{=} \BuiltInTok{file}\NormalTok{.readlines()[}\DecValTok{0}\NormalTok{:}\DecValTok{4}\NormalTok{]}
+\NormalTok{  lines }\OperatorTok{=} \BuiltInTok{file}\NormalTok{.readlines()}
   \ControlFlowTok{for}\NormalTok{ line }\KeywordTok{in}\NormalTok{ lines:}
     \BuiltInTok{print}\NormalTok{(line),}
 \end{Highlighting}
@@ -1836,6 +1836,60 @@ transformed data {
   int<lower=0> N = 1000;      // Number of observations
 
   
+
+  vector[M] x0 = [-1, 0, 1]'; // Covariate baseline
+
+  vector[M] z0 = [-3, 1, 2]'; // Latent functional behavior baseline
+
+  real gamma0 = -2.6;                      // True intercept
+
+  vector[M] gamma1 = [0.2, -2.0, 0.33]';   // True slopes
+
+  matrix[M, M] gamma2 = [ [+0.40, -0.05, -0.20],
+
+                          [-0.05, -1.00, -0.05],
+
+                          [-0.20, -0.05, +0.50] ];
+
+}
+
+
+
+generated quantities {
+
+  matrix[N, M] X; // Covariate design matrix
+
+  real y[N];      // Variates
+
+
+
+  for (n in 1:N) {
+
+    real x2 = -5;
+
+    while (x2 < x0[2] - 4 || x2 > x0[2] + 4)
+
+      x2 = normal_rng(x0[2], 2);
+
+    
+
+    X[n, 2] = x2;
+
+    X[n, 1] = normal_rng(x0[1] + 1.0 * cos(1.5 * (X[n, 2] - x0[2])), 0.3);
+
+    X[n, 3] = normal_rng(x0[3] + 0.76 * (X[n, 1] - x0[1]), 0.5);
+
+
+
+    y[n] = bernoulli_logit_rng(  gamma0 
+
+                               + (X[n] - z0') * gamma1
+
+                               + (X[n] - z0') * gamma2 * (X[n] - z0')');
+
+  }
+
+}
 \end{verbatim}
 
 \begin{Shaded}
@@ -1856,8 +1910,8 @@ Using cached StanModel
 Iteration: 1 / 1 [100%]  (Sampling)
 
  Elapsed Time: 0 seconds (Warm-up)
-               0.001613 seconds (Sampling)
-               0.001613 seconds (Total)
+               0.00166 seconds (Sampling)
+               0.00166 seconds (Total)
 \end{verbatim}
 
 We'll try to fit this model not with a constraint-respecting logistic
@@ -1872,7 +1926,7 @@ infinite outputs.
 \begin{Shaded}
 \begin{Highlighting}[]
 \ControlFlowTok{with} \BuiltInTok{open}\NormalTok{(}\StringTok{\textquotesingle{}stan\_programs/bernoulli\_linear.stan\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}r\textquotesingle{}}\NormalTok{) }\ImportTok{as} \BuiltInTok{file}\NormalTok{:}
-\NormalTok{  lines }\OperatorTok{=} \BuiltInTok{file}\NormalTok{.readlines()[}\DecValTok{0}\NormalTok{:}\DecValTok{4}\NormalTok{]}
+\NormalTok{  lines }\OperatorTok{=} \BuiltInTok{file}\NormalTok{.readlines()}
   \ControlFlowTok{for}\NormalTok{ line }\KeywordTok{in}\NormalTok{ lines:}
     \BuiltInTok{print}\NormalTok{(line),}
 \end{Highlighting}
@@ -1886,6 +1940,70 @@ data {
   int<lower=0> N; // Number of observations
 
   
+
+  vector[M] x0;   // Covariate baselines
+
+  matrix[N, M] X; // Covariate design matrix
+
+  
+
+  int<lower=0, upper=1> y[N]; // Variates
+
+}
+
+
+
+transformed data {
+
+  matrix[N, M] deltaX;
+
+  for (n in 1:N) {
+
+    deltaX[n,] = X[n] - x0';
+
+  }
+
+}
+
+
+
+parameters {
+
+  real alpha;      // Intercept
+
+  vector[M] beta;  // Linear slopes
+
+}
+
+
+
+model {
+
+  // Prior model
+
+  alpha ~ normal(0, 1);
+
+  beta ~ normal(0, 1);
+
+
+
+  // Vectorized observation model
+
+  y ~ bernoulli(alpha + deltaX * beta);
+
+}
+
+
+
+// Simulate a full observation from the current value of the parameters
+
+generated quantities {
+
+  vector[N] p = alpha + deltaX * beta;
+
+  int y_pred[N] = bernoulli_rng(p);
+
+}
 \end{verbatim}
 
 Because of this awkward constraint we have to carefully initialize our
@@ -1920,54 +2038,54 @@ Using cached StanModel
 
 \begin{verbatim}
 
-Gradient evaluation took 0.00025 seconds
-1000 transitions using 10 leapfrog steps per transition would take 2.5 seconds.
+Gradient evaluation took 0.000198 seconds
+1000 transitions using 10 leapfrog steps per transition would take 1.98 seconds.
 Adjust your expectations accordingly!
 
 
 
-Gradient evaluation took 0.000231 seconds
-1000 transitions using 10 leapfrog steps per transition would take 2.31 seconds.
+Gradient evaluation took 0.000194 seconds
+1000 transitions using 10 leapfrog steps per transition would take 1.94 seconds.
 Adjust your expectations accordingly!
 
 
 
-Gradient evaluation took 0.00022 seconds
-1000 transitions using 10 leapfrog steps per transition would take 2.2 seconds.
+Gradient evaluation took 0.000171 seconds
+1000 transitions using 10 leapfrog steps per transition would take 1.71 seconds.
 Adjust your expectations accordingly!
 
 
 
-Gradient evaluation took 0.000174 seconds
-1000 transitions using 10 leapfrog steps per transition would take 1.74 seconds.
+Gradient evaluation took 0.000165 seconds
+1000 transitions using 10 leapfrog steps per transition would take 1.65 seconds.
 Adjust your expectations accordingly!
 
 \end{verbatim}
 
 \begin{verbatim}
 
- Elapsed Time: 0.680298 seconds (Warm-up)
-               0.540146 seconds (Sampling)
-               1.22044 seconds (Total)
+ Elapsed Time: 0.60704 seconds (Warm-up)
+               0.478339 seconds (Sampling)
+               1.08538 seconds (Total)
 
 
- Elapsed Time: 0.768242 seconds (Warm-up)
-               0.560955 seconds (Sampling)
-               1.3292 seconds (Total)
+ Elapsed Time: 0.689018 seconds (Warm-up)
+               0.495555 seconds (Sampling)
+               1.18457 seconds (Total)
 \end{verbatim}
 
 \begin{verbatim}
 
- Elapsed Time: 0.831245 seconds (Warm-up)
-               0.612173 seconds (Sampling)
-               1.44342 seconds (Total)
+ Elapsed Time: 0.743199 seconds (Warm-up)
+               0.544426 seconds (Sampling)
+               1.28763 seconds (Total)
 \end{verbatim}
 
 \begin{verbatim}
 
- Elapsed Time: 0.807862 seconds (Warm-up)
-               3.57459 seconds (Sampling)
-               4.38245 seconds (Total)
+ Elapsed Time: 0.721348 seconds (Warm-up)
+               3.28321 seconds (Sampling)
+               4.00456 seconds (Total)
 \end{verbatim}
 
 Stan is able to run to completion, but just how useful are the Markov
@@ -2367,7 +2485,7 @@ Environment}\label{original-computing-environment}}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2022-11-26T23:41:42.238074-05:00
+Last updated: 2022-11-27T11:23:29.807115-05:00
 
 Python implementation: CPython
 Python version       : 3.9.6

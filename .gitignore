@@ -274,3 +274,8 @@ TSWLatexianTemp*
 
 # Makeindex log files
 *.lpz
+
+*.rds
+*.DS_Store
+*.pkl
+*_files

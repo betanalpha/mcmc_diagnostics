@@ -61,10 +61,10 @@ def check_all_hmc_diagnostics(fit,
   if n > 0: 
     no_warning = False
     print(f'{n:.0f} of {N} iterations ended with a divergence ({n / N:.2%})')
-    print(   '  Divergences are due unstable numerical integration.\n'
-          +  '  These instabilities are often due to posterior degeneracies.\n'
-          +  '  If there are only a small number of divergences then running\n'
-          + f'with adapt_delta larger than {adapt_target:.3f} may reduce the\n'
+    print(   '  Divergences are due unstable numerical integration.  '
+          +  'These instabilities are often due to posterior degeneracies.\n'
+          +  '  If there are only a small number of divergences then running '
+          + f'with adapt_delta larger than {adapt_target:.3f} may reduce the '
           + 'divergences at the cost of more expensive transitions.\n')
   
   # Check transitions that ended prematurely due to maximum tree depth limit
@@ -92,7 +92,7 @@ def check_all_hmc_diagnostics(fit,
       print(f'Chain {chain_num + 1}: E-FMI = {numer / denom:.3f}.')
    
   if not no_efmi_warning:
-    print('  E-FMI below 0.2 suggests a funnel-like geometry hiding')
+    print('  E-FMI below 0.2 suggests a funnel-like geometry hiding ')
     print('somewhere in the posterior distribution.\n')
   
   # Check convergence of the stepsize adaptation
@@ -113,8 +113,8 @@ def check_all_hmc_diagnostics(fit,
     print('due to discontinuous or inexact gradients.\n\n')
   
   if no_warning:
-    print('All Hamiltonian Monte Carlo diagnostics are consistent with')
-    print('accurate Markov chain Monte Carlo.\n')
+    print(  'All Hamiltonian Monte Carlo diagnostics are consistent with '
+          + 'accurate Markov chain Monte Carlo.\n')
 
 def plot_inv_metric(fit, B=25):
   """Plot outcome of inverse metric adaptation"""
@@ -253,7 +253,7 @@ def _shaped_ordered_params(fit):
   ef = ef[:, 0:len(fit.flatnames)] # drop lp__
   shaped = {}
   idx = 0
-  for dim, param_name in zip(fit.par_dims, fit.extract().keys()):
+  for dim, param_name in zip([d for d in fit.par_dims if d != [0]], fit.extract().keys()):
     length = int(numpy.prod(dim))
     shaped[param_name] = ef[:,idx:idx + length]
     shaped[param_name].reshape(*([-1] + dim))
@@ -341,25 +341,43 @@ def plot_div_pairs(fit, names, transforms):
       idx1 = k // N_cols
       idx2 = k % N_cols
       k += 1
-          
-      axarr[idx1, idx2].scatter(x_nondiv_samples, y_nondiv_samples, s=10,
-                                color = dark_highlight, alpha=0.05)
-      axarr[idx1, idx2].scatter(x_div_samples, y_div_samples, s=10,
-                                color = "#00FF00", alpha=0.25)
-      axarr[idx1, idx2].set_xlabel(x_name)
-      axarr[idx1, idx2].set_xlim([xmin, xmax])
-      axarr[idx1, idx2].set_ylabel(y_name)
-      axarr[idx1, idx2].set_ylim([ymin, ymax])
-      axarr[idx1, idx2].spines["top"].set_visible(False)
-      axarr[idx1, idx2].spines["right"].set_visible(False)
+      
+      if N_rows > 1:
+        axarr[idx1, idx2].scatter(x_nondiv_samples, y_nondiv_samples, s=10,
+                                  color = dark_highlight, alpha=0.05)
+        axarr[idx1, idx2].scatter(x_div_samples, y_div_samples, s=10,
+                                  color = "#00FF00", alpha=0.25)
+        axarr[idx1, idx2].set_xlabel(x_name)
+        axarr[idx1, idx2].set_xlim([xmin, xmax])
+        axarr[idx1, idx2].set_ylabel(y_name)
+        axarr[idx1, idx2].set_ylim([ymin, ymax])
+        axarr[idx1, idx2].spines["top"].set_visible(False)
+        axarr[idx1, idx2].spines["right"].set_visible(False)
+      else:
+        axarr[idx2].scatter(x_nondiv_samples, y_nondiv_samples, s=10,
+                                  color = dark_highlight, alpha=0.05)
+        axarr[idx2].scatter(x_div_samples, y_div_samples, s=10,
+                                  color = "#00FF00", alpha=0.25)
+        axarr[idx2].set_xlabel(x_name)
+        axarr[idx2].set_xlim([xmin, xmax])
+        axarr[idx2].set_ylabel(y_name)
+        axarr[idx2].set_ylim([ymin, ymax])
+        axarr[idx2].spines["top"].set_visible(False)
+        axarr[idx2].spines["right"].set_visible(False)
     
   for i in range(N_rows * N_cols - N_plots):
     idx1 = k // N_cols
     idx2 = k % N_cols
     k += 1
-    axarr[idx1, idx2].axis('off')
-      
-  plot.subplots_adjust(hspace=0.75, wspace=0.75)
+    if N_rows > 1:
+      axarr[idx1, idx2].axis('off')
+    else:
+      axarr[idx2].axis('off')
+  
+  if N_rows > 1:
+    plot.subplots_adjust(hspace=0.75, wspace=0.75)
+  else:
+    plot.subplots_adjust(hspace=0.75)
   plot.show()
 
 def compute_khat(fs):
@@ -559,7 +577,7 @@ def compute_tauhat(fs):
   zs = [ f - m for f in fs ]
   
   if v < 1e-10:
-    return Inf
+    return math.inf
   
   B = 2**math.ceil(math.log2(N)) # Next power of 2 after N
   zs_buff = zs + [0] * (B - N)
@@ -727,21 +745,22 @@ def check_all_expectand_diagnostics(fit,
       
       # Check tail khats in each Markov chain
       khats = compute_tail_khats(fs)
-      if khats[0] >= 0.25 and khats[1] >= 0.25:
+      khat_threshold = 0.75
+      if khats[0] >= khat_threshold and khats[1] >= khat_threshold:
         no_khat_warning = False
         local_warning = True
         local_message +=  f'  Chain {c + 1}: Both left and right tail hat{{k}}s' \
-                        + f'({khats[0]:.3f}, {khats[1]:.3f}) exceed 0.25!\n'
-      elif khats[0] < 0.25 and khats[1] >= 0.25:
+                        + f'({khats[0]:.3f}, {khats[1]:.3f}) exceed {khat_threshold}!\n'
+      elif khats[0] < khat_threshold and khats[1] >= khat_threshold:
         no_khat_warning = False
         local_warning = True
         local_message +=  f'  Chain {c + 1}: Right tail hat{{k}} ({khats[1]:.3f})' \
-                        + ' exceeds 0.25!\n'
-      elif khats[0] >= 0.25 and khats[1] < 0.25:
+                        + f' exceeds {khat_threshold}!\n'
+      elif khats[0] >= khat_threshold and khats[1] < khat_threshold:
         no_khat_warning = False
         local_warning = True
         local_message +=  f'  Chain {c + 1}: Left tail hat{{k}} ({khats[0]:.3f})' \
-                        + ' exceeds 0.25!\n'
+                        + f' exceeds {khat_threshold}!\n'
       
       # Check empirical variance in each Markov chain
       var = welford_summary(fs)[1]
@@ -857,7 +876,8 @@ def expectand_diagnostics_summary(fit,
       # Check tail khats in each Markov chain
       fs = unpermuted_samples[:,c,idx]
       khats = compute_tail_khats(fs)
-      if khats[0] >= 0.25 or khats[1] >= 0.25:
+      khat_threshold = 0.75
+      if khats[0] >= khat_threshold or khats[1] >= khat_threshold:
         failed_idx.append(idx)
         failed_khat_idx.append(idx)
     
@@ -873,7 +893,7 @@ def expectand_diagnostics_summary(fit,
     
     if math.isnan(rhat):
       failed_idx.append(idx)
-      failed_rhat_idx.apepnd(idx)
+      failed_rhat_idx.append(idx)
     elif rhat > 1.1:
       failed_idx.append(idx)
       failed_rhat_idx.append(idx)
@@ -936,6 +956,162 @@ def expectand_diagnostics_summary(fit,
           + ' triggered hat{ESS} warnings.\n')
     print(  '  If hat{ESS} is too small then even reliable Markov chain' \
           + ' Monte Carlo estimators may still be too imprecise.\n\n')
+
+
+def summarize_all_diagnostics(fit,
+                              adapt_target=0.801,
+                              max_treedepth=10,
+                              expectand_idxs=None,
+                              min_neff_per_chain=100,
+                              exclude_zvar=False):
+  """Summarize Hamiltonian Monte Carlo and expectand diagnostics
+     into a binary encoding"""
+  
+  warning_code = 0
+  
+  sampler_params = fit.get_sampler_params(inc_warmup=False)
+  
+  # Check divergences
+  divergent = [x for y in sampler_params for x in y['divergent__']]
+  n = sum(divergent)
+  N = len(divergent)
+  
+  if n > 0: 
+    no_warning = False
+    warning_code = warning_code | (1 << 0)
+  
+  # Check transitions that ended prematurely due to maximum tree depth limit
+  sampler_params = fit.get_sampler_params(inc_warmup=False)
+  depths = [x for y in sampler_params for x in y['treedepth__']]
+  n = sum(1 for x in depths if x == max_treedepth)
+  N = len(depths)
+  
+  if n > 0:
+    warning_code = warning_code | (1 << 1)
+  
+  # Checks the energy fraction of missing information (E-FMI)
+  no_efmi_warning = True
+  for chain_num, s in enumerate(sampler_params):
+    energies = s['energy__']
+    numer = sum((energies[i] - energies[i - 1])**2 for 
+                i in range(1, len(energies))) / len(energies)
+    denom = numpy.var(energies)
+    if numer / denom < 0.2:
+      no_efmi_warning = False
+
+  if not no_efmi_warning:
+    warning_code = warning_code | (1 << 2)
+
+  # Check convergence of the stepsize adaptation
+  no_accept_warning = True
+  for chain_num, s in enumerate(sampler_params):
+    ave_accept_proxy = numpy.mean(s['accept_stat__'])
+    if ave_accept_proxy < 0.9 * adapt_target:
+      no_accept_warning = False
+  
+  if not no_accept_warning:
+    warning_code = warning_code | (1 << 3)
+  
+  unpermuted_samples = fit.extract(permuted=False)
+  
+  input_dims = unpermuted_samples.shape
+  N = input_dims[0]
+  C = input_dims[1]
+  I = input_dims[2]
+  
+  if expectand_idxs is None:
+    expectand_idxs = range(I)
+  
+  bad_idxs = set(expectand_idxs).difference(range(I))
+  if len(bad_idxs) > 0:
+    print(f'Excluding the invalid expectand indices: {bad_idxs}')
+    expectand_idxs = set(expectand_idxs).difference(bad_idxs)
+
+  khat_warning = False
+  zvar_warning = False
+  rhat_warning = False
+  tauhat_warning = False
+  neff_warning = False
+
+  for idx in expectand_idxs:
+    if exclude_zvar:
+      # Check zero variance across all Markov chains for exclusion
+      any_zvar = False
+      for c in range(C):
+        fs = unpermuted_samples[:,c,idx]
+        var = welford_summary(fs)[1]
+        if var < 1e-10:
+          any_zvar = True
+      if any_zvar:
+        continue
+    
+    for c in range(C):
+      # Check tail khats in each Markov chain
+      fs = unpermuted_samples[:,c,idx]
+      khats = compute_tail_khats(fs)
+      khat_threshold = 0.75
+      if khats[0] >= khat_threshold or khats[1] >= khat_threshold:
+        khat_warning = True
+    
+      # Check empirical variance in each Markov chain
+      var = welford_summary(fs)[1]
+      if var < 1e-10:
+        zvar_warning = True
+    
+    # Check split Rhat across Markov chains
+    chains = [ unpermuted_samples[:,c,idx] for c in range(C) ]
+    rhat = compute_split_rhat(chains)
+    
+    if math.isnan(rhat):
+      rhat_warning = True
+    elif rhat > 1.1:
+      rhat_warning = True
+    
+    for c in range(C):
+      # Check empirical integrated autocorrelation time
+      fs = unpermuted_samples[:,c,idx]
+      int_ac_time = compute_tauhat(fs)
+      if (int_ac_time / N) > 0.25:
+        tauhat_warning = True
+      
+      # Check empirical effective sample size
+      neff = N / int_ac_time
+      if neff < min_neff_per_chain:
+        neff_warning = True
+  
+  if khat_warning:
+    warning_code = warning_code | (1 << 4)
+  if zvar_warning:
+    warning_code = warning_code | (1 << 5)
+  if rhat_warning:
+    warning_code = warning_code | (1 << 6)  
+  if tauhat_warning:
+    warning_code = warning_code | (1 << 7)
+  if neff_warning:
+    warning_code = warning_code | (1 << 8)
+  
+  return warning_code
+
+def parse_warning_code(warning_code):
+    """Parses warning code into individual failures"""
+    if warning_code & (1 << 0):
+        print("  divergence warning")
+    if warning_code & (1 << 1):
+        print("  treedepth warning")
+    if warning_code & (1 << 2):
+        print("  E_FMI warning")
+    if warning_code & (1 << 3):
+        print("  average acceptance proxy warning")
+    if warning_code & (1 << 4):
+        print("  khat warning")
+    if warning_code & (1 << 4):
+        print("  zero variance warning")
+    if warning_code & (1 << 4):
+        print("  Rhat warning")
+    if warning_code & (1 << 4):
+        print("  tauhat warning")
+    if warning_code & (1 << 4):
+        print("  min effective sample size warning")
 
 def compute_rhos(fs):
   """Visualize empirical autocorrelations for a given sequence"""

@@ -29,10 +29,10 @@ check_all_hmc_diagnostics <- function(fit,
     cat(sprintf('%s of %s iterations ended with a divergence (%s%%).\n',
                 n, N, 100 * n / N))
 
-    cat('  Divergences are due unstable numerical integration.\n')
-    cat('  These instabilities are often due to posterior degeneracies.\n')
-    cat('  If there are only a small number of divergences then running\n')
-    cat(sprintf('with adapt_delta larger than %.3f may reduce the divergences\n',
+    cat('  Divergences are due unstable numerical integration.  ')
+    cat('These instabilities are often due to posterior degeneracies.\n')
+    cat('  If there are only a small number of divergences then running ')
+    cat(sprintf('with adapt_delta larger than %.3f may reduce the divergences ',
                 adapt_target))
     cat('at the cost of more expensive transitions.\n\n')
   }
@@ -63,7 +63,7 @@ check_all_hmc_diagnostics <- function(fit,
     }
   }
   if (!no_efmi_warning) {
-    cat('  E-FMI below 0.2 suggests a funnel-like geometry hiding\n')
+    cat('  E-FMI below 0.2 suggests a funnel-like geometry hiding ')
     cat('somewhere in the posterior distribution.\n\n')
   }
 
@@ -81,13 +81,13 @@ check_all_hmc_diagnostics <- function(fit,
     }
   }
   if (!no_accept_warning) {
-    cat('  A small average proxy acceptance statistic indicates that the\n')
-    cat('integrator step size adaptation failed to converge.  This is often\n')
+    cat('  A small average proxy acceptance statistic indicates that the ')
+    cat('integrator step size adaptation failed to converge.  This is often ')
     cat('due to discontinuous or inexact gradients.\n\n')
   }
 
   if (no_warning) {
-    cat('All Hamiltonian Monte Carlo diagnostics are consistent with\n')
+    cat('All Hamiltonian Monte Carlo diagnostics are consistent with ')
     cat('accurate Markov chain Monte Carlo.\n\n')
   }
 }
@@ -150,7 +150,7 @@ display_stepsizes <- function(fit) {
 plot_num_leapfrog <- function(fit) {
   sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
 
-  max_n <- max(sapply(1:4, function(c) max(sampler_params[[c]][,'n_leapfrog__'])))
+  max_n <- max(sapply(1:4, function(c) max(sampler_params[[c]][,'n_leapfrog__']))) + 1
   max_count <- max(sapply(1:4, function(c) max(table(sampler_params[[c]][,'n_leapfrog__']))))
 
   colors <- c(c_dark, c_mid_highlight, c_mid, c_light_highlight)
@@ -671,28 +671,30 @@ check_all_expectand_diagnostics <- function(fit,
       fs <- unpermuted_samples[, c, idx]
       
       # Check tail khats in each Markov chain
+      khat_threshold <- 0.75
       khats <- compute_tail_khats(fs)
-      if (khats[1] >= 0.25 & khats[2] >= 0.25) {
+      if (khats[1] >= khat_threshold & khats[2] >= khat_threshold) {
         no_khat_warning <- FALSE
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                sprintf('  Chain %s: Both left and right tail hat{k}s', c),
-                sprintf('(%.3f, %.3f) exceed 0.25!\n', khats[1], khats[2]))
-      } else if (khats[1] < 0.25 & khats[2] >= 0.25) {
+                sprintf('  Chain %s: Both left and right tail hat{k}s ', c),
+                sprintf('(%.3f, %.3f) exceed %.2f!\n', 
+                        khats[1], khats[2], khat_threshold))
+      } else if (khats[1] < khat_threshold & khats[2] >= khat_threshold) {
         no_khat_warning <- FALSE
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Right tail hat{k} (%.3f) exceeds 0.25!\n',
-                         c, khats[2]))
-      } else if (khats[1] >= 0.25 & khats[2] < 0.25) {
+                 sprintf('  Chain %s: Right tail hat{k} (%.3f) exceeds %.2f!\n',
+                         c, khats[2], khat_threshold))
+      } else if (khats[1] >= khat_threshold & khats[2] < khat_threshold) {
         no_khat_warning <- FALSE
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Left tail hat{k} ($.3f) exceeds 0.25!\n',
-                 c, khats[1]))
+                 sprintf('  Chain %s: Left tail hat{k} (%.3f) exceeds %.2f!\n',
+                 c, khats[1], khat_threshold))
       }
       
       # Check empirical variance in each Markov chain
@@ -784,7 +786,7 @@ check_all_expectand_diagnostics <- function(fit,
 
   if(no_khat_warning & no_zvar_warning & no_rhat_warning & no_tauhat_warning & no_neff_warning) {
     message <- paste0('All expectands checked appear to be behaving',
-                      ' well enough for relaiable Markov chain Monte Carlo estimation.\n')
+                      ' well enough for reliable Markov chain Monte Carlo estimation.\n')
   }
 
   cat(message)
@@ -839,7 +841,8 @@ expectand_diagnostics_summary <- function(fit,
       # Check tail khats in each Markov chain
       fs <- unpermuted_samples[,c, idx]
       khats <- compute_tail_khats(fs)
-      if (khats[1] >= 0.25 | khats[2] >= 0.25) {
+      khat_threshold <- 0.75
+      if (khats[1] >= khat_threshold | khats[2] >= khat_threshold) {
         failed_idx <- c(failed_idx, idx)
         failed_khat_idx <- c(failed_khat_idx, idx)
       }
@@ -932,6 +935,187 @@ expectand_diagnostics_summary <- function(fit,
     cat(paste0('  If hat{ESS} is too small then even reliable Markov chain',
                ' Monte Carlo estimators may still be too imprecise.\n\n'))
   }
+}
+
+# Summarize Hamiltonian Monte Carlo and expectand diagnostics
+# into a binary encoding
+summarize_all_diagnostics <- function(fit,
+                                      adapt_target=0.801,
+                                      max_treedepth=10,
+                                      expectand_idxs=NULL,
+                                      min_neff_per_chain=100,
+                                      exclude_zvar=FALSE) {
+  warning_code <- 0
+    
+  sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
+
+  # Check divergences
+  divergent <- do.call(rbind, sampler_params)[,'divergent__']
+  n = sum(divergent)
+  N = length(divergent)
+
+  if (n > 0) {
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 0))
+  }
+
+  # Check transitions that ended prematurely due to maximum tree depth limit
+  treedepths <- do.call(rbind, sampler_params)[,'treedepth__']
+  n = length(treedepths[sapply(treedepths, function(x) x >= max_treedepth)])
+  N = length(treedepths)
+
+  if (n > 0) {
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 1))
+  }
+
+  # Checks the energy fraction of missing information (E-FMI)
+  no_efmi_warning <- TRUE
+  for (c in 1:length(sampler_params)) {
+    energies = sampler_params[c][[1]][,'energy__']
+    numer = sum(diff(energies)**2) / length(energies)
+    denom = var(energies)
+    if (numer / denom < 0.2) {
+      no_efmi_warning <- FALSE
+    }
+  }
+  if (!no_efmi_warning) {
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 2))
+  }
+
+  # Check convergence of the stepsize adaptation
+  no_accept_warning <- TRUE
+  for (c in 1:length(sampler_params)) {
+    ave_accept_proxy <- mean(sampler_params[[c]][,'accept_stat__'])
+    if (ave_accept_proxy < 0.9 * adapt_target) {
+      no_accept_warning <- FALSE
+    }
+  }
+  if (!no_accept_warning) {
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 3))
+  }
+  
+  unpermuted_samples <- rstan:::extract(fit, permute=FALSE)
+
+  input_dims <- dim(unpermuted_samples)
+  N <- input_dims[1]
+  C <- input_dims[2]
+  I <- input_dims[3]
+
+  if (is.null(expectand_idxs)) {
+    expectand_idxs <- 1:I
+  }
+
+  bad_idxs <- setdiff(expectand_idxs, 1:I)
+  if (length(bad_idxs) > 0) {
+    cat(sprintf('Excluding the invalid expectand indices: %s',
+                bad_idxs))
+    expectand_idxs <- setdiff(expectand_idxs, bad_idxs)
+  }
+
+  khat_warning <- FALSE
+  zvar_warning <- FALSE
+  rhat_warning <- FALSE
+  tauhat_warning <- FALSE
+  neff_warning <- FALSE
+
+  for (idx in expectand_idxs) {
+    if (exclude_zvar) {
+      # Check zero variance across all Markov chains for exclusion
+      any_zvar <- FALSE
+      for (c in 1:C) {
+        fs <- unpermuted_samples[, c, idx]
+        var <- welford_summary(fs)[2]
+        if (var < 1e-10)
+          any_zvar <- TRUE
+      }
+      if (any_zvar) {
+        next
+      }
+    }
+
+    for (c in 1:C) {
+      # Check tail khats in each Markov chain
+      fs <- unpermuted_samples[,c, idx]
+      khats <- compute_tail_khats(fs)
+      khat_threshold <- 0.75
+      if (khats[1] >= khat_threshold | khats[2] >= khat_threshold) {
+        khat_warning <- TRUE
+      }
+    
+      # Check empirical variance in each Markov chain
+      var <- welford_summary(fs)[2]
+      if (var < 1e-10) {
+        zvar_warning <- TRUE
+      }
+    }
+  
+    # Check split Rhat across Markov chains
+    chains <- lapply(1:C, function(c) unpermuted_samples[,c,idx])
+    rhat <- compute_split_rhat(chains)
+
+    if (is.nan(rhat)) {
+      rhat_warning <- TRUE
+    } else if (rhat > 1.1) {
+      rhat_warning <- TRUE
+    }
+
+    for (c in 1:C) {
+      # Check empirical integrated autocorrelation time
+      fs <- unpermuted_samples[,c, idx]
+      int_ac_time <- compute_tauhat(fs)
+      if (int_ac_time / N > 0.25) {
+        tauhat_warning <- TRUE
+      }
+
+      # Check empirical effective sample size
+      neff <- N / int_ac_time
+      if (neff < min_neff_per_chain) {
+        neff_warning <- TRUE
+      }
+    }
+  }
+  
+  if (khat_warning) {
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 4))
+  }
+        
+  if (zvar_warning) { 
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 5))
+  }
+  
+  if (rhat_warning) {
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 6))
+  }
+  
+  if (tauhat_warning) {
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 7))
+  }
+  
+  if (neff_warning) {
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 8))
+  }
+  
+  (warning_code)
+}
+
+parse_warning_code <- function(warning_code) {
+  if (bitwAnd(warning_code, bitwShiftL(1, 0)))
+    print("  divergence warning")
+  if (bitwAnd(warning_code, bitwShiftL(1, 1)))
+    print("  treedepth warning")
+  if (bitwAnd(warning_code, bitwShiftL(1, 2)))
+    print("  E-FMI warning")
+  if (bitwAnd(warning_code, bitwShiftL(1, 3)))
+    print("  average acceptance proxy warning")
+  if (bitwAnd(warning_code, bitwShiftL(1, 4)))
+    print("  khat warning")
+  if (bitwAnd(warning_code, bitwShiftL(1, 5)))
+    print("  zero variance warning")
+  if (bitwAnd(warning_code, bitwShiftL(1, 6)))
+    print("  Rhat warning")
+  if (bitwAnd(warning_code, bitwShiftL(1, 7)))
+    print("  tauhat warning")
+  if (bitwAnd(warning_code, bitwShiftL(1, 8)))
+    print("  min effective sample size warning")
 }
 
 # Visualize empirical autocorrelations for a given sequence
@@ -1123,7 +1307,8 @@ plot_pushforward_hist <- function(unpermuted_samples, B, flim=NULL, name="f") {
   mean_p <- rep(0, B)
   delta_p <- rep(0, B)
 
-  chains <- lapply(1:4, function(c) unpermuted_samples[,c])
+  C <- dim(unpermuted_samples)[2]
+  chains <- lapply(1:C, function(c) unpermuted_samples[,c])
 
   for (b in 1:B) {
     bin_indicator <- function(x) {

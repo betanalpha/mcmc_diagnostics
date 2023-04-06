@@ -59,7 +59,7 @@ check_all_hmc_diagnostics <- function(fit,
     if (numer / denom < 0.2) {
       no_warning <- FALSE
       no_efmi_warning <- FALSE
-      cat(sprintf('Chain %s: E-FMI = %s.\n', n, numer / denom))
+      cat(sprintf('Chain %s: E-FMI = %s.\n', c, numer / denom))
     }
   }
   if (!no_efmi_warning) {

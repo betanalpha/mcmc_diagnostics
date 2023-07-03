@@ -10,96 +10,198 @@ c_mid_highlight <- c("#A25050")
 c_dark <- c("#8F2727")
 c_dark_highlight <- c("#7C0000")
 
+c_light_teal <- c("#6B8E8E")
+c_mid_teal <- c("#487575")
+c_dark_teal <- c("#1D4F4F")
+
+# Extract unpermuted expectand values from a StanFit object and format 
+# them for convenient access
+# @param stan_fit A StanFit object
+# @return A named list of two-dimensional arrays for each expectand in 
+#         the StanFit object.  The first dimension of each element 
+#         indexes the Markov chains and the second dimension indexes the 
+#         sequential states within each Markov chain. 
+extract_expectands <- function(stan_fit) {
+  nom_params <- rstan:::extract(fit, permuted=FALSE)
+  params <- lapply(1:dim(nom_params)[3], function(n) t(nom_params[,,n]))
+  names(params) <- names(fit)
+  (params)
+}
+
+# Extract Hamiltonian Monte Carlo diagnostics values from a StanFit
+# object and format them for convenient access
+# @param stan_fit A StanFit object
+# @return A named list of two-dimensional arrays for each expectand in 
+#         the StanFit object.  The first dimension of each element 
+#         indexes the Markov chains and the second dimension indexes the 
+#         sequential states within each Markov chain. 
+extract_hmc_diagnostics <- function(stan_fit) {
+  diagnostic_names <- c('divergent__', 'treedepth__', 'n_leapfrog__', 
+                        'stepsize__', 'energy__', 'accept_stat__')
+
+  nom_params <- get_sampler_params(fit, inc_warmup=FALSE)
+  C <- length(nom_params)
+  params <- lapply(diagnostic_names, 
+                   function(name) t(sapply(1:C, function(c) 
+                                  nom_params[c][[1]][,name])))
+  names(params) <- diagnostic_names
+  (params)
+}
+
 # Check all Hamiltonian Monte Carlo Diagnostics 
 # for an ensemble of Markov chains
-check_all_hmc_diagnostics <- function(fit,
+# @param diagnostics A named list of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+# @param adapt_target Target acceptance proxy statistic for step size 
+#                     adaptation.
+# @param max_treedepth The maximum numerical trajectory treedepth
+check_all_hmc_diagnostics <- function(diagnostics,
                                       adapt_target=0.801,
-                                      max_treedepth=10) {
-  sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
-
+                                      max_treedepth=10,
+                                      max_width=72) {
+  if (!is.vector(diagnostics)) {
+    cat('Input variable `diagnostics` is not a named list!')
+    return
+  }
+  
   no_warning <- TRUE
-
-  # Check divergences
-  divergent <- do.call(rbind, sampler_params)[,'divergent__']
-  n = sum(divergent)
-  N = length(divergent)
-
-  if (n > 0) {
-    no_warning <- FALSE
-    cat(sprintf('%s of %s iterations ended with a divergence (%s%%).\n',
-                n, N, 100 * n / N))
-
-    cat('  Divergences are due unstable numerical integration.  ')
-    cat('These instabilities are often due to posterior degeneracies.\n')
-    cat('  If there are only a small number of divergences then running ')
-    cat(sprintf('with adapt_delta larger than %.3f may reduce the divergences ',
-                adapt_target))
-    cat('at the cost of more expensive transitions.\n\n')
-  }
-
-  # Check transitions that ended prematurely due to maximum tree depth limit
-  treedepths <- do.call(rbind, sampler_params)[,'treedepth__']
-  n = length(treedepths[sapply(treedepths, function(x) x >= max_treedepth)])
-  N = length(treedepths)
-
-  if (n > 0) {
-    no_warning <- FALSE
-    cat(sprintf('%s of %s iterations saturated the maximum tree depth of %s (%s%%).',
-                n, N, max_treedepth, 100 * n / N))
-
-    cat('  Increasing max_depth will increase the efficiency of the transitions.\n\n')
-  }
-
-  # Checks the energy fraction of missing information (E-FMI)
+  no_divergence_warning <- TRUE
+  no_treedepth_warning <- TRUE
   no_efmi_warning <- TRUE
-  for (c in 1:length(sampler_params)) {
-    energies = sampler_params[c][[1]][,'energy__']
+  no_accept_warning <- TRUE
+  
+  message <- ""
+  
+  C <- dim(diagnostics[['divergent__']])[1]
+  S <- dim(diagnostics[['divergent__']])[2]
+  
+  for (c in 1:C) {
+    local_message <- ""
+    # Check for divergences
+    n_div <- sum(diagnostics[['divergent__']][c,])
+    
+    if (n_div > 0) {
+      no_warning <- FALSE
+      no_divergence_warning <- FALSE
+      local_message <- 
+        paste0(local_message,
+               sprintf('  Chain %s: %s of %s transitions (%.1f%%) ', 
+                       c, n_div, S, 100 * n_div / S),
+               'diverged.\n')
+    }
+    
+    # Check for tree depth saturation
+    n_tds <- sum(sapply(diagnostics[['treedepth__']][c,], 
+                        function(s) s > max_treedepth))
+    
+    if (n_tds > 0) {
+      no_warning <- FALSE
+      no_treedepth_warning <- FALSE
+      local_message <- 
+        paste0(local_message,
+               sprintf('  Chain %s: %s of %s transitions (%s%%) ', 
+                       c, n_div, S, 100 * n_div / S),
+               sprintf('saturated the maximum treedepth of %s.\n', 
+                       max_treedepth))
+    }
+    
+    # Check the energy fraction of missing information (E-FMI)
+    energies = diagnostics[['energy__']][c,]
     numer = sum(diff(energies)**2) / length(energies)
     denom = var(energies)
-    if (numer / denom < 0.2) {
+    efmi <- numer / denom
+    if (efmi < 0.2) {
       no_warning <- FALSE
       no_efmi_warning <- FALSE
-      cat(sprintf('Chain %s: E-FMI = %s.\n', c, numer / denom))
+      local_message <- 
+        paste0(local_message, 
+               sprintf('  Chain %s: E-FMI = %.3f.\n', c, efmi))
     }
-  }
-  if (!no_efmi_warning) {
-    cat('  E-FMI below 0.2 suggests a funnel-like geometry hiding ')
-    cat('somewhere in the posterior distribution.\n\n')
-  }
-
-  # Check convergence of the stepsize adaptation
-  no_accept_warning <- TRUE
-  for (c in 1:length(sampler_params)) {
-    ave_accept_proxy <- mean(sampler_params[[c]][,'accept_stat__'])
+    
+    # Check convergence of the stepsize adaptation
+    ave_accept_proxy <- mean(diagnostics[['accept_stat__']][c,])
     if (ave_accept_proxy < 0.9 * adapt_target) {
       no_warning <- FALSE
       no_accept_warning <- FALSE
-      cat(sprintf('Chain %s: Average proxy acceptance statistic (%.3f)\n',
-                   c, ave_accept_proxy))
-      cat(sprintf('          is smaller than 90%% of the target (%.3f).\n',
-                  adapt_target))
+      local_message <- 
+        paste0(local_message,
+               sprintf('  Chain %s: Averge proxy acceptance ', c),
+               sprintf('statistic (%.3f) is\n', ave_accept_proxy),
+                       '           smaller than 90% of the target ',
+               sprintf('(%.3f).\n', adapt_target))
     }
-  }
-  if (!no_accept_warning) {
-    cat('  A small average proxy acceptance statistic indicates that the ')
-    cat('integrator step size adaptation failed to converge.  This is often ')
-    cat('due to discontinuous or inexact gradients.\n\n')
+    
+    if (local_message != "") {
+      message <- paste0(message, local_message, '\n')
+    }
   }
 
   if (no_warning) {
-    cat('All Hamiltonian Monte Carlo diagnostics are consistent with ')
-    cat('accurate Markov chain Monte Carlo.\n\n')
+    desc <- paste0('All Hamiltonian Monte Carlo diagnostics are ',
+                   'consistent with reliable Markov chain Monte Carlo.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
+    message <- paste0(message, desc)
   }
+  
+  if (!no_divergence_warning) {
+    desc <- paste0('Divergent Hamiltonian transitions result from ',
+                   'unstable numerical trajectories.  These ',
+                   'instabilities often due to degenerate target ',
+                   'geometry, especially "pinches".  If there are ',
+                   'only a small number of divergences then running ',
+                   'with adept_delta larger ',
+                   sprintf('than %.3f may reduce the ', adapt_target),
+                   'instabilities at the cost of more expensive ',
+                   'Hamiltonian transitions.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
+    message <- paste0(message, desc, '\n\n')
+  }
+
+  if (!no_treedepth_warning) {
+    desc <- paste0('Numerical trajectories that saturate the ',
+                   'maximum treedepth have terminated prematurely.  ',
+                   sprintf('Increasing max_depth above %s ', max_depth),
+                   'should result in more expensive, but more ',
+                   'efficient, Hamiltonian transitions.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
+    message <- paste0(message, desc, '\n\n')
+  }
+
+  if (!no_efmi_warning) {
+    desc <- paste0('E-FMI below 0.2 arise when a funnel-like geometry ',
+                   'obstructs how effectively Hamiltonian trajectories ',
+                   'can explore the target distribution.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
+    message <- paste0(message, desc, '\n\n')
+  }
+
+  if (!no_accept_warning) {
+    desc <- paste0('A small average proxy acceptance statistic ',
+                   'indicates that the adaptation of the numerical ',
+                   'integrator step size failed to converge.  This is ',
+                   'often due to discontinuous or imprecise ',
+                   'gradients.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
+    message <- paste0(message, desc, '\n\n')
+  }
+
+  cat(message)
 }
 
 # Plot outcome of inverse metric adaptation
-plot_inv_metric <- function(fit, B=25) {
-  chain_info <- get_adaptation_info(fit)
-  C <- length(chain_info)
+# @params adaptation_info A list containing raw adaptation text for
+#                         each Markov chain.  The output of RStan and 
+#                         PyStan's `get_adaptation_info` functions.
+# @params B The number of bins for the inverse metric element histograms.
+plot_inv_metric <- function(adaptation_info, B=25) {
+  C <- length(adaptation_info)
 
   inv_metric_elems <- list()
   for (c in 1:C) {
-    raw_info <- chain_info[[c]]
+    raw_info <- adaptation_info[[c]]
     clean1 <- sub("# Adaptation terminated\n# Step size = [0-9.]*\n#",
                   "", raw_info)
     clean2 <- sub(" [a-zA-Z ]*:\n# ", "", clean1)
@@ -136,84 +238,210 @@ plot_inv_metric <- function(fit, B=25) {
   }
 }
 
-# Display outcome of symplectic integrator step size adaptation
-display_stepsizes <- function(fit) {
-  sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
-  for (c in 1:4) {
-    stepsize <- sampler_params[[c]][,'stepsize__'][1]
+# Display adapted symplectic integrator step sizes
+# @param diagnostics A named list of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+display_stepsizes <- function(diagnostics) {
+  if (!is.vector(diagnostics)) {
+    cat('Input variable `diagnostics` is not a named list!')
+    return
+  }
+  
+  stepsizes <- diagnostics[['divergent__']]
+  C <- dim(stepsizes)[1]
+  
+  for (c in 1:C) {
+    stepsize <- stepsizes[c, 1]
     cat(sprintf('Chain %s: Integrator Step Size = %f\n',
                 c, stepsize))
   }
 }
 
-# Display symplectic integrator trajectory lenghts
-plot_num_leapfrog <- function(fit) {
-  sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
+# Display symplectic integrator trajectory lengths
+# @param diagnostics A named list of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+plot_num_leapfrog <- function(diagnostics) {
+  if (!is.vector(diagnostics)) {
+    cat('Input variable `diagnostics` is not a named list!')
+    return
+  }
+  
+  lengths <- diagnostics[['n_leapfrog__']]
+  C <- dim(lengths)[1]
 
-  max_n <- max(sapply(1:4, function(c) max(sampler_params[[c]][,'n_leapfrog__']))) + 1
-  max_count <- max(sapply(1:4, function(c) max(table(sampler_params[[c]][,'n_leapfrog__']))))
+  max_length <- max(lengths) + 1
+  max_count <- max(sapply(1:C, function(c) max(table(lengths[c,]))))
 
   colors <- c(c_dark, c_mid_highlight, c_mid, c_light_highlight)
 
-  idx <- rep(1:max_n, each=2)
+  idx <- rep(1:max_length, each=2)
   xs <- sapply(1:length(idx), function(b) if(b %% 2 == 0) idx[b] + 0.5
                                           else idx[b] - 0.5)
 
-  par(mfrow=c(2, 2), mar = c(5, 5, 3, 1))
+  par(mfrow=c(2, 2), mar = c(5, 2, 2, 1))
 
-  for (c in 1:4) {
-    stepsize <- round(sampler_params[[c]][,'stepsize__'][1], 3)
+  for (c in 1:C) {
+    stepsize <- round(diagnostics[['stepsize__']][c,1], 3)
   
-    counts <- hist(sampler_params[[c]][,'n_leapfrog__'],
-                   seq(0.5, max_n + 0.5, 1), plot=FALSE)$counts
+    counts <- hist(lengths[c,], 
+                   seq(0.5, max_length + 0.5, 1), 
+                   plot=FALSE)$counts
     pad_counts <- counts[idx]
   
     plot(xs, pad_counts, type="l",  lwd=2, col=colors[c],
          main=paste0("Chain ", c, " (Stepsize = ", stepsize, ")"),
-         xlab="Numerical Trajectory Length", xlim=c(0.5, max_n + 0.5),
+         xlab="Numerical Trajectory Length", xlim=c(0.5, max_length + 0.5),
          ylab="", ylim=c(0, 1.1 * max_count), yaxt='n')
   }
 }
 
-# Display empirical average of the proxy acceptance statistic
-# across each individual Markov chains
+# Display empirical average of the proxy acceptance statistic across 
+# each Markov chain
+# @param diagnostics A named list of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
 display_ave_accept_proxy <- function(fit) {
-  sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
+  if (!is.vector(diagnostics)) {
+    cat('Input variable `diagnostics` is not a named list!')
+    return
+  }
+  
+  proxy_stats <- diagnostics[['accept_stat__']]
+  C <- dim(proxy_stats)[1]
 
-  for (c in 1:length(sampler_params)) {
-    ave_accept_proxy <- mean(sampler_params[[c]][,'accept_stat__'])
+  for (c in 1:C) {
+    ave_accept_proxy <- mean(proxy_stats[c,])
     cat(sprintf('Chain %s: Average proxy acceptance statistic = %.3f\n',
                 c, ave_accept_proxy))
   }
 }
 
-# Separate Markov chain states into those sampled from non-divergent
-# numerical Hamiltonian trajectories and those sampled from divergent
-# numerical Hamiltonian trajectories
-partition_div <- function(fit) {
-  nom_params <- rstan:::extract(fit, permuted=FALSE)
-  n_chains <- dim(nom_params)[2]
-  params <- as.data.frame(do.call(rbind, lapply(1:n_chains, function(n) nom_params[,n,])))
-
-  sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
-  divergent <- do.call(rbind, sampler_params)[,'divergent__']
-  params$divergent <- divergent
-
-  div_params <- params[params$divergent == 1,]
-  nondiv_params <- params[params$divergent == 0,]
-
-  return(list(div_params, nondiv_params))
-}
-
 # Plot pairwise scatter plots with non-divergent and divergent 
 # transitions separated by color
-plot_div_pairs <- function(fit, names, transforms) {
+# @param expectand_samples A named list of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+# @param diagnostics A named list of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+# @param expectand_names Vector of expectand names to plot
+# @params transforms Vector of flags configurating which if any
+#                    transformation to apply to each named expectand:
+#                      0: identity
+#                      1: log
+#                      2: logit
+# @params mode_mode Plotting style configuration: 
+#                     0: Non-divergent transitions are plotted in 
+#                        transparent red while divergent transitions are
+#                        plotted in transparent green.
+#                     1: Non-divergent transitions are plotted in gray 
+#                        while divergent transitions are plotted in 
+#                        different shades of teal depending on the 
+#                        trajectory length.  Transitions from shorter
+#                        trajectories should cluster somewhat closer to 
+#                        the neighborhoods with problematic geometries.
+plot_div_pairs <- function(expectand_samples, diagnostics, 
+                           expectand_names, transforms, plot_mode=0) {
+  if (!is.vector(expectand_samples)) {
+    cat('Input variable `expectand_samples` is not a named list!')
+    return
+  }
+   
+  if (!is.vector(diagnostics)) {
+    cat('Input variable `diagnostics` is not a named list!')
+    return
+  }
+  
+  if (!is.vector(expectand_names)) {
+    cat('Input variable `expectand_names` is not a named list!')
+    return
+  }
+  
+  if (!is.vector(transforms)) {
+    cat('Input variable `transforms` is not a named list!')
+    return
+  }
+  
+  if (length(transforms) != length(expectand_names)) {
+    cat(paste0('`expectand_names` and `transforms` input variables ', 
+               'are not the same length!'))
+    return
+  }
+  
+  N <- length(expectand_names)
+  for (n in 1:N) {
+    if (transforms[n] < 0 | transforms[n] > 3) {
+      warning <- 
+        paste0(sprintf('The transform flag %s for expectand %s ', 
+                       transforms[n], expectand_names[n]),
+               'is invalid.  Defaulting to no transformation.')
+      warning <- paste0(strwrap(warning, max_width, 0), collapse='\n')
+      cat(warning)
+      transforms[n] <- 0
+    }
+    
+    if (transforms[n] == 1) {
+      if (min(expectand_samples[[expectand_names[n]]]) <= 0) {
+        error <- 
+          paste0(sprintf('Log transform requested for expectand %s ', 
+                          expectand_names[n]),
+                 'but expectand values are not strictly positive.')
+        error <- paste0(strwrap(error, max_width, 0), collapse='\n')
+        cat(error)
+        return
+      }
+    }
+    
+    if (transforms[n] == 2) {
+      if (min(expectand_samples[[expectand_names[n]]]) <= 0 |
+          max(expectand_samples[[expectand_names[n]]]) >= 1) {
+        error <- 
+          paste0(sprintf('Logit transform requested for expectand %s ', 
+                          expectand_names[n]),
+                 'but expectand values are not strictly confined ',
+                 'to the unit interval.')
+        error <- paste0(strwrap(error, max_width, 0), collapse='\n')
+        cat(error)
+        return
+      }
+    }
+  }
+  
+  if (plot_mode < 0 | plot_mode > 1) {
+    warning <- 
+      paste0(sprintf('Invalid `plot_mode` value %s ', plot_mode))
+    cat(warning)
+    transforms[n] <- 0
+  }
+
   c_dark_trans <- c("#8F272780")
   c_green_trans <- c("#00FF0080")
 
-  N <- length(names)
+  # Extract non-divergent and divergent transition indices
+  divs <- diagnostics[['divergent__']]
+  C <- dim(divs)[1]
+  nondiv_filter <- c(sapply(1:C, function(c) divs[c,] == 0))
+  div_filter    <- c(sapply(1:C, function(c) divs[c,] == 1))
+  
+  nlfs <- diagnostics[['n_leapfrog__']]
+  max_nlf <- max(nlfs)
+  nom_colors <- c(c_light_teal, c_mid_teal, c_dark_teal)
+  cmap <- colormap(colormap=nom_colors, nshades=max_nlf)
+  
+  # Set plot layout dynamically
   N_plots <- choose(N, 2)
-
   if (N_plots <= 3) {
     par(mfrow=c(1, N_plots), mar = c(5, 5, 2, 1))
   } else if (N_plots == 4) {
@@ -221,59 +449,96 @@ plot_div_pairs <- function(fit, names, transforms) {
   } else {
     par(mfrow=c(2, 3), mar = c(5, 5, 2, 1))
   }
-
-  partition <- partition_div(fit)
-  div_samples <- partition[[1]]
-  nondiv_samples <- partition[[2]]
-
+  
   for (n in 1:(N - 1)) {
     for (m in (n + 1):N) {
-    
-      name_x <- names[n]
+      # Format x variable
+      name_x <- expectand_names[n]
+      samples <- c(sapply(1:C, 
+                          function(c) expectand_samples[[name_x]][c,]))
       if (transforms[n] == 0) {
-        x_nondiv_samples <- nondiv_samples[name_x][,1]
-        x_div_samples <- div_samples[name_x][,1]
-        x_name <- name_x
+        x_nondiv_samples <- samples[nondiv_filter]
+        x_div_samples <- samples[div_filter]
+        x_display_name <- name_x
       } else if (transforms[n] == 1) {
-        x_nondiv_samples <- log(nondiv_samples[name_x][,1])
-        x_div_samples <- log(div_samples[name_x][,1])
-        x_name <- paste("log(", name_x, ")", sep="")
+        x_nondiv_samples <- log(samples[nondiv_filter])
+        x_div_samples <- log(samples[div_filter])
+        x_display_name <- paste0("log(", name_x, ")")
+      } else if (transforms[n] == 2) {
+        x_nondiv_samples <- log(samples[nondiv_filter] / 
+                                (1 - samples[nondiv_filter]))
+        x_div_samples <- log(samples[div_idxs] /
+                             (1 - samples[div_filter]))
+        x_display_name <- paste0("logit(", name_x, ")")
       }
       xlims <- range(c(x_nondiv_samples, x_div_samples))
     
-      name_y <- names[m]
+      # Format y variable
+      name_y <- expectand_names[m]
+      samples <- c(sapply(1:C, 
+                          function(c) expectand_samples[[name_y]][c,]))
       if (transforms[m] == 0) {
-        y_nondiv_samples <- nondiv_samples[name_y][,1]
-        y_div_samples <- div_samples[name_y][,1]
-        y_name <- name_y
+        y_nondiv_samples <- samples[nondiv_filter]
+        y_div_samples <- samples[div_filter]
+        y_display_name <- name_y
       } else if (transforms[m] == 1) {
-        y_nondiv_samples <- log(nondiv_samples[name_y][,1])
-        y_div_samples <- log(div_samples[name_y][,1])
-        y_name <- paste("log(", name_y, ")", sep="")
+        y_nondiv_samples <- log(samples[nondiv_filter])
+        y_div_samples <- log(samples[div_filter])
+        y_display_name <- paste0("log(", name_y, ")")
+      } else if (transforms[m] == 2) {
+        y_nondiv_samples <- log(samples[nondiv_filter] / 
+                                (1 - samples[nondiv_filter]))
+        y_div_samples <- log(samples[div_filter] /
+                             (1 - samples[div_filter]))
+        y_display_name <- paste0("logit(", name_y, ")")
       }
       ylims <- range(c(y_nondiv_samples, y_div_samples))
     
-      plot(x_nondiv_samples, y_nondiv_samples,
-           col=c_dark_trans, pch=16, main="",
-           xlab=x_name, xlim=xlims, ylab=y_name, ylim=ylims)
-      points(x_div_samples, y_div_samples,
-             col=c_green_trans, pch=16)
+      if (plot_mode == 0) {
+        plot(x_nondiv_samples, y_nondiv_samples,
+             col=c_dark_trans, pch=16, main="",
+             xlab=x_display_name, xlim=xlims, 
+             ylab=y_display_name, ylim=ylims)
+        points(x_div_samples, y_div_samples,
+               col=c_green_trans, pch=16)
+      }
+      if (plot_mode == 1) {
+        plot(x_nondiv_samples, y_nondiv_samples,
+             col="#DDDDDD", pch=16, main="",
+             xlab=x_display_name, xlim=xlims, 
+             ylab=y_display_name, ylim=ylims)
+        points(x_div_samples, y_div_samples,
+               col=cmap[nlfs], pch=16)
+      }
     }
   }
 }
 
-# Compute empirical Pareto shape for a positive sample
-compute_khat <- function(fs) {
+# Compute hat{xi}, an estimate for the shape of a generalized Pareto 
+# distribution from a sample of positive values using the method 
+# introduced in "A New and Efficient Estimation Method for the 
+# Generalized Pareto Distribution" by Zhang and Stephens 
+# https://doi.org/10.1198/tech.2009.08017.
+# 
+# Within the generalized Pareto distribution family all moments up to 
+# the mth order are finite if and only if 
+#  xi < 1 / m.
+#
+# @params fs A one-dimensional array of positive values.
+# @return Shape parameter estimate.
+compute_xi_hat <- function(fs) {
   N <- length(fs)
   sorted_fs <- sort(fs)
 
+  # Return erroneous result if all input values are the same 
   if (sorted_fs[1] == sorted_fs[N]) {
-    return (-2)
+    return (NaN)
   }
 
+  # Return erroneous result if all input values are not positive
   if (sorted_fs[1] < 0) {
-    cat("x must be positive!")
-    return (NA)
+    cat("Input values must be positive!")
+    return (NaN)
   }
 
   # Estimate 25% quantile
@@ -283,23 +548,25 @@ compute_khat <- function(fs) {
     return (-2)
   }
 
-  # Heurstic Pareto configuration
+  # Heurstic generalized Pareto shape configuration
   M <- 20 + floor(sqrt(N))
 
   b_hat_vec <- rep(0, M)
   log_w_vec <- rep(0, M)
 
   for (m in 1:M) {
-    b_hat_vec[m] <- 1 / sorted_fs[N] + (1 - sqrt(M / (m - 0.5))) / (3 * q)
+    b_hat_vec[m] <- 1 / sorted_fs[N] + 
+                 (1 - sqrt(M / (m - 0.5))) / (3 * q)
     if (b_hat_vec[m] != 0) {
-      k_hat <- - mean( log(1 - b_hat_vec[m] * sorted_fs) )
-      log_w_vec[m] <- N * ( log(b_hat_vec[m] / k_hat) + k_hat - 1)
+      xi_hat <- mean( log(1 - b_hat_vec[m] * sorted_fs) )
+      log_w_vec[m] <- N * ( log(-b_hat_vec[m] / xi_hat) - xi_hat - 1 )
     } else {
       log_w_vec[m] <- 0
     }
   }
   
-  # Remove terms that don't contribute to improve numerical stability of average
+  # Remove terms that don't contribute to average to improve numerical 
+  # stability
   log_w_vec <- log_w_vec[b_hat_vec != 0]
   b_hat_vec <- b_hat_vec[b_hat_vec != 0]
 
@@ -310,53 +577,93 @@ compute_khat <- function(fs) {
   mean( log (1 - b_hat * sorted_fs) )
 }
 
-# Compute empirical Pareto shape for upper and lower tails
-compute_tail_khats <- function(fs) {
+# Compute empirical generalized Pareto shape for upper and lower tails
+# for an arbitrary sample of expectand values, ignoring any 
+# autocorrelation between the values.
+# @param fs A one-dimensional array of expectand values.
+# @return Left and right shape estimators.
+compute_tail_xi_hats <- function(fs) {
   f_center <- median(fs)
+  
+  # Isolate lower and upper tails which can be adequately modeled by a 
+  # generalized Pareto shape for sufficiently well-behaved distributions
   fs_left <- abs(fs[fs < f_center] - f_center)
+  N <- length(fs_left)
+  M <- min(0.2 * N, 3 * sqrt(N))
+  fs_left <- fs_left[M:N]
+  
   fs_right <- fs[fs > f_center] - f_center
-
-  # Default to -2 if left tail is ill-defined
-  khat_left <- -2
+  N <- length(fs_right)
+  M <- min(0.2 * N, 3 * sqrt(N))
+  fs_right <- fs_right[M:N]
+  
+  # Default to NaN if left tail is ill-defined
+  xi_hat_left <- NaN
   if (length(fs_left) > 40)
-    khat_left <- compute_khat(fs_left)
+    xi_hat_left <- compute_xi_hat(fs_left)
 
-  # Default to -2 if right tail is ill-defined
-  khat_right <- -2
+  # Default to NaN if right tail is ill-defined
+  xi_hat_right <- NaN
   if (length(fs_right) > 40)
-    khat_right <- compute_khat(fs_right)
+    xi_hat_right <- compute_xi_hat(fs_right)
 
-  c(khat_left, khat_right)
+  c(xi_hat_left, xi_hat_right)
 }
 
-# Check empirical Pareto shape for upper and lower tails of a
-# given expectand output ensemble
-check_tail_khats <- function(unpermuted_samples) {
+# Check upper and lower tail behavior of a given expectand output 
+# ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param max_width Maximum line width for printing
+check_tail_xi_hats <- function(samples, max_width=72) {
+  if (length(dim(samples)) != 2) {
+    cat('Input variable `samples` has the wrong dimension')
+    return
+  }
+  C <- dim(samples)[1]
+  
   no_warning <- TRUE
-  for (c in 1:4) {
-    fs <- unpermuted_samples[,c]
-    khats <- compute_tail_khats(fs)
-    if (khats[1] >= 0.25 & khats[2] >= 0.25) {
-      cat(sprintf('Chain %s: Both left and right tail khats exceed 0.25!\n',
-                   c))
+  message <- ""
+  
+  for (c in 1:C) {
+    xi_hats <- compute_tail_xi_hats(samples[c,])
+    if (xi_hats[1] >= 0.25 & xi_hats[2] >= 0.25) {
+      message <- paste0(message,
+                        sprintf('Chain %s: Both left and right ', c),
+                        'tail hat{xi}s exceed 0.25!\n')
       no_warning <- FALSE
-    } else if (khats[1] < 0.25 & khats[2] >= 0.25) {
-      cat(sprintf('Chain %s: Right tail khat exceeds 0.25!\n', c))
+    } else if (xi_hats[1] < 0.25 & xi_hats[2] >= 0.25) {
+      message <- paste0(message,
+                        sprintf('Chain %s: Only right ', c),
+                        'tail hat{xi} exceeds 0.25!\n')
       no_warning <- FALSE
-    } else if (khats[1] >= 0.25 & khats[2] < 0.25) {
-      cat(sprintf('Chain %s: Left tail khat exceeds 0.25!\n', c))
+    } else if (xi_hats[1] >= 0.25 & xi_hats[2] < 0.25) {
+      message <- paste0(message,
+                        sprintf('Chain %s: Only left ', c),
+                        'tail hat{xi} exceeds 0.25!\n')
       no_warning <- FALSE
     }
   }
+  
   if (no_warning) {
-    cat('Expectand appears to be sufficiently integrable.\n\n')
+    desc <- 'Expectand appears to be sufficiently integrable.\n\n'
+    message <- paste0(message, desc)
   } else {
-    cat('  Large tail khats suggest that the expectand might\n')
-    cat('not be sufficiently integrable.\n\n')
+    desc <- paste0('Large tail xi_hats suggest that the expectand ',
+                   'might not be sufficiently integrable.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
+    message <- paste0(message, desc)
   }
+  
+  cat(message)
 }
 
-# Welford accumulator for empirical mean and variance of a given sequence
+# Compute empirical mean and variance of a given sequence with a single
+# pass using Welford accumulators.
+# @params A one-dimensional array of expectand values.
+# @return The empirical mean and variance.
 welford_summary <- function(fs) {
   mean <- 0
   var <- 0
@@ -373,40 +680,76 @@ welford_summary <- function(fs) {
   return(c(mean, var))
 }
 
-# Check expectand output ensemble for vanishing empirical variance
-check_variances <- function(unpermuted_samples) {
+# Check expectand output ensemble for vanishing empirical variance.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param max_width Maximum line width for printing
+check_variances <- function(samples, max_width=72) {
+  if (length(dim(samples)) != 2) {
+    cat('Input variable `samples` has the wrong dimension')
+    return
+  }
+  C <- dim(samples)[1]
+  
   no_warning <- TRUE
-  for (c in 1:4) {
-    fs <- unpermuted_samples[,c]
-    var <- welford_summary(fs)[2]
+  message <- ""
+
+  for (c in 1:C) {
+    var <- welford_summary(samples[c,])[2]
     if (var < 1e-10) {
-      cat(sprintf('Chain %s: Expectand is constant!\n', c))
+      message <- paste0(message,
+                        sprintf('Chain %s: Expectand is constant!\n', c))
       no_warning <- FALSE
     }
   }
+  
   if (no_warning) {
-    cat('Expectand is varying in all Markov chains.')
+    desc <- 'Expectand is varying across all Markov chains.\n\n'
+    message <- paste0(message, desc)
   } else {
-    cat('  If the expectand is not expected (haha) to be\n')
-    cat('constant then the Markov transitions are misbehaving.\n')
+    desc <- paste0('If the expectand is not expected to be nearly ',
+                   'constant then the Markov transition might be ',
+                   'misbehaving.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
+    message <- paste0(message, desc)
   }
+  
+  cat(message)
 }
 
-# Split a Markov chain into initial and terminal Markov chains
+# Split a sequence of expectand values in half to create an initial and 
+# terminal Markov chains
+# @params chain A sequence of expectand values derived from a single 
+#               Markov chain.
+# @return Two subsequences of expectand values.
 split_chain <- function(chain) {
   N <- length(chain)
   M <- N %/% 2
   list(chain1 <- chain[1:M], chain2 <- chain[(M + 1):N])
 }
 
-# Compute split hat{R} for an expectand output ensemble across
-# a collection of Markov chains
-compute_split_rhat <- function(chains) {
-  split_chains <- unlist(lapply(chains, function(c) split_chain(c)),
+# Compute split hat{R} for the expectand values across a Markov chain 
+# ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @return Split Rhat estimate.
+compute_split_rhat <- function(samples) {
+  if (length(dim(samples)) != 2) {
+    cat('Input variable `samples` has the wrong dimension')
+    return
+  }
+  C <- dim(samples)[1]
+  
+  split_chains <- unlist(lapply(1:C, 
+                                function(c) split_chain(samples[c,])),
                          recursive=FALSE)
 
   N_chains <- length(split_chains)
-  N <- sum(sapply(chains, function(c) length(c)))
+  N <- sum(sapply(1:C, function(c) length(samples[c,])))
 
   means <- rep(0, N_chains)
   vars <- rep(0, N_chains)
@@ -429,57 +772,71 @@ compute_split_rhat <- function(chains) {
   (rhat)
 }
 
-# Compute split hat{R} for all expectand output ensembles across
-# a collection of Markov chains
-compute_split_rhats <- function(fit, expectand_idxs=NULL) {
-  unpermuted_samples <- rstan:::extract(fit, permute=FALSE)
-
-  input_dims <- dim(unpermuted_samples)
-  N <- input_dims[1]
-  C <- input_dims[2]
-  I <- input_dims[3]
-
-  if (is.null(expectand_idxs)) {
-    expectand_idxs <- 1:I
-  }
-
-  bad_idxs <- setdiff(expectand_idxs, 1:I)
-  if (length(bad_idxs) > 0) {
-    cat(sprintf('Excluding the invalid expectand indices: %s\n',
-                bad_idxs))
-    expectand_idxs <- setdiff(expectand_idxs, bad_idxs)
+# Compute split hat{R} for all input expectands
+# @param expectand_samples A named list of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+compute_split_rhats <- function(expectand_samples) {
+  if (!is.vector(expectand_samples)) {
+    cat('Input variable `expectand_samples` is not a named list!')
+    return
   }
 
   rhats <- c()
-  for (idx in expectand_idxs) {
-    chains <- lapply(1:C, function(c) unpermuted_samples[,c,idx])
-    rhats <- c(rhats, compute_split_rhat(chains))
+  for (name in names(expectand_samples)) {
+    samples <- expectand_samples[[name]]
+    C <- dim(samples)[1]
+    S <- dim(samples)[2]
+    rhats <- c(rhats, compute_split_rhat(samples))
   }
   return(rhats)
 }
 
-# Check split hat{R} for all expectand output ensembles across
-# a collection of Marko chains
-check_rhat <- function(unpermuted_samples) {
-  chains <- lapply(1:4, function(c) unpermuted_samples[,c])
-  rhat <- compute_split_rhat(chains)
+# Check split hat{R} across a given expectand output ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param max_width Maximum line width for printing
+check_rhat <- function(samples, max_width=72) {
+  if (length(dim(samples)) != 2) {
+    cat('Input variable `samples` has the wrong dimension')
+    return
+  }
+
+  rhat <- compute_split_rhat(samples)
 
   no_warning <- TRUE
+  message <- ""
+
   if (is.nan(rhat)) {
-    cat('All Markov chains are frozen!\n')
+    message <- paste0(message, 'All Markov chains are frozen!\n')
   } else if (rhat > 1.1) {
-    cat(sprintf('Split rhat is %f!\n', rhat))
+    message <- paste0(message, sprintf('Split Rhat is %f!\n', rhat))
     no_warning <- FALSE
   }
+  
   if (no_warning) {
-    cat('Markov chains are consistent with equilibrium.\n')
+    desc <- 'Markov chain behavior is consistent with equilibrium.\n\n'
+    message <- paste0(message, desc)
   } else {
-    cat('  Split rhat larger than 1.1 is inconsistent with equilibrium.\n')
+    desc <- paste0('Split Rhat larger than 1.1 suggests that at ',
+                   'least one of the Markov chains has not reached ',
+                   'an equilibrium.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
+    message <- paste0(message, desc)
   }
+  
+  cat(message)
 }
 
 # Compute empirical integrated autocorrelation time for a sequence
-compute_tauhat <- function(fs) {
+# of expectand values, known here as \hat{tau}.
+# @param fs A one-dimensional array of expectand values.
+# @return Left and right shape estimators.
+compute_tau_hat <- function(fs) {
   # Compute empirical autocorrelations
   N <- length(fs)
   zs <- fs - mean(fs)
@@ -527,138 +884,138 @@ compute_tauhat <- function(fs) {
     }
   
     if (p == P) {
-      # throw some kind of error when autocorrelation
-      # sequence doesn't get terminated
+      return (NaN)
     }
   
     old_pair_sum <- current_pair_sum
   }
 }
 
-# Compute the minimimum empirical integrated autocorrelation time
-# across a collection of Markov chains for all expectand output ensembles
-compute_min_tauhat <- function(fit, expectand_idxs=NULL) {
-  unpermuted_samples <- rstan:::extract(fit, permute=FALSE)
-
-  input_dims <- dim(unpermuted_samples)
-  N <- input_dims[1]
-  C <- input_dims[2]
-  I <- input_dims[3]
-
-  expectand_names <- names(unpermuted_samples[1,1,])
-
-  if (is.null(expectand_idxs)) {
-    expectand_idxs <- 1:I
+# Compute the maximum empirical effective sample size across the 
+# Markov chains for the given expectands
+# @param expectand_samples A named list of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+compute_max_eesss <- function(expectand_samples) {
+  if (!is.vector(expectand_samples)) {
+    cat('Input variable `expectand_samples` is not a named list!')
+    return
   }
 
-  bad_idxs <- setdiff(expectand_idxs, 1:I)
-  if (length(bad_idxs) > 0) {
-    cat(sprintf('Excluding the invalid expectand indices: %s',
-                bad_idxs))
-    expectand_idxs <- setdiff(expectand_idxs, bad_idxs)
-  }
-
-  min_int_ac_times <- c()
-
-  for (idx in expectand_idxs) {
-    int_ac_times <- rep(0, C)
+  max_eesss <- c()
+  for (name in names(expectand_samples)) {
+    samples <- expectand_samples[[name]]
+    C <- dim(samples)[1]
+    S <- dim(samples)[2]
+    
+    eesss <- rep(0, C)
     for (c in 1:C) {
-      fs <- unpermuted_samples[,c, idx]
-      int_ac_times[c] <- compute_tauhat(fs)
+      tau_hat <- compute_tau_hat(samples[c,])
+      eesss[c] <- S / tau_hat
     }
-    min_int_ac_times <- c(min_int_ac_times, min(int_ac_times))
+    max_eesss <- c(max_eesss, max(eesss))
   }
-  return(min_int_ac_times)
+  return(max_eesss)
 }
 
-# Check the empirical integrated autocorrelation times across a 
-# collection of Markov chains for all expectand output ensembles
-check_min_tauhat <- function(unpermuted_samples) {
-  N <- dim(unpermuted_samples)[1]
+# Check the empirical effective sample size (EESS) for all a given 
+# expectand output ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param min_eess_per_chain The minimum empirical effective sample size
+#                           before a warning message is passed.
+# @param max_width Maximum line width for printing
+check_eess <- function(samples,
+                       min_eess_per_chain=100,
+                       max_width=72) {
+  if (length(dim(samples)) != 2) {
+    cat('Input variable `samples` has the wrong dimension')
+    return
+  }
+  
+  C <- dim(samples)[1]
+  N <- dim(samples)[2]
+  
   no_warning <- TRUE
-  for (c in 1:4) {
-    fs <- unpermuted_samples[,c]
-    int_ac_time <- compute_tauhat(fs)
-    if (int_ac_time / N > 0.25) {
-      cat(sprintf('Chain %s: The integrated autocorrelation time', c))
-      cat('exceeds 0.25 * N!\n')
+  message <- ""
+  
+  for (c in 1:C) {
+    tau_hat <- compute_tau_hat(samples[c,])
+    eess <- N / tau_hat
+    if (eess < min_eess_per_chain) {
+      message <- paste0(message,
+                        sprintf('Chain %s: The empirical effective ', c),
+                        sprintf('sample size %f is too small!\n', eess))
       no_warning <- FALSE
     }
   }
   if (no_warning) {
-    cat('Autocorrelations within each Markov chain appear to be reasonable.\n')
-  } else {
-    cat('  Autocorrelations in at least one Markov chain are large enough')
-    cat('that Markov chain Monte Carlo estimates may not be reliable.\n')
-  }
-}
-
-# Check the empirical effective sample size for all expectand output ensembles
-check_neff <- function(unpermuted_samples,
-                       min_neff_per_chain=100) {
-  N <- dim(unpermuted_samples)[1]
-  no_warning <- TRUE
-  for (c in 1:4) {
-    fs <- unpermuted_samples[,c]
-    int_ac_time <- compute_tauhat(fs)
-    neff <- N / int_ac_time
-    if (neff < min_neff_per_chain) {
-      cat(sprintf('Chain %s: The effective sample size %f is too small!\n',
-                   c, neff))
-      no_warning <- FALSE
-    }
-  }
-  if (no_warning) {
-    cat('All effective sample sizes are sufficiently large.\n')
+    desc <- paste0('The empirical effective sample sizes is large ',
+                   'enough for Markov chain Monte Carlo estimation ',
+                   'to be reliable assuming that a central limit ',
+                   'theorem holds.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, desc)
   } else {
     cat('  If the effective sample size is too small then\n')
     cat('Markov chain Monte Carlo estimators will be imprecise.\n\n')
+    
+    desc <- paste0('If the empirical effective sample sizes is too ',
+                   'small than Markov chain Monte Carlo estimation ',
+                   'may be unreliable even when a central limit ',
+                   'theorem holds.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
+    message <- paste0(message, desc)
   }
+  
+  cat(message)
 }
 
-# Check all expectand diagnostics
-check_all_expectand_diagnostics <- function(fit,
-                                            expectand_idxs=NULL,
-                                            min_neff_per_chain=100,
-                                            exclude_zvar=FALSE) {
-  unpermuted_samples <- rstan:::extract(fit, permute=FALSE)
-
-  input_dims <- dim(unpermuted_samples)
-  N <- input_dims[1]
-  C <- input_dims[2]
-  I <- input_dims[3]
-
-  expectand_names <- names(unpermuted_samples[1,1,])
-
-  if (is.null(expectand_idxs)) {
-    expectand_idxs <- 1:I
+# Check all expectand-specific diagnostics.
+# @param expectand_samples A named list of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+# @param min_eess_per_chain The minimum empirical effective sample size
+#                           before a warning message is passed.
+# @param exclude_zvar Binary variable to exclude all expectands with
+#                     vanishing empirical variance from other diagnostic
+#                     checks.
+# @param max_width Maximum line width for printing
+check_all_expectand_diagnostics <- function(expectand_samples,
+                                            min_eess_per_chain=100,
+                                            exclude_zvar=FALSE,
+                                            max_width=72) {
+  if (!is.vector(expectand_samples)) {
+    cat('Input variable `expectand_samples` is not a named list!')
+    return
   }
 
-  bad_idxs <- setdiff(expectand_idxs, 1:I)
-  if (length(bad_idxs) > 0) {
-    cat(sprintf('Excluding the invalid expectand indices: %s',
-                bad_idxs))
-    expectand_idxs <- setdiff(expectand_idxs, bad_idxs)
-  }
-
-  no_khat_warning <- TRUE
   no_zvar_warning <- TRUE
+  no_xi_hat_warning <- TRUE
   no_rhat_warning <- TRUE
-  no_tauhat_warning <- TRUE
-  no_neff_warning <- TRUE
+  no_eess_warning <- TRUE
 
   message <- ""
 
-  for (idx in expectand_idxs) {
+  for (name in names(expectand_samples)) {
+    samples <- expectand_samples[[name]]
+    C <- dim(samples)[1]
+    S <- dim(samples)[2]
+    
     local_warning <- FALSE
-    local_message <- paste0(expectand_names[idx], ':\n')
+    local_message <- paste0(name, ':\n')
   
     if (exclude_zvar) {
       # Check zero variance across all Markov chains for exclusion
       any_zvar <- FALSE
       for (c in 1:C) {
-        fs <- unpermuted_samples[, c, idx]
-        var <- welford_summary(fs)[2]
+        var <- welford_summary(samples[c,])[2]
         if (var < 1e-10)
           any_zvar <- TRUE
       }
@@ -668,33 +1025,50 @@ check_all_expectand_diagnostics <- function(fit,
     }
   
     for (c in 1:C) {
-      fs <- unpermuted_samples[, c, idx]
+      fs <- samples[c,]
       
-      # Check tail khats in each Markov chain
-      khat_threshold <- 0.75
-      khats <- compute_tail_khats(fs)
-      if (khats[1] >= khat_threshold & khats[2] >= khat_threshold) {
-        no_khat_warning <- FALSE
+      # Check tail behavior in each Markov chain
+      xi_hat_threshold <- 0.25
+      xi_hats <- compute_tail_xi_hats(fs)
+      if ( is.nan(xi_hats[1]) ) {
+        no_xi_hat_warning <- FALSE
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                sprintf('  Chain %s: Both left and right tail hat{k}s ', c),
-                sprintf('(%.3f, %.3f) exceed %.2f!\n', 
+                 sprintf('  Chain %s: Left hat{xi} is Nan!\n', c))
+      } else if ( is.nan(xi_hats[2]) ) {
+        no_xi_hat_warning <- FALSE
+        local_warning <- TRUE
+        local_message <-
+          paste0(local_message,
+                 sprintf('  Chain %s: Right hat{xi} is Nan!\n', c))
+      } else if (xi_hats[1] >= xi_hat_threshold & 
+          xi_hats[2] >= xi_hat_threshold) {
+        no_xi_hat_warning <- FALSE
+        local_warning <- TRUE
+        local_message <-
+          paste0(local_message,
+                sprintf('  Chain %s: Both left and right tail ', c),
+                sprintf('hat{xi}s (%.3f, %.3f) exceed %.2f!\n', 
                         khats[1], khats[2], khat_threshold))
-      } else if (khats[1] < khat_threshold & khats[2] >= khat_threshold) {
-        no_khat_warning <- FALSE
+      } else if (xi_hats[1] < xi_hat_threshold & 
+                 xi_hats[2] >= xi_hat_threshold) {
+        no_xi_hat_warning <- FALSE
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Right tail hat{k} (%.3f) exceeds %.2f!\n',
-                         c, khats[2], khat_threshold))
-      } else if (khats[1] >= khat_threshold & khats[2] < khat_threshold) {
-        no_khat_warning <- FALSE
+                 sprintf('  Chain %s: Only right tail hat{k} ', c),
+                 sprintf('(%.3f) exceeds %.2f!\n',
+                         xi_hats[2], xi_hat_threshold))
+      } else if (xi_hats[1] >= xi_hat_threshold & 
+                 xi_hats[2] < xi_hat_threshold) {
+        no_xi_hat_warning <- FALSE
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Left tail hat{k} (%.3f) exceeds %.2f!\n',
-                 c, khats[1], khat_threshold))
+                 sprintf('  Chain %s: Only left tail hat{k} ', c),
+                 sprintf('(%.3f) exceeds %.2f!\n',
+                         xi_hats[1], xi_hat_threshold))
       }
       
       # Check empirical variance in each Markov chain
@@ -704,14 +1078,13 @@ check_all_expectand_diagnostics <- function(fit,
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Expectand has vanishing', c),
-                 ' empirical variance!\n')
+                 sprintf('  Chain %s: Expectand has vanishing ', c),
+                         'empirical variance!\n')
       }
     }
   
     # Check split Rhat across Markov chains
-    chains <- lapply(1:C, function(c) unpermuted_samples[,c,idx])
-    rhat <- compute_split_rhat(chains)
+    rhat <- compute_split_rhat(samples)
 
     if (is.nan(rhat)) {
       local_message <- paste0(local_message,
@@ -725,110 +1098,106 @@ check_all_expectand_diagnostics <- function(fit,
     }
 
     for (c in 1:C) {
-      # Check empirical integrated autocorrelation time
-      fs <- unpermuted_samples[,c, idx]
-      int_ac_time <- compute_tauhat(fs)
-      if (int_ac_time / N > 0.25) {
-        no_tauhat_warning <- FALSE
-        local_warning <- TRUE
-        local_message <-
-          paste0(local_message,
-                 sprintf('  Chain %s: hat{tau} per iteration (%.3f)',
-                         c, int_ac_time / N),
-                 ' exceeds 0.25!\n')
-      }
-
       # Check empirical effective sample size
-      neff <- N / int_ac_time
-      if (neff < min_neff_per_chain) {
-        no_neff_warning <- FALSE
+      fs <- samples[c,]
+      
+      tau_hat <- compute_tau_hat(fs)
+      eess <- S / tau_hat
+      
+      if (eess < min_eess_per_chain) {
+        no_eess_warning <- FALSE
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: hat{ESS} (%.3f) is smaller than',
-                         c, neff),
-                 sprintf(' desired (%s)!\n', min_neff_per_chain))
+                 sprintf('  Chain %s: hat{ESS} (%.3f) is smaller than ',
+                         c, eess),
+                 sprintf('desired (%s)!\n', min_eess_per_chain))
       }
     }
-    local_message <- paste0(local_message, '\n')
+    
     if (local_warning) {
-      message <- paste0(message, local_message)
+      message <- paste0(message, local_message, '\n')
     }
   }
 
-  if (!no_khat_warning) {
-    message <- paste0(message,
-                      'Large tail hat{k}s suggest that the expectand',
-                      ' might not be sufficiently integrable.\n\n')
+  if (!no_xi_hat_warning) {
+    desc <- paste0('Large tail hat{xi}s suggest that the expectand ',
+                   ' might not be sufficiently integrable.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, '\n', desc, '\n')
   }
   if (!no_zvar_warning) {
-    message <- paste0(message,
-                      'If the expectands are not constant then zero empirical',
-                      ' variance suggests that the Markov',
-                      ' transitions are misbehaving.\n\n')
+    desc <- paste0('If the expectands are not constant then zero ',
+                   'empirical variance suggests that the Markov ',
+                   'transitions may be misbehaving.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, '\n', desc, '\n')
   }
   if (!no_rhat_warning) {
-    message <- paste0(message,
-                      'Split hat{R} larger than 1.1 is inconsisent with',
-                      ' equilibrium.\n\n')
+    desc <- paste0('Split Rhat larger than 1.1 suggests that at ',
+                   'least one of the Markov chains has not reached ',
+                   'an equilibrium.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, '\n', desc, '\n')
   }
-  if (!no_tauhat_warning) {
-    message <- paste0(message,
-                      'hat{tau} larger than a quarter of the Markov chain',
-                      ' length suggests that Markov chain Monte Carlo,',
-                      ' estimates will be unreliable.\n\n')
-  }
-  if (!no_neff_warning) {
-    message <- paste0(message,
-                      'If hat{ESS} is too small then reliable Markov chain',
-                      ' Monte Carlo estimators may still be too imprecise.\n\n')
+  if (!no_eess_warning) {
+    desc <- paste0('If the empirical effective sample sizes is too ',
+                   'small than Markov chain Monte Carlo estimation',
+                   'may be unreliable even when a central limit ',
+                   'theorem holds.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, '\n', desc)
   }
 
-  if(no_khat_warning & no_zvar_warning & no_rhat_warning & no_tauhat_warning & no_neff_warning) {
-    message <- paste0('All expectands checked appear to be behaving',
-                      ' well enough for reliable Markov chain Monte Carlo estimation.\n')
+  if(no_xi_hat_warning & no_zvar_warning & 
+     no_rhat_warning & no_eess_warning) {
+    desc <- paste0('All expectands checked appear to be behaving ',
+                   'well enough for reliable Markov chain Monte ',
+                   'Carlo estimation.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, desc)
   }
 
   cat(message)
 }
 
-# Summarize expectand diagnostics
-expectand_diagnostics_summary <- function(fit,
-                                          expectand_idxs=NULL,
-                                          min_neff_per_chain=100,
-                                          exclude_zvar=FALSE) {
-  unpermuted_samples <- rstan:::extract(fit, permute=FALSE)
-
-  input_dims <- dim(unpermuted_samples)
-  N <- input_dims[1]
-  C <- input_dims[2]
-  I <- input_dims[3]
-
-  if (is.null(expectand_idxs)) {
-    expectand_idxs <- 1:I
+# Summary all expectand-specific diagnostics.
+# @param expectand_samples A named list of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+# @param min_eess_per_chain The minimum empirical effective sample size
+#                           before a warning message is passed.
+# @param exclude_zvar Binary variable to exclude all expectands with
+#                     vanishing empirical variance from other diagnostic
+#                     checks.
+# @param max_width Maximum line width for printing
+summarize_expectand_diagnostics <- function(expectand_samples,
+                                            min_eess_per_chain=100,
+                                            exclude_zvar=FALSE,
+                                            max_width=72) {
+  if (!is.vector(expectand_samples)) {
+    cat('Input variable `expectand_samples` is not a named list!')
+    return
   }
 
-  bad_idxs <- setdiff(expectand_idxs, 1:I)
-  if (length(bad_idxs) > 0) {
-    cat(sprintf('Excluding the invalid expectand indices: %s',
-                bad_idxs))
-    expectand_idxs <- setdiff(expectand_idxs, bad_idxs)
-  }
+  failed_names <- c()
+  failed_xi_hat_names <- c()
+  failed_zvar_names <- c()
+  failed_rhat_names <- c()
+  failed_eess_names <- c()
 
-  failed_idx <- c()
-  failed_khat_idx <- c()
-  failed_zvar_idx <- c()
-  failed_rhat_idx <- c()
-  failed_tauhat_idx <- c()
-  failed_neff_idx <- c()
-
-  for (idx in expectand_idxs) {
+  for (name in names(expectand_samples)) {
+    samples <- expectand_samples[[name]]
+    C <- dim(samples)[1]
+    S <- dim(samples)[2]
+    
     if (exclude_zvar) {
       # Check zero variance across all Markov chains for exclusion
       any_zvar <- FALSE
       for (c in 1:C) {
-        fs <- unpermuted_samples[, c, idx]
-        var <- welford_summary(fs)[2]
+        var <- welford_summary(samples[c,])[2]
         if (var < 1e-10)
           any_zvar <- TRUE
       }
@@ -838,192 +1207,216 @@ expectand_diagnostics_summary <- function(fit,
     }
 
     for (c in 1:C) {
-      # Check tail khats in each Markov chain
-      fs <- unpermuted_samples[,c, idx]
-      khats <- compute_tail_khats(fs)
-      khat_threshold <- 0.75
-      if (khats[1] >= khat_threshold | khats[2] >= khat_threshold) {
-        failed_idx <- c(failed_idx, idx)
-        failed_khat_idx <- c(failed_khat_idx, idx)
+      fs <- samples[c,]
+      
+      # Check tail behavior in each Markov chain
+      xi_hat_threshold <- 0.25
+      xi_hats <- compute_tail_xi_hats(fs)
+      if ( is.nan(xi_hats[1]) | is.nan(xi_hats[2]) ) {
+        failed_names <- c(failed_names, name)
+        failed_xi_hat_nameas <- c(failed_xi_hat_names, name)
+      } else if (xi_hats[1] >= xi_hat_threshold | 
+          xi_hats[2] >= xi_hat_threshold) {
+        failed_names <- c(failed_names, name)
+        failed_xi_hat_nameas <- c(failed_xi_hat_names, name)
       }
-    
+      
       # Check empirical variance in each Markov chain
       var <- welford_summary(fs)[2]
       if (var < 1e-10) {
-        failed_idx <- c(failed_idx, idx)
-        failed_zvar_idx <- c(failed_zvar_idx, idx)
+        failed_names <- c(failed_names, name)
+        failed_zvar_names <- c(failed_zvar_names, name) 
       }
     }
-  
+
     # Check split Rhat across Markov chains
-    chains <- lapply(1:C, function(c) unpermuted_samples[,c,idx])
-    rhat <- compute_split_rhat(chains)
+    rhat <- compute_split_rhat(samples)
 
     if (is.nan(rhat)) {
-      failed_idx <- c(failed_idx, idx)
-      failed_rhat_idx <- c(failed_rhat_idx, idx)
+      failed_names <- c(failed_names, name)
+      failed_rhat_names <- c(failed_rhat_names, name)
     } else if (rhat > 1.1) {
-      failed_idx <- c(failed_idx, idx)
-      failed_rhat_idx <- c(failed_rhat_idx, idx)
+      failed_names <- c(failed_names, name)
+      failed_rhat_names <- c(failed_rhat_names, name)
     }
 
     for (c in 1:C) {
-      # Check empirical integrated autocorrelation time
-      fs <- unpermuted_samples[,c, idx]
-      int_ac_time <- compute_tauhat(fs)
-      if (int_ac_time / N > 0.25) {
-        failed_idx <- c(failed_idx, idx)
-        failed_tauhat_idx <- c(failed_tauhat_idx, idx)
-      }
-
       # Check empirical effective sample size
-      neff <- N / int_ac_time
-      if (neff < min_neff_per_chain) {
-        failed_idx <- c(failed_idx, idx)
-        failed_neff_idx <- c(failed_neff_idx, idx)
+      fs <- samples[c,]
+      
+      tau_hat <- compute_tau_hat(fs)
+      eess <- S / tau_hat
+      
+      if (eess < min_eess_per_chain) {
+        failed_names <- c(failed_names, name)
+        failed_eess_names <- c(failed_eess_names, name)
       }
     }
   }
   
-  failed_idx <- unique(failed_idx)
-  if (length(failed_idx)) {
-    cat(sprintf('The expectands %s triggered diagnostic warnings.\n\n',
-                paste(failed_idx, collapse=", ")))
+  message <- ""
+  
+  failed_names <- unique(failed_names)
+  if (length(failed_names)) {
+    desc <- 
+      sprintf('The expectands %s triggered diagnostic warnings.\n\n',
+              paste(failed_names, collapse=", "))
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, desc, '\n\n')
   } else {
-    cat(paste0('All expectands checked appear to be behaving',
-               'well enough for Markov chain Monte Carlo estimation.\n'))
+    desc <- paste0('All expectands checked appear to be behaving ',
+                   'well enough for reliable Markov chain Monte ',
+                   'Carlo estimation.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, desc)
   }
 
-  failed_khat_idx <- unique(failed_khat_idx)
-  if (length(failed_khat_idx)) {
-    cat(sprintf('The expectands %s triggered hat{k} warnings.\n',
-                paste(failed_khat_idx, collapse=", ")))
-    cat(paste0('  Large tail hat{k}s suggest that the expectand',
-               ' might not be sufficiently integrable.\n\n'))
+  failed_xi_hat_names <- unique(failed_xi_hat_names)
+  if (length(failed_xi_hat_names)) {
+    desc <- 
+      paste0(sprintf('The expectands %s triggered hat{xi} warnings.\n\n',
+             paste(failed_xi_hat_names, collapse=", ")),
+             '  Large tail hat{xi}s suggest that the expectand ',
+             'might not be sufficiently integrable.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, desc, '\n\n')
   }
         
-  failed_zvar_idx <- unique(failed_zvar_idx)
-  if (length(failed_zvar_idx)) { 
-    cat(sprintf('The expectands %s triggered zero variance warnings.\n',
-                paste(failed_zvar_idx, collapse=", ")))
-    cat(paste0('  If the expectands are not constant then zero empirical',
-               ' variance suggests that the Markov',
-               ' transitions are misbehaving.\n\n'))
+  failed_zvar_names <- unique(failed_zvar_names)
+  if (length(failed_zvar_names)) { 
+    desc <- 
+      paste0(sprintf('The expectands %s triggered zero variance warnings.\n\n',
+             paste(failed_zvar_names, collapse=", ")),
+             '  If the expectands are not constant then zero ',
+             'empirical variance suggests that the Markov ',
+             'transitions may be misbehaving.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, desc, '\n\n')
   }
   
-  failed_rhat_idx <- unique(failed_rhat_idx)
-  if (length(failed_rhat_idx)) {
-    cat(sprintf('The expectands %s triggered hat{R} warnings.\n',
-                paste(failed_rhat_idx, collapse=", ")))
-    cat(paste0('  Split hat{R} larger than 1.1 is inconsistent with', 
-               ' equilibrium.\n\n'))
+  failed_rhat_names <- unique(failed_rhat_names)
+  if (length(failed_rhat_names)) {
+    desc <- 
+      paste0(sprintf('The expectands %s triggered hat{R} warnings.\n\n',
+             paste(failed_rhat_names, collapse=", ")),
+             '  Split Rhat larger than 1.1 suggests that at ',
+             'least one of the Markov chains has not reached ',
+             'an equilibrium.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, desc, '\n\n')
   }
   
-  failed_tauhat_idx <- unique(failed_tauhat_idx)
-  if (length(failed_tauhat_idx)) {
-    cat(sprintf('The expectands %s triggered hat{tau} warnings.\n',
-                paste(failed_tauhat_idx, collapse=", ")))
-    cat(paste0('  hat{tau} larger than a quarter of the Markov chain',
-               ' length suggests that Markov chain Monte Carlo',
-               ' estimates may be unreliable.\n\n'))
+  failed_eess_names <- unique(failed_eess_names)
+  if (length(failed_eess_names)) {
+    desc <- 
+      paste0(sprintf('The expectands %s triggered hat{ESS} warnings.\n\n',
+             paste(failed_eess_names, collapse=", ")),
+             '  If the empirical effective sample sizes is too ',
+             'small than Markov chain Monte Carlo estimation',
+             'may be unreliable even when a central limit ',
+             'theorem holds.\n\n')
+    desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
+    message <- paste0(message, desc, '\n\n')
   }
   
-  failed_neff_idx <- unique(failed_neff_idx)
-  if (length(failed_neff_idx)) {
-    cat(sprintf('The expectands %s triggered hat{ESS} warnings.\n',
-                paste(failed_neff_idx, collapse=", ")))
-    cat(paste0('  If hat{ESS} is too small then even reliable Markov chain',
-               ' Monte Carlo estimators may still be too imprecise.\n\n'))
-  }
+  cat(message)
 }
 
 # Summarize Hamiltonian Monte Carlo and expectand diagnostics
 # into a binary encoding
-summarize_all_diagnostics <- function(fit,
-                                      adapt_target=0.801,
-                                      max_treedepth=10,
-                                      expectand_idxs=NULL,
-                                      min_neff_per_chain=100,
-                                      exclude_zvar=FALSE) {
+# @param expectand_samples A named list of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+# @param diagnostics A named list of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+# @param adapt_target Target acceptance proxy statistic for step size 
+#                     adaptation.
+# @param max_treedepth The maximum numerical trajectory treedepth
+# @param min_eess_per_chain The minimum empirical effective sample size
+#                           before a warning message is passed.
+# @param exclude_zvar Binary variable to exclude all expectands with
+#                     vanishing empirical variance from other diagnostic
+#                     checks.
+# @return warning_code An eight bit binary summary of the diagnostic 
+#                      output.
+encode_all_diagnostics <- function(expectand_samples,
+                                   diagnostics,
+                                   adapt_target=0.801,
+                                   max_treedepth=10,
+                                   min_eess_per_chain=100,
+                                   exclude_zvar=FALSE) {
   warning_code <- 0
     
   sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
 
   # Check divergences
-  divergent <- do.call(rbind, sampler_params)[,'divergent__']
-  n = sum(divergent)
-  N = length(divergent)
-
+  n = sum(sapply(1:C, function(c) diagnostics[['divergent__']][c,]))
   if (n > 0) {
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 0))
   }
 
-  # Check transitions that ended prematurely due to maximum tree depth limit
-  treedepths <- do.call(rbind, sampler_params)[,'treedepth__']
-  n = length(treedepths[sapply(treedepths, function(x) x >= max_treedepth)])
-  N = length(treedepths)
+  # Check transitions that ended prematurely due to maximum tree depth 
+  # limit
+  n = sum(sapply(1:C, function(c) 
+                      diagnostics[['treedepth__']][c,] > max_treedepth))
 
   if (n > 0) {
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 1))
   }
 
   # Checks the energy fraction of missing information (E-FMI)
+  C <- dim(diagnostics[['energy__']])[1]
+  
   no_efmi_warning <- TRUE
-  for (c in 1:length(sampler_params)) {
-    energies = sampler_params[c][[1]][,'energy__']
+  no_accept_warning <- TRUE
+  
+  for (c in 1:C) {
+    # Check the energy fraction of missing information (E-FMI)
+    energies = diagnostics[['energy__']][c,]
     numer = sum(diff(energies)**2) / length(energies)
     denom = var(energies)
-    if (numer / denom < 0.2) {
+    efmi <- numer / denom
+    if (efmi < 0.2) {
       no_efmi_warning <- FALSE
     }
-  }
-  if (!no_efmi_warning) {
-    warning_code <- bitwOr(warning_code, bitwShiftL(1, 2))
-  }
-
-  # Check convergence of the stepsize adaptation
-  no_accept_warning <- TRUE
-  for (c in 1:length(sampler_params)) {
-    ave_accept_proxy <- mean(sampler_params[[c]][,'accept_stat__'])
+  
+    # Check convergence of the stepsize adaptation
+    ave_accept_proxy <- mean(diagnostics[['accept_stat__']][c,])
     if (ave_accept_proxy < 0.9 * adapt_target) {
       no_accept_warning <- FALSE
     }
   }
+
+  if (!no_efmi_warning) {
+    warning_code <- bitwOr(warning_code, bitwShiftL(1, 2))
+  }
+
   if (!no_accept_warning) {
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 3))
   }
   
-  unpermuted_samples <- rstan:::extract(fit, permute=FALSE)
-
-  input_dims <- dim(unpermuted_samples)
-  N <- input_dims[1]
-  C <- input_dims[2]
-  I <- input_dims[3]
-
-  if (is.null(expectand_idxs)) {
-    expectand_idxs <- 1:I
-  }
-
-  bad_idxs <- setdiff(expectand_idxs, 1:I)
-  if (length(bad_idxs) > 0) {
-    cat(sprintf('Excluding the invalid expectand indices: %s',
-                bad_idxs))
-    expectand_idxs <- setdiff(expectand_idxs, bad_idxs)
-  }
-
-  khat_warning <- FALSE
   zvar_warning <- FALSE
+  xi_hat_warning <- FALSE
   rhat_warning <- FALSE
-  tauhat_warning <- FALSE
-  neff_warning <- FALSE
+  eess_warning <- FALSE
 
-  for (idx in expectand_idxs) {
+  message <- ""
+
+  for (name in names(expectand_samples)) {
+    samples <- expectand_samples[[name]]
+    C <- dim(samples)[1]
+    S <- dim(samples)[2]
+  
     if (exclude_zvar) {
       # Check zero variance across all Markov chains for exclusion
       any_zvar <- FALSE
       for (c in 1:C) {
-        fs <- unpermuted_samples[, c, idx]
-        var <- welford_summary(fs)[2]
+        var <- welford_summary(samples[c,])[2]
         if (var < 1e-10)
           any_zvar <- TRUE
       }
@@ -1031,16 +1424,18 @@ summarize_all_diagnostics <- function(fit,
         next
       }
     }
-
+  
     for (c in 1:C) {
-      # Check tail khats in each Markov chain
-      fs <- unpermuted_samples[,c, idx]
-      khats <- compute_tail_khats(fs)
-      khat_threshold <- 0.75
-      if (khats[1] >= khat_threshold | khats[2] >= khat_threshold) {
-        khat_warning <- TRUE
+      fs <- samples[c,]
+      
+      # Check tail behavior in each Markov chain
+      xi_hat_threshold <- 0.25
+      xi_hats <- compute_tail_xi_hats(fs)
+      if (xi_hats[1] >= xi_hat_threshold | 
+          xi_hats[2] >= xi_hat_threshold) {
+        xi_hat_warning <- TRUE
       }
-    
+      
       # Check empirical variance in each Markov chain
       var <- welford_summary(fs)[2]
       if (var < 1e-10) {
@@ -1049,8 +1444,7 @@ summarize_all_diagnostics <- function(fit,
     }
   
     # Check split Rhat across Markov chains
-    chains <- lapply(1:C, function(c) unpermuted_samples[,c,idx])
-    rhat <- compute_split_rhat(chains)
+    rhat <- compute_split_rhat(samples)
 
     if (is.nan(rhat)) {
       rhat_warning <- TRUE
@@ -1059,22 +1453,19 @@ summarize_all_diagnostics <- function(fit,
     }
 
     for (c in 1:C) {
-      # Check empirical integrated autocorrelation time
-      fs <- unpermuted_samples[,c, idx]
-      int_ac_time <- compute_tauhat(fs)
-      if (int_ac_time / N > 0.25) {
-        tauhat_warning <- TRUE
-      }
-
       # Check empirical effective sample size
-      neff <- N / int_ac_time
-      if (neff < min_neff_per_chain) {
-        neff_warning <- TRUE
+      fs <- samples[c,]
+      
+      tau_hat <- compute_tau_hat(fs)
+      eess <- S / tau_hat
+      
+      if (eess < min_eess_per_chain) {
+        eess_warning <- TRUE
       }
     }
-  }
+  }  
   
-  if (khat_warning) {
+  if (xi_hat_warning) {
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 4))
   }
         
@@ -1086,18 +1477,17 @@ summarize_all_diagnostics <- function(fit,
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 6))
   }
   
-  if (tauhat_warning) {
+  if (eess_warning) {
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 7))
-  }
-  
-  if (neff_warning) {
-    warning_code <- bitwOr(warning_code, bitwShiftL(1, 8))
   }
   
   (warning_code)
 }
 
-parse_warning_code <- function(warning_code) {
+# Translate binary diagnostic codes to human readable output.
+# @params warning_code An eight bit binary summary of the diagnostic 
+#                      output.
+decode_warning_code <- function(warning_code) {
   if (bitwAnd(warning_code, bitwShiftL(1, 0)))
     print("  divergence warning")
   if (bitwAnd(warning_code, bitwShiftL(1, 1)))
@@ -1107,18 +1497,19 @@ parse_warning_code <- function(warning_code) {
   if (bitwAnd(warning_code, bitwShiftL(1, 3)))
     print("  average acceptance proxy warning")
   if (bitwAnd(warning_code, bitwShiftL(1, 4)))
-    print("  khat warning")
+    print("  xi_hat warning")
   if (bitwAnd(warning_code, bitwShiftL(1, 5)))
     print("  zero variance warning")
   if (bitwAnd(warning_code, bitwShiftL(1, 6)))
     print("  Rhat warning")
   if (bitwAnd(warning_code, bitwShiftL(1, 7)))
-    print("  tauhat warning")
-  if (bitwAnd(warning_code, bitwShiftL(1, 8)))
-    print("  min effective sample size warning")
+    print("  min empirical effective sample size warning")
 }
 
-# Visualize empirical autocorrelations for a given sequence
+# Compute empirical autocorrelations for a given Markov chain sequence
+# @parmas fs A one-dimensional array of sequential expectand values.
+# @return A one-dimensional array of empirical autocorrelations at each 
+#         lag up to the length of the sequence.
 compute_rhos <- function(fs) {
   # Compute empirical autocorrelations
   N <- length(fs)
@@ -1170,67 +1561,120 @@ compute_rhos <- function(fs) {
   return(rhos)
 }
 
-# Plot empirical correlograms for the expectand output ensembels in a 
-# collection of Markov chains
-plot_empirical_correlogram <- function(unpermuted_fs,
+# Plot empirical correlograms for a given expectand across a Markov 
+# chain ensemble.
+# @param fs A two-dimensional array of scalar Markov chain states 
+#           with the first dimension indexing the Markov chains and 
+#           the second dimension indexing the sequential states 
+#           within each Markov chain.
+# @param max_L Maximum autocorrelation lag
+# @param rho_lim Plotting range of autocorrelation values
+# @display_name Name of expectand
+plot_empirical_correlogram <- function(fs,
                                        max_L,
-                                       rholim=c(-0.2, 1.1),
-                                       name="") {
+                                       rho_lim=c(-0.2, 1.1),
+                                       display_name="") {
+  if (length(dim(fs)) != 2) {
+    cat('Input variable `fs` has the wrong dimensions!')
+  }
+  C <- dim(fs)[1]
+  
   idx <- rep(0:max_L, each=2)
   xs <- sapply(1:length(idx), function(b) if(b %% 2 == 0) idx[b] + 0.5
                                           else idx[b] - 0.5)
 
-  plot(0, type="n", main=name,
+  plot(0, type="n", main=display_name,
        xlab="Lag", xlim=c(-0.5, max_L + 0.5),
-       ylab="Empirical Autocorrelation", ylim=rholim)
+       ylab="Empirical Autocorrelation", ylim=rho_lim)
   abline(h=0, col="#DDDDDD", lty=2, lwd=2)
 
   colors <- c(c_dark, c_mid_highlight, c_mid, c_light_highlight)
-  for (c in 1:4) {
-    fs <- unpermuted_fs[,c]
-    rhos <- compute_rhos(fs)
+  for (c in 1:C) {
+    rhos <- compute_rhos(fs[c,])
     pad_rhos <- unlist(lapply(idx, function(n) rhos[n + 1]))
     lines(xs, pad_rhos, lwd=2, col=colors[c])
   }
 }
 
-# Plot two expectand output ensembles againt each other separated by
-# Markov chain 
-plot_chain_sep_pairs <- function(unpermuted_f1s, name_x,
-                                 unpermuted_f2s, name_y) {
-  N <- dim(unpermuted_f1s)[1]
+# Visualize the projection of a Markov chain ensemble along two 
+# expectands as a pairs plot.  Point colors darken along each Markov 
+# chain to visualize the autocorrelation.
+# @param f1s A two-dimensional array of expectand values with the first 
+#            dimension indexing the Markov chains and the second 
+#            dimension indexing the sequential states  within each 
+#            Markov chain.
+# @params display_name1 Name of first expectand
+# @param f2s A two-dimensional array of expectand values with the first 
+#            dimension indexing the Markov chains and the second 
+#            dimension indexing the sequential states  within each 
+#            Markov chain.
+# @params display_name2 Name of second expectand
+plot_chain_sep_pairs <- function(f1s, display_name1,
+                                 f2s, display_name2) {
+  if (length(dim(f1s)) != 2) {
+    cat('Input variable `f1s` has the wrong dimensions!')
+    return
+  }
+  C1 <- dim(f1s)[1]
+  S1 <- dim(f1s)[2]
+
+  if (length(dim(f2s)) != 2) {
+    cat('Input variable `f1s` has the wrong dimensions!')
+    return
+  }
+  C2 <- dim(f2s)[1]
+  S2 <- dim(f2s)[2]
+  
+  if (C1 != C2) {
+    C <- min(C1, C2)
+    C1 <- C
+    C2 <- C
+    cat(sprintf('Plotting only %s Markov chains.\n', C))
+  }
 
   nom_colors <- c("#DCBCBC", "#C79999", "#B97C7C",
                   "#A25050", "#8F2727", "#7C0000")
-  cmap <- colormap(colormap=nom_colors, nshades=N)
+  cmap <- colormap(colormap=nom_colors, nshades=max(S1, S2))
 
-  min_x <- min(sapply(1:4, function(c) min(unpermuted_f1s[,c])))
-  max_x <- max(sapply(1:4, function(c) max(unpermuted_f1s[,c])))
+  min_x <- min(sapply(1:C1, function(c) min(f1s[c,])))
+  max_x <- max(sapply(1:C1, function(c) max(f1s[c,])))
 
-  min_y <- min(sapply(1:4, function(c) min(unpermuted_f2s[,c])))
-  max_y <- max(sapply(1:4, function(c) max(unpermuted_f2s[,c])))
+  min_y <- min(sapply(1:C2, function(c) min(f2s[c,])))
+  max_y <- max(sapply(1:C2, function(c) max(f2s[c,])))
 
   par(mfrow=c(2, 2), mar = c(5, 5, 3, 1))
 
-  for (c in 1:4) {
+  for (c in 1:C1) {
     plot(0, type="n", main=paste("Chain", c),
-         xlab=name_x, xlim=c(min_x, max_x),
-         ylab=name_y, ylim=c(min_y, max_y))
+         xlab=display_name1, xlim=c(min_x, max_x),
+         ylab=display_name2, ylim=c(min_y, max_y))
   
-    points(unlist(lapply(1:4, function(c) unpermuted_f1s[,c])),
-           unlist(lapply(1:4, function(c) unpermuted_f2s[,c])),
+    points(unlist(lapply(1:C1, function(c) f1s[c,])),
+           unlist(lapply(1:C1, function(c) f2s[c,])),
            col="#DDDDDD", pch=16, cex=1.0)
-    points(unpermuted_f1s[,c], unpermuted_f2s[,c],
-         col=cmap, pch=16, cex=1.0)
+    points(f1s[c,], f2s[c,], col=cmap, pch=16, cex=1.0)
   }
 }
 
-# Evaluate an expectand along a Markov chain
-pushforward_chains <- function(chains, expectand) {
-  lapply(chains, function(c) sapply(c, function(x) expectand(x)))
+# Evaluate an expectand at the states of a Markov chain ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param expectand Scalar function to be applied to the Markov chain 
+#                  states.
+# @return A two-dimensional array of expectand values with the 
+#         first dimension indexing the Markov chains and the 
+#         second dimension indexing the sequential states within 
+#         each Markov chain.
+pushforward_samples <- function(samples, expectand) {
+  apply(samples, 2, expectand)
 }
 
-# Estimate expectand expectation value from a Markov chain
+# Estimate expectand exectation value from a single Markov chain.
+# @param fs A one-dimensional array of sequential expectand values.
+# @return The Markov chain Monte Carlo estimate, its estimated standard 
+#         error, and empirical effective sample size.
 mcmc_est <- function(fs) {
   N <- length(fs)
   if (N == 1) {
@@ -1243,35 +1687,46 @@ mcmc_est <- function(fs) {
     return(c(summary[1], 0, NaN))
   }
 
-  int_ac_time <- compute_tauhat(fs)
-  neff <- N / int_ac_time
-  return(c(summary[1], sqrt(summary[2] / neff), neff))
+  int_ac_time <- compute_tau_hat(fs)
+  eess <- N / int_ac_time
+  return(c(summary[1], sqrt(summary[2] / eess), eess))
 }
 
-# Estimate expectand exectation value from a collection of Markov chains
-ensemble_mcmc_est <- function(chains) {
-  C <- length(chains)
-  chain_ests <- lapply(chains, function(c) mcmc_est(c))
-
+# Estimate expectand exectation value from a Markov chain ensemble.
+# @param samples A two-dimensional array of expectand values with the 
+#                first dimension indexing the Markov chains and the 
+#                second dimension indexing the sequential states within 
+#                each Markov chain.
+# @return The ensemble Markov chain Monte Carlo estimate, its estimated
+#         standard error, and empirical effective sample size.
+ensemble_mcmc_est <- function(samples) {
+  if (length(dim(samples)) != 2) {
+    cat('Input variable `samples` has the wrong dimension')
+    return (c(NaN, NaN, NaN))
+  }
+  
+  C <- dim(samples)[1]
+  chain_ests <- lapply(1:C, function(c) mcmc_est(samples[c,]))
+  
   # Total effective sample size
   total_ess <- sum(sapply(chain_ests, function(est) est[3]))
-
+  
   if (is.nan(total_ess)) {
     m <- mean(sapply(chain_ests, function(est) est[1]))
     se <- mean(sapply(chain_ests, function(est) est[2]))
     return (c(m, se, NaN))
   }
-
+  
   # Ensemble average weighted by effective sample size
   mean <- sum(sapply(chain_ests,
                      function(est) est[3] * est[1])) / total_ess
-
+  
   # Ensemble variance weighed by effective sample size
   # including correction for the fact that individual Markov chain
   # variances are defined relative to the individual mean estimators
   # and not the ensemble mean estimator
   vars <- rep(0, C)
-
+  
   for (c in 1:C) {
     est <- chain_ests[[c]]
     chain_var <- est[3] * est[2]**2
@@ -1279,17 +1734,34 @@ ensemble_mcmc_est <- function(chains) {
     vars[c] <- est[3] * (var_update + chain_var)
   }
   var <- sum(vars) / total_ess
-
+  
   c(mean, sqrt(var / total_ess), total_ess)
 }
 
-# Plot pushforward histogram of a given expectand using Markov chain
-# Monte Carlo estimators to estimate the output bin probabilities
-plot_pushforward_hist <- function(unpermuted_samples, B, flim=NULL, name="f") {
+# Visualize pushforward distribution of a given expectand as a 
+# histogram, using Markov chain Monte Carlo estimators to estimate the 
+# output bin probabilities.  Bin probability estimator error is shown 
+# in gray.
+# @param samples A two-dimensional array of expectand values with the 
+#                first dimension indexing the Markov chains and the 
+#                second dimension indexing the sequential states within 
+#                each Markov chain.
+# @param B The number of histogram bins
+# @param display_name Exectand name
+# @param flim Optional histogram range
+# @param baseline Optional baseline value for visual comparison
+plot_expectand_pushforward <- function(samples, B, display_name="f", 
+                                       flim=NULL, baseline=NULL) {
+  if (length(dim(samples)) != 2) {
+    cat('Input variable `samples` has the wrong dimension')
+    return (c(NaN, NaN, NaN))
+  }
+  
+  # Automatically adjust histogram range to range of expectand values
+  # if range is not already set as an input variable
   if (is.null(flim)) {
-    # Automatically adjust histogram binning to range of outputs
-    min_f <- min(unpermuted_samples)
-    max_f <- max(unpermuted_samples)
+    min_f <- min(samples)
+    max_f <- max(samples)
     
     # Add bounding bins
     delta <- (max_f - min_f) / B
@@ -1304,43 +1776,49 @@ plot_pushforward_hist <- function(unpermuted_samples, B, flim=NULL, name="f") {
     bins <- seq(flim[1], flim[2], delta)
   }
   
+  # Compute bin heights
   mean_p <- rep(0, B)
   delta_p <- rep(0, B)
-
-  C <- dim(unpermuted_samples)[2]
-  chains <- lapply(1:C, function(c) unpermuted_samples[,c])
-
+  
   for (b in 1:B) {
+    # Estimate bin probabilities
     bin_indicator <- function(x) {
       ifelse(bins[b] <= x & x < bins[b + 1], 1, 0)
     }
-    indicator_chains <- pushforward_chains(chains, bin_indicator)
-    est <- ensemble_mcmc_est(indicator_chains)
-  
+    indicator_samples <- pushforward_samples(samples, bin_indicator)
+    est <- ensemble_mcmc_est(indicator_samples)
+    
     # Normalize bin probabilities by bin width to allow
     # for direct comparison to probability density functions
     width = bins[b + 1] - bins[b]
     mean_p[b] = est[1] / width
     delta_p[b] = est[2] / width
   }
-
+  
+  # Plot histogram
   idx <- rep(1:B, each=2)
   x <- sapply(1:length(idx), function(b) if(b %% 2 == 1) bins[idx[b]]
-                                         else bins[idx[b] + 1])
+              else bins[idx[b] + 1])
   lower_inter <- sapply(idx, function (n)
-                             max(mean_p[n] - 2 * delta_p[n], 0))
+    max(mean_p[n] - 2 * delta_p[n], 0))
   upper_inter <- sapply(idx, function (n)
-                             min(mean_p[n] + 2 * delta_p[n], 1 / width))
-
+    min(mean_p[n] + 2 * delta_p[n], 1 / width))
+  
   min_y <- min(lower_inter)
   max_y <- max(1.05 * upper_inter)
-
+  
   plot(1, type="n", main="",
-       xlim=flim, xlab=name,
+       xlim=flim, xlab=display_name,
        ylim=c(min_y, max_y), ylab="", yaxt="n")
-  title(ylab="Estimated Bin\nProbabilities", mgp=c(1, 1, 0))
-
+  title(ylab="Estimated Bin\nProbabilities / Bin Width", mgp=c(1, 1, 0))
+  
   polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),
-          col = c_light, border = NA)
+          col = "#DDDDDD", border = NA)
   lines(x, mean_p[idx], col=c_dark, lwd=2)
+  
+  # Plot baseline if applicable
+  if (!is.null(baseline)) {
+    abline(v=baseline, col="white", lty=1, lwd=4)
+    abline(v=baseline, col="black", lty=1, lwd=2)
+  }
 }

@@ -1,3 +1,13 @@
+################################################################################
+#
+# The code is copyright 2003 Michael Betancourt and licensed under the
+# new BSD (3-clause) license:
+#  https://opensource.org/licenses/BSD-3-Clause
+#
+# For more information see https://github.com/betanalpha/mcmc_diagnostics.
+#
+################################################################################
+
 # Load required libraries
 library(rstan)
 library(colormap)
@@ -15,7 +25,7 @@ c_mid_teal <- c("#487575")
 c_dark_teal <- c("#1D4F4F")
 
 # Extract unpermuted expectand values from a StanFit object and format 
-# them for convenient access
+# them for convenient access.  Removes the auxiliary `lp__` variable.
 # @param stan_fit A StanFit object
 # @return A named list of two-dimensional arrays for each expectand in 
 #         the StanFit object.  The first dimension of each element 
@@ -23,13 +33,14 @@ c_dark_teal <- c("#1D4F4F")
 #         sequential states within each Markov chain. 
 extract_expectands <- function(stan_fit) {
   nom_params <- rstan:::extract(fit, permuted=FALSE)
-  params <- lapply(1:dim(nom_params)[3], function(n) t(nom_params[,,n]))
-  names(params) <- names(fit)
+  N <- dim(nom_params)[3] - 1
+  params <- lapply(1:N, function(n) t(nom_params[,,n]))
+  names(params) <- names(fit)[1:N]
   (params)
 }
 
 # Extract Hamiltonian Monte Carlo diagnostics values from a StanFit
-# object and format them for convenient access
+# object and format them for convenient access.
 # @param stan_fit A StanFit object
 # @return A named list of two-dimensional arrays for each expectand in 
 #         the StanFit object.  The first dimension of each element 
@@ -58,6 +69,7 @@ extract_hmc_diagnostics <- function(stan_fit) {
 # @param adapt_target Target acceptance proxy statistic for step size 
 #                     adaptation.
 # @param max_treedepth The maximum numerical trajectory treedepth
+# @param max_width Maximum line width for printing
 check_all_hmc_diagnostics <- function(diagnostics,
                                       adapt_target=0.801,
                                       max_treedepth=10,
@@ -149,7 +161,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
   if (!no_divergence_warning) {
     desc <- paste0('Divergent Hamiltonian transitions result from ',
                    'unstable numerical trajectories.  These ',
-                   'instabilities often due to degenerate target ',
+                   'instabilities are often due to degenerate target ',
                    'geometry, especially "pinches".  If there are ',
                    'only a small number of divergences then running ',
                    'with adept_delta larger ',
@@ -250,7 +262,7 @@ display_stepsizes <- function(diagnostics) {
     return
   }
   
-  stepsizes <- diagnostics[['divergent__']]
+  stepsizes <- diagnostics[['stepsize__']]
   C <- dim(stepsizes)[1]
   
   for (c in 1:C) {
@@ -336,13 +348,12 @@ display_ave_accept_proxy <- function(fit) {
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
 #                    states within each Markov chain.
-# @param expectand_names Vector of expectand names to plot
 # @params transforms Vector of flags configurating which if any
 #                    transformation to apply to each named expectand:
 #                      0: identity
 #                      1: log
 #                      2: logit
-# @params mode_mode Plotting style configuration: 
+# @params plot_mode Plotting style configuration: 
 #                     0: Non-divergent transitions are plotted in 
 #                        transparent red while divergent transitions are
 #                        plotted in transparent green.
@@ -352,20 +363,16 @@ display_ave_accept_proxy <- function(fit) {
 #                        trajectory length.  Transitions from shorter
 #                        trajectories should cluster somewhat closer to 
 #                        the neighborhoods with problematic geometries.
+# @param max_width Maximum line width for printing
 plot_div_pairs <- function(expectand_samples, diagnostics, 
-                           expectand_names, transforms, plot_mode=0) {
+                           transforms, plot_mode=0, max_width=72) {
   if (!is.vector(expectand_samples)) {
     cat('Input variable `expectand_samples` is not a named list!')
     return
   }
-   
+  
   if (!is.vector(diagnostics)) {
     cat('Input variable `diagnostics` is not a named list!')
-    return
-  }
-  
-  if (!is.vector(expectand_names)) {
-    cat('Input variable `expectand_names` is not a named list!')
     return
   }
   
@@ -374,15 +381,17 @@ plot_div_pairs <- function(expectand_samples, diagnostics,
     return
   }
   
-  if (length(transforms) != length(expectand_names)) {
-    cat(paste0('`expectand_names` and `transforms` input variables ', 
+  # Check expectand/transform compatibility
+  N <- length(expectand_samples)
+  if (length(transforms) != N) {
+    cat(paste0('Input variables `expectand_samples` and `transforms` ', 
                'are not the same length!'))
     return
   }
   
-  N <- length(expectand_names)
+  expectand_names = names(expectand_samples)
   for (n in 1:N) {
-    if (transforms[n] < 0 | transforms[n] > 3) {
+    if (transforms[n] < 0 | transforms[n] > 2) {
       warning <- 
         paste0(sprintf('The transform flag %s for expectand %s ', 
                        transforms[n], expectand_names[n]),
@@ -396,7 +405,7 @@ plot_div_pairs <- function(expectand_samples, diagnostics,
       if (min(expectand_samples[[expectand_names[n]]]) <= 0) {
         error <- 
           paste0(sprintf('Log transform requested for expectand %s ', 
-                          expectand_names[n]),
+                         expectand_names[n]),
                  'but expectand values are not strictly positive.')
         error <- paste0(strwrap(error, max_width, 0), collapse='\n')
         cat(error)
@@ -409,7 +418,7 @@ plot_div_pairs <- function(expectand_samples, diagnostics,
           max(expectand_samples[[expectand_names[n]]]) >= 1) {
         error <- 
           paste0(sprintf('Logit transform requested for expectand %s ', 
-                          expectand_names[n]),
+                         expectand_names[n]),
                  'but expectand values are not strictly confined ',
                  'to the unit interval.')
         error <- paste0(strwrap(error, max_width, 0), collapse='\n')
@@ -420,36 +429,38 @@ plot_div_pairs <- function(expectand_samples, diagnostics,
   }
   
   if (plot_mode < 0 | plot_mode > 1) {
-    warning <- 
-      paste0(sprintf('Invalid `plot_mode` value %s ', plot_mode))
-    cat(warning)
-    transforms[n] <- 0
+    cat(sprintf('Invalid `plot_mode` value %s.', plot_mode))
+    return
   }
-
+  
   c_dark_trans <- c("#8F272780")
   c_green_trans <- c("#00FF0080")
-
+  
   # Extract non-divergent and divergent transition indices
   divs <- diagnostics[['divergent__']]
   C <- dim(divs)[1]
   nondiv_filter <- c(sapply(1:C, function(c) divs[c,] == 0))
   div_filter    <- c(sapply(1:C, function(c) divs[c,] == 1))
   
-  nlfs <- diagnostics[['n_leapfrog__']]
-  max_nlf <- max(nlfs)
+  nlfs <- c(sapply(1:C, 
+                   function(c) diagnostics[['n_leapfrog__']][c,]))
+  div_nlfs <- nlfs[div_filter]
+  max_nlf <- max(div_nlfs)
   nom_colors <- c(c_light_teal, c_mid_teal, c_dark_teal)
   cmap <- colormap(colormap=nom_colors, nshades=max_nlf)
   
   # Set plot layout dynamically
-  N_plots <- choose(N, 2)
+  N_cols <- 2
+  N_plots <- choose(N, N_cols)
   if (N_plots <= 3) {
     par(mfrow=c(1, N_plots), mar = c(5, 5, 2, 1))
   } else if (N_plots == 4) {
-    par(mfrow=c(2, 2), mar = c(5, 5, 2, 1))
+    par(mfrow=c(N_cols, 2), mar = c(5, 5, 2, 1))
   } else {
-    par(mfrow=c(2, 3), mar = c(5, 5, 2, 1))
+    par(mfrow=c(N_cols, 3), mar = c(5, 5, 2, 1))
   }
   
+  # Plot!
   for (n in 1:(N - 1)) {
     for (m in (n + 1):N) {
       # Format x variable
@@ -466,13 +477,13 @@ plot_div_pairs <- function(expectand_samples, diagnostics,
         x_display_name <- paste0("log(", name_x, ")")
       } else if (transforms[n] == 2) {
         x_nondiv_samples <- log(samples[nondiv_filter] / 
-                                (1 - samples[nondiv_filter]))
+                                  (1 - samples[nondiv_filter]))
         x_div_samples <- log(samples[div_idxs] /
-                             (1 - samples[div_filter]))
+                               (1 - samples[div_filter]))
         x_display_name <- paste0("logit(", name_x, ")")
       }
       xlims <- range(c(x_nondiv_samples, x_div_samples))
-    
+      
       # Format y variable
       name_y <- expectand_names[m]
       samples <- c(sapply(1:C, 
@@ -487,13 +498,13 @@ plot_div_pairs <- function(expectand_samples, diagnostics,
         y_display_name <- paste0("log(", name_y, ")")
       } else if (transforms[m] == 2) {
         y_nondiv_samples <- log(samples[nondiv_filter] / 
-                                (1 - samples[nondiv_filter]))
+                                  (1 - samples[nondiv_filter]))
         y_div_samples <- log(samples[div_filter] /
-                             (1 - samples[div_filter]))
+                               (1 - samples[div_filter]))
         y_display_name <- paste0("logit(", name_y, ")")
       }
       ylims <- range(c(y_nondiv_samples, y_div_samples))
-    
+      
       if (plot_mode == 0) {
         plot(x_nondiv_samples, y_nondiv_samples,
              col=c_dark_trans, pch=16, main="",
@@ -508,7 +519,7 @@ plot_div_pairs <- function(expectand_samples, diagnostics,
              xlab=x_display_name, xlim=xlims, 
              ylab=y_display_name, ylim=ylims)
         points(x_div_samples, y_div_samples,
-               col=cmap[nlfs], pch=16)
+               col=cmap[div_nlfs], pch=16)
       }
     }
   }
@@ -629,21 +640,48 @@ check_tail_xi_hats <- function(samples, max_width=72) {
   
   for (c in 1:C) {
     xi_hats <- compute_tail_xi_hats(samples[c,])
-    if (xi_hats[1] >= 0.25 & xi_hats[2] >= 0.25) {
-      message <- paste0(message,
-                        sprintf('Chain %s: Both left and right ', c),
-                        'tail hat{xi}s exceed 0.25!\n')
+    xi_hat_threshold <- 0.25
+    if ( is.nan(xi_hats[1]) & is.nan(xi_hats[2]) ) {
       no_warning <- FALSE
-    } else if (xi_hats[1] < 0.25 & xi_hats[2] >= 0.25) {
-      message <- paste0(message,
-                        sprintf('Chain %s: Only right ', c),
-                        'tail hat{xi} exceeds 0.25!\n')
+      message <-
+        paste0(message,
+               sprintf('  Chain %s: Both left and right ', c),
+               'hat{xi}s are NaN!\n')
+    } 
+    else if ( is.nan(xi_hats[1]) ) {
       no_warning <- FALSE
-    } else if (xi_hats[1] >= 0.25 & xi_hats[2] < 0.25) {
-      message <- paste0(message,
-                        sprintf('Chain %s: Only left ', c),
-                        'tail hat{xi} exceeds 0.25!\n')
+      message <-
+        paste0(message,
+               sprintf('  Chain %s: Left hat{xi} is NaN!\n', c))
+    } else if ( is.nan(xi_hats[2]) ) {
       no_warning <- FALSE
+      message <-
+        paste0(message,
+               sprintf('  Chain %s: Right hat{xi} is NaN!\n', c))
+    } else if (xi_hats[1] >= xi_hat_threshold & 
+      xi_hats[2] >= xi_hat_threshold) {
+      no_warning <- FALSE
+      message <-
+        paste0(message,
+              sprintf('  Chain %s: Both left and right tail ', c),
+              sprintf('hat{xi}s (%.3f, %.3f) exceed %.2f!\n', 
+                      khats[1], khats[2], khat_threshold))
+    } else if (xi_hats[1] < xi_hat_threshold & 
+               xi_hats[2] >= xi_hat_threshold) {
+      no_warning <- FALSE
+      message <-
+        paste0(message,
+               sprintf('  Chain %s: Only right tail hat{k} ', c),
+               sprintf('(%.3f) exceeds %.2f!\n',
+                       xi_hats[2], xi_hat_threshold))
+    } else if (xi_hats[1] >= xi_hat_threshold & 
+               xi_hats[2] < xi_hat_threshold) {
+      no_warning <- FALSE
+      message <-
+        paste0(message,
+               sprintf('  Chain %s: Only left tail hat{k} ', c),
+               sprintf('(%.3f) exceeds %.2f!\n',
+                       xi_hats[1], xi_hat_threshold))
     }
   }
   
@@ -787,8 +825,6 @@ compute_split_rhats <- function(expectand_samples) {
   rhats <- c()
   for (name in names(expectand_samples)) {
     samples <- expectand_samples[[name]]
-    C <- dim(samples)[1]
-    S <- dim(samples)[2]
     rhats <- c(rhats, compute_split_rhat(samples))
   }
   return(rhats)
@@ -812,9 +848,10 @@ check_rhat <- function(samples, max_width=72) {
   message <- ""
 
   if (is.nan(rhat)) {
-    message <- paste0(message, 'All Markov chains are frozen!\n')
+    message <- paste0(message, 
+                      'All Markov chains appear to be frozen!\n')
   } else if (rhat > 1.1) {
-    message <- paste0(message, sprintf('Split Rhat is %f!\n', rhat))
+    message <- paste0(message, sprintf('Split hat{R} is %f!\n', rhat))
     no_warning <- FALSE
   }
   
@@ -822,7 +859,7 @@ check_rhat <- function(samples, max_width=72) {
     desc <- 'Markov chain behavior is consistent with equilibrium.\n\n'
     message <- paste0(message, desc)
   } else {
-    desc <- paste0('Split Rhat larger than 1.1 suggests that at ',
+    desc <- paste0('Split hat{R} larger than 1.1 suggests that at ',
                    'least one of the Markov chains has not reached ',
                    'an equilibrium.\n\n')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
@@ -891,20 +928,20 @@ compute_tau_hat <- function(fs) {
   }
 }
 
-# Compute the maximum empirical effective sample size across the 
+# Compute the minimum empirical effective sample size across the 
 # Markov chains for the given expectands
 # @param expectand_samples A named list of two-dimensional arrays for 
 #                          each expectand.  The first dimension of each
 #                          element indexes the Markov chains and the 
 #                          second dimension indexes the sequential 
 #                          states within each Markov chain.
-compute_max_eesss <- function(expectand_samples) {
+compute_min_eesss <- function(expectand_samples) {
   if (!is.vector(expectand_samples)) {
     cat('Input variable `expectand_samples` is not a named list!')
     return
   }
 
-  max_eesss <- c()
+  min_eesss <- c()
   for (name in names(expectand_samples)) {
     samples <- expectand_samples[[name]]
     C <- dim(samples)[1]
@@ -915,9 +952,9 @@ compute_max_eesss <- function(expectand_samples) {
       tau_hat <- compute_tau_hat(samples[c,])
       eesss[c] <- S / tau_hat
     }
-    max_eesss <- c(max_eesss, max(eesss))
+    min_eesss <- c(min_eesss, min(eesss))
   }
-  return(max_eesss)
+  return(min_eesss)
 }
 
 # Check the empirical effective sample size (EESS) for all a given 
@@ -995,9 +1032,9 @@ check_all_expectand_diagnostics <- function(expectand_samples,
     cat('Input variable `expectand_samples` is not a named list!')
     return
   }
-
-  no_zvar_warning <- TRUE
+  
   no_xi_hat_warning <- TRUE
+  no_zvar_warning <- TRUE
   no_rhat_warning <- TRUE
   no_eess_warning <- TRUE
 
@@ -1030,18 +1067,26 @@ check_all_expectand_diagnostics <- function(expectand_samples,
       # Check tail behavior in each Markov chain
       xi_hat_threshold <- 0.25
       xi_hats <- compute_tail_xi_hats(fs)
-      if ( is.nan(xi_hats[1]) ) {
+      if ( is.nan(xi_hats[1]) & is.nan(xi_hats[2]) ) {
         no_xi_hat_warning <- FALSE
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Left hat{xi} is Nan!\n', c))
+                 sprintf('  Chain %s: Both left and right ', c),
+                 'hat{xi}s are NaN!\n')
+      } 
+      else if ( is.nan(xi_hats[1]) ) {
+        no_xi_hat_warning <- FALSE
+        local_warning <- TRUE
+        local_message <-
+          paste0(local_message,
+                 sprintf('  Chain %s: Left hat{xi} is NaN!\n', c))
       } else if ( is.nan(xi_hats[2]) ) {
         no_xi_hat_warning <- FALSE
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Right hat{xi} is Nan!\n', c))
+                 sprintf('  Chain %s: Right hat{xi} is NaN!\n', c))
       } else if (xi_hats[1] >= xi_hat_threshold & 
           xi_hats[2] >= xi_hat_threshold) {
         no_xi_hat_warning <- FALSE
@@ -1078,7 +1123,7 @@ check_all_expectand_diagnostics <- function(expectand_samples,
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Expectand has vanishing ', c),
+                 sprintf('  Chain %s: Expectand exhibits vanishing ', c),
                          'empirical variance!\n')
       }
     }
@@ -1216,7 +1261,7 @@ summarize_expectand_diagnostics <- function(expectand_samples,
         failed_names <- c(failed_names, name)
         failed_xi_hat_nameas <- c(failed_xi_hat_names, name)
       } else if (xi_hats[1] >= xi_hat_threshold | 
-          xi_hats[2] >= xi_hat_threshold) {
+                 xi_hats[2] >= xi_hat_threshold) {
         failed_names <- c(failed_names, name)
         failed_xi_hat_nameas <- c(failed_xi_hat_names, name)
       }
@@ -1242,9 +1287,7 @@ summarize_expectand_diagnostics <- function(expectand_samples,
 
     for (c in 1:C) {
       # Check empirical effective sample size
-      fs <- samples[c,]
-      
-      tau_hat <- compute_tau_hat(fs)
+      tau_hat <- compute_tau_hat(samples[c,])
       eess <- S / tau_hat
       
       if (eess < min_eess_per_chain) {
@@ -1312,7 +1355,7 @@ summarize_expectand_diagnostics <- function(expectand_samples,
       paste0(sprintf('The expectands %s triggered hat{ESS} warnings.\n\n',
              paste(failed_eess_names, collapse=", ")),
              '  If the empirical effective sample sizes is too ',
-             'small than Markov chain Monte Carlo estimation',
+             'small than Markov chain Monte Carlo estimation ',
              'may be unreliable even when a central limit ',
              'theorem holds.\n\n')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
@@ -1351,9 +1394,7 @@ encode_all_diagnostics <- function(expectand_samples,
                                    min_eess_per_chain=100,
                                    exclude_zvar=FALSE) {
   warning_code <- 0
-    
-  sampler_params <- get_sampler_params(fit, inc_warmup=FALSE)
-
+  
   # Check divergences
   n = sum(sapply(1:C, function(c) diagnostics[['divergent__']][c,]))
   if (n > 0) {
@@ -1363,7 +1404,7 @@ encode_all_diagnostics <- function(expectand_samples,
   # Check transitions that ended prematurely due to maximum tree depth 
   # limit
   n = sum(sapply(1:C, function(c) 
-                      diagnostics[['treedepth__']][c,] > max_treedepth))
+                      diagnostics[['treedepth__']][c,] == max_treedepth))
 
   if (n > 0) {
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 1))
@@ -1404,9 +1445,7 @@ encode_all_diagnostics <- function(expectand_samples,
   xi_hat_warning <- FALSE
   rhat_warning <- FALSE
   eess_warning <- FALSE
-
-  message <- ""
-
+  
   for (name in names(expectand_samples)) {
     samples <- expectand_samples[[name]]
     C <- dim(samples)[1]
@@ -1431,7 +1470,9 @@ encode_all_diagnostics <- function(expectand_samples,
       # Check tail behavior in each Markov chain
       xi_hat_threshold <- 0.25
       xi_hats <- compute_tail_xi_hats(fs)
-      if (xi_hats[1] >= xi_hat_threshold | 
+      if (isnan(xi_hats[1]) | isnan(xi_hats[2])) {
+        xi_hat_warning <- TRUE
+      } else if (xi_hats[1] >= xi_hat_threshold | 
           xi_hats[2] >= xi_hat_threshold) {
         xi_hat_warning <- TRUE
       }
@@ -1676,8 +1717,8 @@ pushforward_samples <- function(samples, expectand) {
 # @return The Markov chain Monte Carlo estimate, its estimated standard 
 #         error, and empirical effective sample size.
 mcmc_est <- function(fs) {
-  N <- length(fs)
-  if (N == 1) {
+  S <- length(fs)
+  if (S == 1) {
     return(c(fs[1], 0, NaN))
   }
 
@@ -1687,8 +1728,8 @@ mcmc_est <- function(fs) {
     return(c(summary[1], 0, NaN))
   }
 
-  int_ac_time <- compute_tau_hat(fs)
-  eess <- N / int_ac_time
+  tau_hat <- compute_tau_hat(fs)
+  eess <- S / tau_hat
   return(c(summary[1], sqrt(summary[2] / eess), eess))
 }
 
@@ -1754,7 +1795,7 @@ plot_expectand_pushforward <- function(samples, B, display_name="f",
                                        flim=NULL, baseline=NULL) {
   if (length(dim(samples)) != 2) {
     cat('Input variable `samples` has the wrong dimension')
-    return (c(NaN, NaN, NaN))
+    return
   }
   
   # Automatically adjust histogram range to range of expectand values

@@ -113,10 +113,7 @@ arrays with the first index denoting the individual Markov chains and
 the second index denoting the iterations within an individual Markov 
 chain.
 
-```{.r include="stan_utility_rstan.R" start-line=17 end-line=29}
-```
-
-```{.r include="stan_utility_rstan.R" start-line=31 end-line=49}
+```{.r include="stan_utility_rstan.R" start-line=27 end-line=60}
 ```
 
 If users are able to modify these functions to accept the output from 
@@ -189,7 +186,7 @@ warmup periods.  Small averages indicate some obstruction to the adaptation,
 for example discontinuities in the target distribution or inaccurate gradient
 evaluations.
 
-```{.r include="stan_utility_rstan.R" start-line=51 end-line=192}
+```{.r include="stan_utility_rstan.R" start-line=62 end-line=204}
 ```
 
 ## Integrator Inverse Metric Elements
@@ -203,52 +200,7 @@ First we can look at the inverse metric adaptation in each of the Markov chains.
 Inconsistencies in the adapted inverse metric elements across the Markov chains
 are due to the individual chains encountering different behaviors during warmup.
 
-```{.r include="stan_utility_rstan.R" start-line=194 end-line=239}
-```
-
-```{r}
-plot_inv_metric <- function(adaptation_info, B=25) {
-  adaptation_info <- get_adaptation_info(fit)
-  C <- length(adaptation_info)
-
-  inv_metric_elems <- list()
-  for (c in 1:C) {
-    raw_info <- adaptation_info[[c]]
-    clean1 <- sub("# Adaptation terminated\n# Step size = [0-9.]*\n#",
-                  "", raw_info)
-    clean2 <- sub(" [a-zA-Z ]*:\n# ", "", clean1)
-    clean3 <- sub("\n$", "", clean2)
-    inv_metric_elems[[c]] <- as.numeric(strsplit(clean3, ',')[[1]])
-  }
-
-  min_elem <- min(unlist(inv_metric_elems))
-  max_elem <- max(unlist(inv_metric_elems))
-
-  delta <- (max_elem - min_elem) / B
-  min_elem <- min_elem - delta
-  max_elem <- max_elem + delta
-  bins <- seq(min_elem, max_elem, delta)
-  B <- B + 2  
-
-  max_y <- max(sapply(1:C, function(c)
-    max(hist(inv_metric_elems[[c]], breaks=bins, plot=FALSE)$counts)))
-
-  idx <- rep(1:B, each=2)
-  x <- sapply(1:length(idx), function(b) if(b %% 2 == 1) bins[idx[b]]
-                                         else bins[idx[b] + 1])
-
-  par(mfrow=c(2, 2), mar = c(5, 2, 2, 1))
-  colors <- c(c_dark, c_mid_highlight, c_mid, c_light_highlight)
-
-  for (c in 1:C) {
-    counts <- hist(inv_metric_elems[[c]], breaks=bins, plot=FALSE)$counts
-    y <- counts[idx]
-
-    plot(x, y, type="l", main=paste("Chain", c), col=colors[c],
-         xlim=c(min_elem, max_elem), xlab="Inverse Metric Elements",
-         ylim=c(0, 1.05 * max_y), ylab="", yaxt="n")
-  }
-}
+```{.r include="stan_utility_rstan.R" start-line=206 end-line=251}
 ```
 
 Note that the adaptation information may be accessed differently in 
@@ -263,7 +215,7 @@ inverse metric elements heterogeneity in the adapted values across the Markov
 chains indicates that the Markov chains encountered substantially different
 behavior during warmup.
 
-```{.r include="stan_utility_rstan.R" start-line=241 end-line=261}
+```{.r include="stan_utility_rstan.R" start-line=253 end-line=273}
 ```
 
 ## Numerical Trajectory Lengths
@@ -273,7 +225,7 @@ numerical trajectories generated for each Hamiltonian Markov transition.  The
 longer these trajectories the more degenerate the target distribution, and the
 more expensive it is to explore.
 
-```{.r include="stan_utility_rstan.R" start-line=263 end-line=302}
+```{.r include="stan_utility_rstan.R" start-line=275 end-line=314}
 ```
 
 ## Average Proxy Acceptance Statistic
@@ -282,7 +234,7 @@ When the different adaptation outcomes are due to problematic behaviors
 encountered during warmup then it the average proxy acceptance statistics should
 also vary across the Markov chains.
 
-```{.r include="stan_utility_rstan.R" start-line=304 end-line=325}
+```{.r include="stan_utility_rstan.R" start-line=316 end-line=337}
 ```
 
 ## Divergence-Labeled Pairs Plot
@@ -298,7 +250,7 @@ separately then we should see the divergent states concentrate towards the
 problematic behavior.  The high-dimensional states themselves can be visualized
 with pairs plots.
 
-```{.r include="stan_utility_rstan.R" start-line=327 end-line=515}
+```{.r include="stan_utility_rstan.R" start-line=339 end-line=526}
 ```
 
 # Expectand Diagnostic Functions
@@ -317,8 +269,8 @@ $\mathbb{E}_{\pi}[f^{2}]$ are finite, in which case we say that the expectand is
 sufficiently integrable.  Moreover the smaller the following moments the faster
 the central limit theorem will kick in.
 
-$\hat{xi}$ uses the tail behavior of a realized Markov chain to estimate the
-integrability of an expectand.  More specifically $\hat{xi}$ estimates the shape
+$\hat{\xi}$ uses the tail behavior of a realized Markov chain to estimate the
+integrability of an expectand.  More specifically $\hat{\xi}$ estimates the shape
 of a general Pareto density function from non-central values of the expectand.  
 If the tail behavior were exactly general Pareto then the larger the shape 
 parameter $\xi$ the fewer moments of the distribution will be well-defined.
@@ -344,7 +296,7 @@ the boundedness also guarantees that moments of all orders exist.  To make this
 diagnostic as robust as possible $\hat{\xi}$ will return $-2$ in these cases to
 avoid the diagnostic threshold.
 
-```{.r include="stan_utility_rstan.R" start-line=517 end-line=661}
+```{.r include="stan_utility_rstan.R" start-line=540 end-line=699}
 ```
 
 ## Frozen Chains
@@ -358,7 +310,7 @@ we can signal a constant expectand by looking at its empirical variance.
 Here we'll use a Welford accumulator to compute the empirical variance of the
 expectand values in a single sweep.
 
-```{.r include="stan_utility_rstan.R" start-line=663 end-line=720}
+```{.r include="stan_utility_rstan.R" start-line=701 end-line=758}
 ```
 
 ## Split Rhat
@@ -382,7 +334,7 @@ each Markov chain halves are not consistent with each other.  This could be
 because the Markov chains have not converged to the same typical set or because
 they have not yet expanded into that typical set.
 
-```{.r include="stan_utility_rstan.R" start-line=722 end-line=833}
+```{.r include="stan_utility_rstan.R" start-line=760 end-line=870}
 ```
 
 ## Integrated Autocorrelation Time
@@ -408,7 +360,7 @@ The effective sample size can be interpreted as how large of an ensemble
 of exact samples we would need to achieve the same estimator error for 
 the particular expectand of interest.
 
-```{.r include="stan_utility_rstan.R" start-line=835 end-line=892}
+```{.r include="stan_utility_rstan.R" start-line=872 end-line=958}
 ```
 
 Assuming stationarity we can use the empirical effective sample size to 
@@ -432,7 +384,7 @@ size below $100$ indicates strong autocorrelation that will complicate
 Markov chain Monte Carlo estimation in the worst case and reduce estimator 
 precision in the best case.
 
-```{.r include="stan_utility_rstan.R" start-line=894 end-line=976}
+```{.r include="stan_utility_rstan.R" start-line=960 end-line=1013}
 ```
 
 For example empirical effective sample sizes can provide a useful way to 
@@ -444,12 +396,14 @@ just too short or more persistent problems.
 In practice we have no reason not to check all of these diagnostics at once for
 each expectand of interest.
 
-```{.r include="stan_utility_rstan.R" start-line=978 end-line=1162}
+```{.r include="stan_utility_rstan.R" start-line=1015 end-line=1207}
 ```
 
-**something about summarizing**
+That said for particularly problematic fits the output from checking all
+of the expectands can be overwhelming.  In cases where that may be a
+risk we can summarize the output more compactly.
 
-```{.r include="stan_utility_rstan.R" start-line=1164 end-line=1323}
+```{.r include="stan_utility_rstan.R" start-line=1209 end-line=1366}
 ```
 
 ## Empirical Autocorrelation Visualization
@@ -459,7 +413,7 @@ estimated effective sample sizes, then we may want to follow up with the
 empirical autocorrelations themselves.  An empirical correlogram provides a
 useful visualization of these estimates.
 
-```{.r include="stan_utility_rstan.R" start-line=1509 end-line=1597}
+```{.r include="stan_utility_rstan.R" start-line=1550 end-line=1638}
 ```
 
 ## Chain-Separated Pairs Plot
@@ -469,23 +423,23 @@ Markov chain in a continuous gradient.  When neighboring states are strongly
 correlated these colors will appear to vary smoothly across the ambient space.
 More productive Markov transitions result in a more chaotic spray of colors.
 
-```{.r include="stan_utility_rstan.R" start-line=1599 end-line=1657}
+```{.r include="stan_utility_rstan.R" start-line=1640 end-line=1698}
 ```
 
-# Markov chain Monte Carlo Estimation
+# Markov Chain Monte Carlo Estimation
 
 If none of the diagnostics indicate an obstruction to a Markov chain Monte Carlo
 central limit theorem then we can construct expectation value estimates and
 their standard errors.
 
-```{.r include="stan_utility_rstan.R" start-line=1659 end-line=1739}
+```{.r include="stan_utility_rstan.R" start-line=1700 end-line=1780}
 ```
 
 In addition to examining the single expectation value of an expectand we can
 also visualize the entire pushforward distribution of the expectand by
 estimating the target probabilities in histogram bins.
 
-```{.r include="stan_utility_rstan.R" start-line=1741 end-line=1824}
+```{.r include="stan_utility_rstan.R" start-line=1782 end-line=1865}
 ```
 
 # Demonstration
@@ -497,18 +451,19 @@ First we setup our local `R` environment.
 ```{r}
 #| warning: false
 #| message: false
-#| echo: false
-source("stan_utility_rstan.R")
-```
-
-```{r}
-#| warning: false
-#| message: false
 
 library(rstan)
 rstan_options(auto_write = TRUE)            # Cache compiled Stan programs
 options(mc.cores = parallel::detectCores()) # Parallelize chains
 parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
+```
+
+Next we source all of these diagnostics.
+
+```{r}
+#| warning: false
+#| message: false
+source("stan_utility_rstan.R")
 ```
 
 Then we can simulate some binary data from a logistic regression model.
@@ -617,20 +572,23 @@ information from the divergent-labeled pairs plots.
 ```{r}
 samples <- extract_expectands(fit)
 
-plot_div_pairs(samples, diagnostics, 
-               c("alpha", "beta[1]", "beta[2]", "beta[3]"),
-               c(0, 0, 0, 0))
+plot_div_pairs(samples[1:4], diagnostics, c(0, 0, 0, 0))
 ```
 
-We could also try coloring the divergent transitions by their numerical 
-trajectory lengths.  In theory shorter numerical trajectories should be 
-closer to the problematic behavior but in this case it looks like just 
-about every trajectory becomes unstable no matter no longer it is.
+We can also color the divergent transitions by their numerical 
+trajectory lengths.  On average transitions from shorter numerical
+trajectories should be closer to the problematic behavior than 
+transitions from longer numerical trajectories.  Because there are so
+many divergent transitions here the point colors overlap and it's hard
+to make too much out, but it does look like there may be a problematic 
+boundary.  For example plot of `beta[2]` against `beta[1]` is consistent
+with a boundary defined by
+$$
+\beta_{1} + \beta_{2} = \mathrm{constant}.
+$$
 
 ```{r}
-plot_div_pairs(samples, diagnostics, 
-               c("alpha", "beta[1]", "beta[2]", "beta[3]"),
-               c(0, 0, 0, 0), plot_mode=1)
+plot_div_pairs(samples[1:4], diagnostics, c(0, 0, 0, 0), plot_mode=1)
 ```
 
 Having examined the Hamiltonian Monte Carlo diagnostics let's now look through
@@ -712,23 +670,23 @@ plot_chain_sep_pairs(samples[["alpha"]], "alpha",
 To more quantitatively blame the large split $\hat{R}$s on these strong
 autocorrelations we can plot the split $\hat{R}$ from each expectand against
 the corresponding empirical effective sample size.  Specifically for each 
-expectand we plot split $\hat{R}$ against the largest empirical effective 
+expectand we plot split $\hat{R}$ against the smallest empirical effective 
 sample size amongst the four Markov chains.
 
 ```{r}
 rhats <- compute_split_rhats(samples)
-max_eesss <- compute_max_eesss(samples)
+min_eesss <- compute_min_eesss(samples)
 
 par(mfrow=c(1, 1), mar = c(5, 5, 2, 1))
-plot(rhats, max_eesss,
+plot(rhats, min_eesss,
      col=c_dark, pch=16, cex=0.8,
      xlab="Split Rhat", xlim=c(0.95, 2),
-     ylab="Empirical Effective\nSample Size", ylim=c(5, 100))
+     ylab="Empirical Effective\nSample Size", ylim=c(0, 60))
 ```
 
 Every expectand with a large split $\hat{R}$s also exhibits a particularly
-small maximum empirical effective sample size, confirming that the latter 
-are due to our Markov chains not containing enough information.
+small minimum empirical effective sample size, confirming that the latter 
+are likely due to our Markov chains not containing enough information.
 
 If we are sloppy, ignore these diagnostics, and assume that all of our Markov
 chain Monte Carlo estimators are accurate then we are quickly mislead about the
@@ -743,10 +701,14 @@ dark red.
 
 ```{r}
 par(mfrow=c(2, 2), mar = c(5, 4, 2, 1))
-plot_expectand_pushforward(samples[["alpha"]], 25, display_name="alpha")
-plot_expectand_pushforward(samples[["beta[1]"]], 25, display_name="beta[1]")
-plot_expectand_pushforward(samples[["beta[1]"]], 25, display_name="beta[2]")
-plot_expectand_pushforward(samples[["beta[1]"]], 25, display_name="beta[3]")
+plot_expectand_pushforward(samples[["alpha"]], 25, 
+                           display_name="alpha")
+plot_expectand_pushforward(samples[["beta[1]"]], 25, 
+                           display_name="beta[1]")
+plot_expectand_pushforward(samples[["beta[2]"]], 25, 
+                           display_name="beta[2]")
+plot_expectand_pushforward(samples[["beta[3]"]], 25, 
+                           display_name="beta[3]")
 ```
 
 If we look at the central estimates alone we might convince ourselves of all
@@ -760,10 +722,14 @@ same time many of the visual artifacts recede.
 
 ```{r}
 par(mfrow=c(2, 2), mar = c(5, 4, 2, 1))
-plot_expectand_pushforward(samples[["alpha"]], 10, display_name="alpha")
-plot_expectand_pushforward(samples[["beta[1]"]], 10, display_name="beta[1]")
-plot_expectand_pushforward(samples[["beta[1]"]], 10, display_name="beta[2]")
-plot_expectand_pushforward(samples[["beta[1]"]], 10, display_name="beta[3]")
+plot_expectand_pushforward(samples[["alpha"]], 10, 
+                           display_name="alpha")
+plot_expectand_pushforward(samples[["beta[1]"]], 10, 
+                           display_name="beta[1]")
+plot_expectand_pushforward(samples[["beta[2]"]], 10, 
+                           display_name="beta[2]")
+plot_expectand_pushforward(samples[["beta[3]"]], 10, 
+                           display_name="beta[3]")
 ```
 
 When the bin indicator functions enjoy Markov chain Monte Carlo central limit

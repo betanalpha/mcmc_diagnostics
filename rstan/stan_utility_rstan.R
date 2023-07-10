@@ -991,20 +991,19 @@ check_eess <- function(samples,
     }
   }
   if (no_warning) {
-    desc <- paste0('The empirical effective sample sizes is large ',
+    desc <- paste0('The empirical effective sample size is large ',
                    'enough for Markov chain Monte Carlo estimation ',
                    'to be reliable assuming that a central limit ',
                    'theorem holds.\n\n')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc)
   } else {
-    cat('  If the effective sample size is too small then\n')
-    cat('Markov chain Monte Carlo estimators will be imprecise.\n\n')
-    
-    desc <- paste0('If the empirical effective sample sizes is too ',
-                   'small than Markov chain Monte Carlo estimation ',
+    desc <- paste0('Small empirical effective sample sizes indicate strong ',
+                   'empirical autocorrelations in the realized Markov chains. ',
+                   'If the empirical effective sample size is too ',
+                   'small then Markov chain Monte Carlo estimation ',
                    'may be unreliable even when a central limit ',
-                   'theorem holds.\n\n')
+                   'theorem holds.\n\n.')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
     message <- paste0(message, desc)
   }
@@ -1186,10 +1185,12 @@ check_all_expectand_diagnostics <- function(expectand_samples,
     message <- paste0(message, '\n', desc, '\n')
   }
   if (!no_eess_warning) {
-    desc <- paste0('If the empirical effective sample sizes is too ',
-                   'small than Markov chain Monte Carlo estimation',
+    desc <- paste0('Small empirical effective sample sizes indicate strong ',
+                   'empirical autocorrelations in the realized Markov chains. ',
+                   'If the empirical effective sample size is too ',
+                   'small then Markov chain Monte Carlo estimation ',
                    'may be unreliable even when a central limit ',
-                   'theorem holds.\n\n')
+                   'theorem holds.\n\n.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, '\n', desc)
   }
@@ -1354,10 +1355,12 @@ summarize_expectand_diagnostics <- function(expectand_samples,
     desc <- 
       paste0(sprintf('The expectands %s triggered hat{ESS} warnings.\n\n',
              paste(failed_eess_names, collapse=", ")),
-             '  If the empirical effective sample sizes is too ',
-             'small than Markov chain Monte Carlo estimation ',
+             '  Small empirical effective sample sizes indicate strong ',
+             'empirical autocorrelations in the realized Markov chains. ',
+             'If the empirical effective sample size is too ',
+             'small then Markov chain Monte Carlo estimation ',
              'may be unreliable even when a central limit ',
-             'theorem holds.\n\n')
+             'theorem holds.\n\n.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }

@@ -9,7 +9,6 @@
   numbers=noendperiod]{scrartcl}
 
 \usepackage{amsmath,amssymb}
-\usepackage{lmodern}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
@@ -19,6 +18,10 @@
   \usepackage{unicode-math}
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else  
+    % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -160,10 +163,12 @@
 \@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
 \makeatother
 \makeatletter
-\@ifpackageloaded{tcolorbox}{}{\usepackage[many]{tcolorbox}}
+\@ifpackageloaded{tcolorbox}{}{\usepackage[skins,breakable]{tcolorbox}}
 \makeatother
 \makeatletter
 \@ifundefined{shadecolor}{\definecolor{shadecolor}{rgb}{.97, .97, .97}}
+\makeatother
+\makeatletter
 \makeatother
 \makeatletter
 \makeatother
@@ -185,11 +190,11 @@
 
 \title{Markov Chain Monte Carlo Diagnostics}
 \author{Michael Betancourt}
-\date{10/1/22}
+\date{2023-07-01}
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[boxrule=0pt, sharp corners, enhanced, frame hidden, borderline west={3pt}{0pt}{shadecolor}, interior hidden, breakable]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[interior hidden, boxrule=0pt, borderline west={3pt}{0pt}{shadecolor}, sharp corners, frame hidden, enhanced, breakable]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -1533,20 +1538,19 @@ in the worst case and reduce estimator precision in the best case.
 \NormalTok{    \}}
 \NormalTok{  \}}
   \ControlFlowTok{if}\NormalTok{ (no\_warning) \{}
-\NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}The empirical effective sample sizes is large \textquotesingle{}}\NormalTok{,}
+\NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}The empirical effective sample size is large \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}enough for Markov chain Monte Carlo estimation \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}to be reliable assuming that a central limit \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}theorem holds.}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\FunctionTok{strwrap}\NormalTok{(desc, max\_width, }\DecValTok{0}\NormalTok{), }\AttributeTok{collapse=}\StringTok{\textquotesingle{}}\SpecialCharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(message, desc)}
 \NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
-    \FunctionTok{cat}\NormalTok{(}\StringTok{\textquotesingle{}  If the effective sample size is too small then}\SpecialCharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-    \FunctionTok{cat}\NormalTok{(}\StringTok{\textquotesingle{}Markov chain Monte Carlo estimators will be imprecise.}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-    
-\NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}If the empirical effective sample sizes is too \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}small than Markov chain Monte Carlo estimation \textquotesingle{}}\NormalTok{,}
+\NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}Small empirical effective sample sizes indicate strong \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}empirical autocorrelations in the realized Markov chains. \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}If the empirical effective sample size is too \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}small then Markov chain Monte Carlo estimation \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}may be unreliable even when a central limit \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}theorem holds.}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}theorem holds.}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\FunctionTok{strwrap}\NormalTok{(desc, max\_width, }\DecValTok{2}\NormalTok{), }\AttributeTok{collapse=}\StringTok{\textquotesingle{}}\SpecialCharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(message, desc)}
 \NormalTok{  \}}
@@ -1568,7 +1572,6 @@ once for each expectand of interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Check all expectand{-}specific diagnostics.}
 \CommentTok{\# @param expectand\_samples A named list of two{-}dimensional arrays for }
 \CommentTok{\#                          each expectand.  The first dimension of each}
 \CommentTok{\#                          element indexes the Markov chains and the }
@@ -1742,10 +1745,12 @@ once for each expectand of interest.
 \NormalTok{    message }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(message, }\StringTok{\textquotesingle{}}\SpecialCharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, desc, }\StringTok{\textquotesingle{}}\SpecialCharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
   \ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\NormalTok{no\_eess\_warning) \{}
-\NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}If the empirical effective sample sizes is too \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}small than Markov chain Monte Carlo estimation\textquotesingle{}}\NormalTok{,}
+\NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}Small empirical effective sample sizes indicate strong \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}empirical autocorrelations in the realized Markov chains. \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}If the empirical effective sample size is too \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}small then Markov chain Monte Carlo estimation \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}may be unreliable even when a central limit \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}theorem holds.}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}theorem holds.}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\FunctionTok{strwrap}\NormalTok{(desc, max\_width, }\DecValTok{0}\NormalTok{), }\AttributeTok{collapse=}\StringTok{\textquotesingle{}}\SpecialCharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(message, }\StringTok{\textquotesingle{}}\SpecialCharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, desc)}
 \NormalTok{  \}}
@@ -1918,10 +1923,12 @@ we can summarize the output more compactly.
 \NormalTok{    desc }\OtherTok{\textless{}{-}} 
       \FunctionTok{paste0}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{\textquotesingle{}The expectands \%s triggered hat\{ESS\} warnings.}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{,}
              \FunctionTok{paste}\NormalTok{(failed\_eess\_names, }\AttributeTok{collapse=}\StringTok{", "}\NormalTok{)),}
-             \StringTok{\textquotesingle{}  If the empirical effective sample sizes is too \textquotesingle{}}\NormalTok{,}
-             \StringTok{\textquotesingle{}small than Markov chain Monte Carlo estimation \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}  Small empirical effective sample sizes indicate strong \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}empirical autocorrelations in the realized Markov chains. \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}If the empirical effective sample size is too \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}small then Markov chain Monte Carlo estimation \textquotesingle{}}\NormalTok{,}
              \StringTok{\textquotesingle{}may be unreliable even when a central limit \textquotesingle{}}\NormalTok{,}
-             \StringTok{\textquotesingle{}theorem holds.}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+             \StringTok{\textquotesingle{}theorem holds.}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\FunctionTok{strwrap}\NormalTok{(desc, max\_width, }\DecValTok{0}\NormalTok{), }\AttributeTok{collapse=}\StringTok{\textquotesingle{}}\SpecialCharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(message, desc, }\StringTok{\textquotesingle{}}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
@@ -2312,11 +2319,13 @@ First we setup our local \texttt{R} environment.
 \end{Highlighting}
 \end{Shaded}
 
-Next we source all of these diagnostics.
+Next we source all of these diagnostics into a local environment to
+avoid any conflicts with other functions.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{source}\NormalTok{(}\StringTok{"stan\_utility\_rstan.R"}\NormalTok{)}
+\NormalTok{util }\OtherTok{\textless{}{-}} \FunctionTok{new.env}\NormalTok{()}
+\FunctionTok{source}\NormalTok{(}\StringTok{\textquotesingle{}stan\_utility\_rstan.R\textquotesingle{}}\NormalTok{, }\AttributeTok{local=}\NormalTok{util)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2378,8 +2387,8 @@ SAMPLING FOR MODEL 'simu_logistic_reg' NOW (CHAIN 1).
 Chain 1: Iteration: 1 / 1 [100%]  (Sampling)
 Chain 1: 
 Chain 1:  Elapsed Time: 0 seconds (Warm-up)
-Chain 1:                0.001961 seconds (Sampling)
-Chain 1:                0.001961 seconds (Total)
+Chain 1:                0.001972 seconds (Sampling)
+Chain 1:                0.001972 seconds (Total)
 Chain 1: 
 \end{verbatim}
 
@@ -2478,8 +2487,8 @@ Let's start with the Hamiltonian Monte Carlo diagnostics.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{diagnostics }\OtherTok{\textless{}{-}} \FunctionTok{extract\_hmc\_diagnostics}\NormalTok{(fit)}
-\FunctionTok{check\_all\_hmc\_diagnostics}\NormalTok{(diagnostics)}
+\NormalTok{diagnostics }\OtherTok{\textless{}{-}}\NormalTok{ util}\SpecialCharTok{$}\FunctionTok{extract\_hmc\_diagnostics}\NormalTok{(fit)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{check\_all\_hmc\_diagnostics}\NormalTok{(diagnostics)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2517,7 +2526,7 @@ configuration of the Hamiltonian Markov transition.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{plot\_inv\_metric}\NormalTok{(}\FunctionTok{get\_adaptation\_info}\NormalTok{(fit), }\DecValTok{75}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_inv\_metric}\NormalTok{(}\FunctionTok{get\_adaptation\_info}\NormalTok{(fit), }\DecValTok{75}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2543,7 +2552,7 @@ adaptation.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{display\_stepsizes}\NormalTok{(diagnostics)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{display\_stepsizes}\NormalTok{(diagnostics)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2556,7 +2565,7 @@ Chain 4: Integrator Step Size = 0.026320
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{display\_ave\_accept\_proxy}\NormalTok{(diagnostics)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{display\_ave\_accept\_proxy}\NormalTok{(diagnostics)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2573,7 +2582,7 @@ to explore as far as those in the other chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{plot\_num\_leapfrog}\NormalTok{(diagnostics)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_num\_leapfrog}\NormalTok{(diagnostics)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2590,9 +2599,9 @@ much information from the divergent-labeled pairs plots.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{samples }\OtherTok{\textless{}{-}} \FunctionTok{extract\_expectands}\NormalTok{(fit)}
+\NormalTok{samples }\OtherTok{\textless{}{-}}\NormalTok{ util}\SpecialCharTok{$}\FunctionTok{extract\_expectands}\NormalTok{(fit)}
 
-\FunctionTok{plot\_div\_pairs}\NormalTok{(samples[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{], diagnostics, }\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{))}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_div\_pairs}\NormalTok{(samples[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{], diagnostics, }\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2617,7 +2626,8 @@ boundary. For example plot of \texttt{beta{[}2{]}} against
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{plot\_div\_pairs}\NormalTok{(samples[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{], diagnostics, }\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\AttributeTok{plot\_mode=}\DecValTok{1}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_div\_pairs}\NormalTok{(samples[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{], diagnostics, }
+                    \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\AttributeTok{plot\_mode=}\DecValTok{1}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2640,7 +2650,7 @@ diagnostics as well.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{summarize\_expectand\_diagnostics}\NormalTok{(samples)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{summarize\_expectand\_diagnostics}\NormalTok{(samples)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3180,9 +3190,12 @@ p[986], p[987], p[988], p[989], p[990], p[991], p[992], p[993], p[994],
 p[995], p[996], p[997], p[998], p[999], p[1000] triggered hat{ESS}
 warnings.
 
-If the empirical effective sample sizes is too small than Markov chain
-Monte Carlo estimation may be unreliable even when a central limit
-theorem holds.
+Small empirical effective sample sizes indicate strong empirical
+autocorrelations in the realized Markov chains. If the empirical
+effective sample size is too small then Markov chain Monte Carlo
+estimation may be unreliable even when a central limit theorem holds.
+
+.
 \end{verbatim}
 
 \begin{Shaded}
@@ -3204,7 +3217,7 @@ theorem holds.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{clip\_output}\NormalTok{(}\FunctionTok{capture.output}\NormalTok{(}\FunctionTok{check\_all\_expectand\_diagnostics}\NormalTok{(samples)), }
+\FunctionTok{clip\_output}\NormalTok{(}\FunctionTok{capture.output}\NormalTok{(util}\SpecialCharTok{$}\FunctionTok{check\_all\_expectand\_diagnostics}\NormalTok{(samples)), }
             \DecValTok{27}\NormalTok{, }\DecValTok{21}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -3242,9 +3255,6 @@ beta[3]:
 ..........
 ..........
 
-y_pred[999]:
-  Chain 1: Both left and right hat{xi}s are NaN!
-  Chain 2: Both left and right hat{xi}s are NaN!
   Chain 3: Both left and right hat{xi}s are NaN!
   Chain 4: Both left and right hat{xi}s are NaN!
 
@@ -3261,9 +3271,12 @@ sufficiently integrable.
 Split Rhat larger than 1.1 suggests that at least one of the Markov
 chains has not reached an equilibrium.
 
-If the empirical effective sample sizes is too small than Markov chain
-Monte Carlo estimationmay be unreliable even when a central limit
-theorem holds.
+Small empirical effective sample sizes indicate strong empirical
+autocorrelations in the realized Markov chains. If the empirical
+effective sample size is too small then Markov chain Monte Carlo
+estimation may be unreliable even when a central limit theorem holds.
+
+.
 \end{verbatim}
 
 Well that output restriction proved to be prescient as most of the
@@ -3273,7 +3286,7 @@ the four parameter expectands.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{check\_all\_expectand\_diagnostics}\NormalTok{(samples[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{])}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{check\_all\_expectand\_diagnostics}\NormalTok{(samples[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{])}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3310,9 +3323,12 @@ beta[3]:
 Split Rhat larger than 1.1 suggests that at least one of the Markov
 chains has not reached an equilibrium.
 
-If the empirical effective sample sizes is too small than Markov chain
-Monte Carlo estimationmay be unreliable even when a central limit
-theorem holds.
+Small empirical effective sample sizes indicate strong empirical
+autocorrelations in the realized Markov chains. If the empirical
+effective sample size is too small then Markov chain Monte Carlo
+estimation may be unreliable even when a central limit theorem holds.
+
+.
 \end{verbatim}
 
 All four parameter expectands exhibit split \(\hat{R}\) warnings and low
@@ -3326,14 +3342,14 @@ empirical correlograms for each parameter expectand.
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{), }\AttributeTok{mar =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
-\FunctionTok{plot\_empirical\_correlogram}\NormalTok{(samples[[}\StringTok{"alpha"}\NormalTok{]], }\DecValTok{300}\NormalTok{,}
-                           \AttributeTok{rho\_lim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{), }\StringTok{"alpha"}\NormalTok{)}
-\FunctionTok{plot\_empirical\_correlogram}\NormalTok{(samples[[}\StringTok{"beta[1]"}\NormalTok{]], }\DecValTok{300}\NormalTok{,}
-                           \AttributeTok{rho\_lim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{), }\StringTok{"beta[1]"}\NormalTok{)}
-\FunctionTok{plot\_empirical\_correlogram}\NormalTok{(samples[[}\StringTok{"beta[2]"}\NormalTok{]], }\DecValTok{300}\NormalTok{,}
-                           \AttributeTok{rho\_lim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{), }\StringTok{"beta[2]"}\NormalTok{)}
-\FunctionTok{plot\_empirical\_correlogram}\NormalTok{(samples[[}\StringTok{"beta[3]"}\NormalTok{]], }\DecValTok{300}\NormalTok{,}
-                           \AttributeTok{rho\_lim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{), }\StringTok{"beta[3]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_empirical\_correlogram}\NormalTok{(samples[[}\StringTok{"alpha"}\NormalTok{]], }\DecValTok{300}\NormalTok{,}
+                                \AttributeTok{rho\_lim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{), }\StringTok{"alpha"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_empirical\_correlogram}\NormalTok{(samples[[}\StringTok{"beta[1]"}\NormalTok{]], }\DecValTok{300}\NormalTok{,}
+                                \AttributeTok{rho\_lim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{), }\StringTok{"beta[1]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_empirical\_correlogram}\NormalTok{(samples[[}\StringTok{"beta[2]"}\NormalTok{]], }\DecValTok{300}\NormalTok{,}
+                                \AttributeTok{rho\_lim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{), }\StringTok{"beta[2]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_empirical\_correlogram}\NormalTok{(samples[[}\StringTok{"beta[3]"}\NormalTok{]], }\DecValTok{300}\NormalTok{,}
+                                \AttributeTok{rho\_lim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{), }\StringTok{"beta[3]"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3347,9 +3363,9 @@ empirical correlograms for each parameter expectand.
 
 Regardless of whether or not these Markov chains are stationary they are
 extremely autocorrelated. Assuming stationarity we don't start to forget
-the beginning of each Markov chain until we've worked through a quarter
-of the total length, leaving only the equivalent of about four
-independent samples across each chain.
+the beginning of each Markov chain until we've worked through almost all
+of the total length, leaving the equivalent of only one independent
+sample across each chain.
 
 This is consistent with the constraint violations breaking the coherent,
 gradient-driven exploration of Hamiltonian Monte Carlo so that the
@@ -3359,8 +3375,8 @@ characteristic of a random walk.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{plot\_chain\_sep\_pairs}\NormalTok{(samples[[}\StringTok{"alpha"}\NormalTok{]], }\StringTok{"alpha"}\NormalTok{, }
-\NormalTok{                     samples[[}\StringTok{"beta[2]"}\NormalTok{]], }\StringTok{"beta[2]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_chain\_sep\_pairs}\NormalTok{(samples[[}\StringTok{"alpha"}\NormalTok{]], }\StringTok{"alpha"}\NormalTok{, }
+\NormalTok{                          samples[[}\StringTok{"beta[2]"}\NormalTok{]], }\StringTok{"beta[2]"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3380,8 +3396,8 @@ smallest empirical effective sample size amongst the four Markov chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{rhats }\OtherTok{\textless{}{-}} \FunctionTok{compute\_split\_rhats}\NormalTok{(samples)}
-\NormalTok{min\_eesss }\OtherTok{\textless{}{-}} \FunctionTok{compute\_min\_eesss}\NormalTok{(samples)}
+\NormalTok{rhats }\OtherTok{\textless{}{-}}\NormalTok{ util}\SpecialCharTok{$}\FunctionTok{compute\_split\_rhats}\NormalTok{(samples)}
+\NormalTok{min\_eesss }\OtherTok{\textless{}{-}}\NormalTok{ util}\SpecialCharTok{$}\FunctionTok{compute\_min\_eesss}\NormalTok{(samples)}
 
 \FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{), }\AttributeTok{mar =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
 \FunctionTok{plot}\NormalTok{(rhats, min\_eesss,}
@@ -3418,14 +3434,14 @@ probability estimates in dark red.
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{), }\AttributeTok{mar =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
-\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"alpha"}\NormalTok{]], }\DecValTok{25}\NormalTok{, }
-                           \AttributeTok{display\_name=}\StringTok{"alpha"}\NormalTok{)}
-\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[1]"}\NormalTok{]], }\DecValTok{25}\NormalTok{, }
-                           \AttributeTok{display\_name=}\StringTok{"beta[1]"}\NormalTok{)}
-\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[2]"}\NormalTok{]], }\DecValTok{25}\NormalTok{, }
-                           \AttributeTok{display\_name=}\StringTok{"beta[2]"}\NormalTok{)}
-\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[3]"}\NormalTok{]], }\DecValTok{25}\NormalTok{, }
-                           \AttributeTok{display\_name=}\StringTok{"beta[3]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"alpha"}\NormalTok{]], }\DecValTok{25}\NormalTok{, }
+                                \AttributeTok{display\_name=}\StringTok{"alpha"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[1]"}\NormalTok{]], }\DecValTok{25}\NormalTok{, }
+                                \AttributeTok{display\_name=}\StringTok{"beta[1]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[2]"}\NormalTok{]], }\DecValTok{25}\NormalTok{, }
+                                \AttributeTok{display\_name=}\StringTok{"beta[2]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[3]"}\NormalTok{]], }\DecValTok{25}\NormalTok{, }
+                                \AttributeTok{display\_name=}\StringTok{"beta[3]"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3450,14 +3466,14 @@ at the same time many of the visual artifacts recede.
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{), }\AttributeTok{mar =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
-\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"alpha"}\NormalTok{]], }\DecValTok{10}\NormalTok{, }
-                           \AttributeTok{display\_name=}\StringTok{"alpha"}\NormalTok{)}
-\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[1]"}\NormalTok{]], }\DecValTok{10}\NormalTok{, }
-                           \AttributeTok{display\_name=}\StringTok{"beta[1]"}\NormalTok{)}
-\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[2]"}\NormalTok{]], }\DecValTok{10}\NormalTok{, }
-                           \AttributeTok{display\_name=}\StringTok{"beta[2]"}\NormalTok{)}
-\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[3]"}\NormalTok{]], }\DecValTok{10}\NormalTok{, }
-                           \AttributeTok{display\_name=}\StringTok{"beta[3]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"alpha"}\NormalTok{]], }\DecValTok{10}\NormalTok{, }
+                                \AttributeTok{display\_name=}\StringTok{"alpha"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[1]"}\NormalTok{]], }\DecValTok{10}\NormalTok{, }
+                                \AttributeTok{display\_name=}\StringTok{"beta[1]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[2]"}\NormalTok{]], }\DecValTok{10}\NormalTok{, }
+                                \AttributeTok{display\_name=}\StringTok{"beta[2]"}\NormalTok{)}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[3]"}\NormalTok{]], }\DecValTok{10}\NormalTok{, }
+                                \AttributeTok{display\_name=}\StringTok{"beta[3]"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 

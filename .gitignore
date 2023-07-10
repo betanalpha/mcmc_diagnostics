@@ -280,3 +280,4 @@ TSWLatexianTemp*
 *.pkl
 *_files
 *__pycache__/
+*.obj

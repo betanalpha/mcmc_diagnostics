@@ -279,3 +279,4 @@ TSWLatexianTemp*
 *.DS_Store
 *.pkl
 *_files
+*__pycache__/

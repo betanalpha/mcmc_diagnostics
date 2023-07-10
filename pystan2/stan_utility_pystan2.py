@@ -1,28 +1,39 @@
+################################################################################
+#
+# The code is copyright 2003 Michael Betancourt and licensed under the
+# new BSD (3-clause) license:
+#  https://opensource.org/licenses/BSD-3-Clause
+#
+# For more information see https://github.com/betanalpha/mcmc_diagnostics.
+#
+################################################################################
+
 # Load required libraries
 import matplotlib
 import matplotlib.pyplot as plot
-plot.rcParams['figure.figsize'] = [6, 4]
-plot.rcParams['figure.dpi'] = 100
-plot.rcParams['font.family'] = "Serif"
 from matplotlib.colors import LinearSegmentedColormap
 
-light="#DCBCBC"
-light_highlight="#C79999"
-mid="#B97C7C"
-mid_highlight="#A25050"
-dark="#8F2727"
-dark_highlight="#7C0000"
+light = "#DCBCBC"
+light_highlight = "#C79999"
+mid = "#B97C7C"
+mid_highlight = "#A25050"
+dark = "#8F2727"
+dark_highlight = "#7C0000"
+
+light_teal = "#6B8E8E"
+mid_teal = "#487575"
+dark_teal = "#1D4F4F"
 
 import numpy
 import math
+import textwrap
 
 import pystan
 import pickle
 import re
 
 def compile_model(filename, model_name=None, **kwargs):
-  """This will automatically cache models - great if you're just running a
-     script on the command line.
+  """This will automatically cache models.
 
     See http://pystan.readthedocs.io/en/latest/avoiding_recompilation.html"""
   from hashlib import md5
@@ -44,78 +55,174 @@ def compile_model(filename, model_name=None, **kwargs):
        print("Using cached StanModel")
     return sm
 
-def check_all_hmc_diagnostics(fit,
+# Extract unpermuted expectand values from a StanFit object and format 
+# them for convenient access
+# @param stan_fit A StanFit object
+# @return A dictionary of two-dimensional arrays for each expectand in 
+#         the StanFit object.  The first dimension of each element 
+#         indexes the Markov chains and the second dimension indexes the 
+#         sequential states within each Markov chain. 
+def extract_expectands(stan_fit):
+  nom_params = stan_fit.extract(permuted=False, inc_warmup=False)
+  params = { name: numpy.transpose(nom_params[:,:,k]) 
+             for k, name in enumerate(stan_fit.flatnames) }
+  return params
+
+# Extract Hamiltonian Monte Carlo diagnostics values from a StanFit
+# object and format them for convenient access
+# @param stan_fit A StanFit object
+# @return A dictionary of two-dimensional arrays for each expectand in 
+#         the StanFit object.  The first dimension of each element 
+#         indexes the Markov chains and the second dimension indexes the 
+#         sequential states within each Markov chain. 
+def extract_hmc_diagnostics(stan_fit):
+  diagnostic_names = ['divergent__', 'treedepth__', 'n_leapfrog__', 
+                      'stepsize__', 'energy__', 'accept_stat__' ]
+  
+  nom_params = stan_fit.get_sampler_params(inc_warmup=False)
+  C = len(nom_params)
+  params = { name: numpy.vstack([ nom_params[c][name] 
+                                  for c in range(C) ])
+           for name in diagnostic_names }
+  return params
+
+# Check all Hamiltonian Monte Carlo Diagnostics 
+# for an ensemble of Markov chains
+# @param diagnostics A dictionary of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+# @param adapt_target Target acceptance proxy statistic for step size 
+#                     adaptation.
+# @param max_treedepth The maximum numerical trajectory treedepth
+# @param max_width Maximum line width for printing
+def check_all_hmc_diagnostics(diagnostics,
                               adapt_target=0.801,
-                              max_treedepth=10):
+                              max_treedepth=10,
+                              max_width=72):
   """Check all Hamiltonian Monte Carlo Diagnostics for an 
      ensemble of Markov chains"""
-  sampler_params = fit.get_sampler_params(inc_warmup=False)
+     
+  if type(diagnostics) is not dict:
+    print('Input variable `diagnostics` is not a standard dictionary!')
+    return
   
   no_warning = True
-  
-  # Check divergences
-  divergent = [x for y in sampler_params for x in y['divergent__']]
-  n = sum(divergent)
-  N = len(divergent)
-  
-  if n > 0: 
-    no_warning = False
-    print(f'{n:.0f} of {N} iterations ended with a divergence ({n / N:.2%})')
-    print(   '  Divergences are due unstable numerical integration.  '
-          +  'These instabilities are often due to posterior degeneracies.\n'
-          +  '  If there are only a small number of divergences then running '
-          + f'with adapt_delta larger than {adapt_target:.3f} may reduce the '
-          + 'divergences at the cost of more expensive transitions.\n')
-  
-  # Check transitions that ended prematurely due to maximum tree depth limit
-  sampler_params = fit.get_sampler_params(inc_warmup=False)
-  depths = [x for y in sampler_params for x in y['treedepth__']]
-  n = sum(1 for x in depths if x == max_treedepth)
-  N = len(depths)
-  
-  if n > 0:
-    no_warning = False
-    print(  f'{n:.0f} of {N} iterations saturated the maximum tree depth of '
-          + f'{max_treedepth} ({n / N:.2%})')
-    print(  '  Increasing max_depth will increase the efficiency of the '
-          + 'transitions.\n')
-  
-  # Checks the energy fraction of missing information (E-FMI)
+  no_divergence_warning = True
+  no_treedepth_warning = True
   no_efmi_warning = True
-  for chain_num, s in enumerate(sampler_params):
-    energies = s['energy__']
-    numer = sum((energies[i] - energies[i - 1])**2 for i in range(1, len(energies))) / len(energies)
+  no_accept_warning = True
+  
+  messages = []
+  
+  C = diagnostics['divergent__'].shape[0]
+  S = diagnostics['divergent__'].shape[1]
+  
+  for c in range(C):
+    local_messages = []
+    
+    # Check for divergences
+    n_div = sum(diagnostics['divergent__'][c])
+    
+    if n_div > 0:
+      no_warning = False
+      no_divergence_warning = False
+      local_messages.append(f'  Chain {c + 1}: {n_div:.0f} of {S} '
+                            f'transitions ({n_div / S:.2%}) diverged.')
+    
+    # Check for tree depth saturation
+    n_tds = sum([ td > max_treedepth 
+                  for td in diagnostics['treedepth__'][0] ])
+    
+    if n_tds > 0:
+      no_warning = False
+      no_treedepth_warning = False
+      local_messages.append(f'  Chain {c + 1}: {n_tds:.0f} of {S} '
+                            f'transitions ({n_div / S:.2%}) saturated '
+                            f'the maximum treedepth of {max_treedepth}.')
+    
+    # Check the energy fraction of missing information (E-FMI)
+    energies = diagnostics['energy__'][c]
+    numer = sum( [ (energies[i] - energies[i - 1])**2 
+                   for i in range(1, len(energies)) ] ) / S
     denom = numpy.var(energies)
     if numer / denom < 0.2:
       no_warning = False
       no_efmi_warning = False
-      print(f'Chain {chain_num + 1}: E-FMI = {numer / denom:.3f}.')
-   
-  if not no_efmi_warning:
-    print('  E-FMI below 0.2 suggests a funnel-like geometry hiding ')
-    print('somewhere in the posterior distribution.\n')
-  
-  # Check convergence of the stepsize adaptation
-  no_accept_warning = True
-  for chain_num, s in enumerate(sampler_params):
-    ave_accept_proxy = numpy.mean(s['accept_stat__'])
+      local_messages.append(f'  Chain {c + 1}: '
+                            f'E-FMI = {numer / denom:.3f}.')
+    
+    # Check convergence of the stepsize adaptation
+    ave_accept_proxy = numpy.mean(diagnostics['accept_stat__'][c])
     if ave_accept_proxy < 0.9 * adapt_target:
       no_warning = False
       no_accept_warning = False
-      print(  f'Chain {chain_num + 1}: Average proxy acceptance statistic '
-            + f'({ave_accept_proxy:.3f})')
-      print(  f'         is smaller than 90% of the target '
-            + f'({adapt_target:.3f})')
-  
-  if not no_accept_warning:
-    print('  A small average proxy acceptance statistic indicates that the')
-    print('integrator step size adaptation failed to converge.  This is often')
-    print('due to discontinuous or inexact gradients.\n\n')
+      local_messages.append(f'  Chain {c + 1}: Average proxy acceptance '
+                            f'statistic ({ave_accept_proxy:.3f}) is')
+      local_messages.append('                  smaller than 90% of the '
+                            f'target ({adapt_target:.3f}).')
+    
+    if len(local_messages) > 0:
+      messages.append(local_messages)
+      messages.append([' '])
   
   if no_warning:
-    print(  'All Hamiltonian Monte Carlo diagnostics are consistent with '
-          + 'accurate Markov chain Monte Carlo.\n')
+    desc = ('All Hamiltonian Monte Carlo diagnostics are consistent '
+            'with accurate Markov chain Monte Carlo.')
+    desc = textwrap.wrap(desc, max_width)
+    messages.append(desc)
+    messages.append([' '])
+  
+  if not no_divergence_warning:
+    desc = ('Divergent Hamiltonian transitions result from '
+            'unstable numerical trajectories.  These '
+            'instabilities are often due to degenerate target '
+            'geometry, especially "pinches".  If there are '
+            'only a small number of divergences then running '
+            'with adept_delta larger '
+            f'than {adapt_target:.3f} may reduce the '
+            'instabilities at the cost of more expensive '
+            'Hamiltonian transitions.')
+    desc = textwrap.wrap(desc, max_width)
+    messages.append(desc)
+    messages.append([' '])
+  
+  if not no_treedepth_warning:
+    desc = ('Numerical trajectories that saturate the '
+            'maximum treedepth have terminated prematurely.  '
+            f'Increasing max_depth above {max_treedepth} '
+            'should result in more expensive, but more '
+            'efficient, Hamiltonian transitions.')
+    desc = textwrap.wrap(desc, max_width)
+    messages.append(desc)
+    messages.append([' '])
+  
+  if not no_efmi_warning:
+    desc = ('E-FMI below 0.2 arise when a funnel-like geometry '
+            'obstructs how effectively Hamiltonian trajectories '
+            'can explore the target distribution.')
+    desc = textwrap.wrap(desc, max_width)
+    messages.append(desc)
+    messages.append([' '])
 
+  if not no_accept_warning:
+    desc = ('A small average proxy acceptance statistic '
+            'indicates that the adaptation of the numerical '
+            'integrator step size failed to converge.  This is '
+            'often due to discontinuous or imprecise '
+            'gradients.')
+    desc = textwrap.wrap(desc, max_width)
+    messages.append(desc)
+    messages.append([' '])
+  
+  print('\n'.join([ '\n'.join(m) for m in messages ]))
+
+# Plot outcome of inverse metric adaptation
+# @params adaptation_info A list containing raw adaptation text for
+#                         each Markov chain.  The output of RStan and 
+#                         PyStan's `get_adaptation_info` functions.
+# @params B The number of bins for the inverse metric element histograms.
 def plot_inv_metric(fit, B=25):
   """Plot outcome of inverse metric adaptation"""
   chain_info = fit.get_adaptation_info()
@@ -177,43 +284,65 @@ def plot_inv_metric(fit, B=25):
   plot.subplots_adjust(hspace=1.0, wspace=0.25)
   plot.show()
 
-def display_stepsizes(fit):
-  """Display outcome of symplectic integrator step size adaptation"""
-  sampler_params = fit.get_sampler_params(inc_warmup=False)
-  for chain_num, s in enumerate(sampler_params):
-    stepsize = s['stepsize__'][0]
-    print(f'Chain {chain_num + 1}: Integrator Step Size = {stepsize:.2e}')
-
-def plot_num_leapfrog(fit):
-  """Display symplectic integrator trajectory lenghts"""
-  sampler_params = fit.get_sampler_params(inc_warmup=False)
+# Display adapted symplectic integrator step sizes
+# @param diagnostics A dictionary of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+def display_stepsizes(diagnostics):
+  """Display adapted symplectic integrator step sizes"""
+  if type(diagnostics) is not dict:
+    print('Input variable `diagnostics` is not a standard dictionary!')
+    return
   
-  vals_counts = [ numpy.unique(s['n_leapfrog__'], return_counts=True) 
-                  for s in sampler_params ] 
+  stepsizes = diagnostics['stepsize__']
+  C = stepsizes.shape[0]
+  
+  for c in range(C):
+    stepsize = stepsizes[c, 1]
+    print(f'Chain {c + 1}: Integrator Step Size = {stepsize:.2e}')
+
+# Display symplectic integrator trajectory lengths
+# @param diagnostics A dictionary of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+def plot_num_leapfrog(diagnostics):
+  """Display symplectic integrator trajectory lenghts"""
+  if type(diagnostics) is not dict:
+    print('Input variable `diagnostics` is not a standard dictionary!')
+    return
+  
+  lengths = diagnostics['n_leapfrog__']
+  C = lengths.shape[0]
+  
+  vals_counts = [ numpy.unique(lengths[c], return_counts=True) 
+                  for c in range(C) ] 
   max_n = max([ max(a[0]) for a in vals_counts ]).astype(numpy.int64)
   max_counts = max([ max(a[1]) for a in vals_counts ])
   
   idxs = [ idx for idx in range(max_n) for r in range(2) ]
   xs = [ idx + delta for idx in range(max_n) for delta in [-0.5, 0.5]]
   
-  C = len(vals_counts)
   N_plots = C
   N_cols = 2
   N_rows = math.ceil(N_plots / N_cols)
   f, axarr = plot.subplots(N_rows, N_cols)
   k = 0
   
-  for c, s in enumerate(sampler_params):
-    counts = numpy.histogram(s['n_leapfrog__'], 
+  for c in range(C):
+    counts = numpy.histogram(lengths[c], 
                              bins=numpy.arange(0.5, max_n + 1.5, 1))[0]
     ys = counts[idxs]
-
-    eps = s['stepsize__'][0]
-
+    
+    eps = diagnostics['stepsize__'][0][0]
+    
     idx1 = k // N_cols
     idx2 = k % N_cols
     k += 1
-
+    
     axarr[idx1, idx2].plot(xs, ys, dark)
     axarr[idx1, idx2].set_title(f'Chain {c + 1}\n(Stepsize = {eps:.3e})')
     axarr[idx1, idx2].set_xlabel("Numerical Trajectory Length")
@@ -227,161 +356,279 @@ def plot_num_leapfrog(fit):
   plot.subplots_adjust(hspace=1.0, wspace=0.25)
   plot.show()
 
-def display_ave_accept_proxy(fit):
+# Display empirical average of the proxy acceptance statistic across 
+# each Markov chain
+# @param diagnostics A dictionary of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+def display_ave_accept_proxy(diagnostics):
   """Display empirical average of the proxy acceptance statistic
-     across each individual Markov chains"""
-  sampler_params = fit.get_sampler_params(inc_warmup=False)
+     across each Markov chain"""
+     
+  if type(diagnostics) is not dict:
+    print('Input variable `diagnostics` is not a standard dictionary!')
+    return
   
-  for c, s in enumerate(sampler_params):
-    ave_accept_proxy = numpy.mean(s['accept_stat__'])
-    print(  f'Chain {c + 1}: '
-          + f'Average proxy acceptance statistic = {ave_accept_proxy:.3f}')
+  proxy_stats = diagnostics['accept_stat__']
+  C = proxy_stats.shape[0]
+  
+  for c in range(C):
+    proxy_stat = numpy.mean(proxy_stats[c,:])
+    print(  f'Chain {c + 1}: Average proxy acceptance '
+          + f'statistic = {proxy_stat:.3f}')
 
-def _by_chain(unpermuted_extraction):
-  num_chains = len(unpermuted_extraction[0])
-  result = [[] for _ in range(num_chains)]
-  for c in range(num_chains):
-    for i in range(len(unpermuted_extraction)):
-      result[c].append(unpermuted_extraction[i][c])
-  return numpy.array(result)
-
-def _shaped_ordered_params(fit):
-  # flattened, unpermuted, by (iteration, chain)
-  ef = fit.extract(permuted=False, inc_warmup=False)
-  ef = _by_chain(ef)
-  ef = ef.reshape(-1, len(ef[0][0]))
-  ef = ef[:, 0:len(fit.flatnames)] # drop lp__
-  shaped = {}
-  idx = 0
-  for dim, param_name in zip([d for d in fit.par_dims if d != [0]], fit.extract().keys()):
-    length = int(numpy.prod(dim))
-    shaped[param_name] = ef[:,idx:idx + length]
-    shaped[param_name].reshape(*([-1] + dim))
-    idx += length
-  return shaped
-
-def partition_div(fit):
-  """Separate Markov chain states into those sampled from non-divergent
-     numerical Hamiltonian trajectories and those sampled from divergent
-     numerical Hamiltonian trajectories"""
-  sampler_params = fit.get_sampler_params(inc_warmup=False)
-  div = numpy.concatenate([x['divergent__'] for x in
-                           sampler_params]).astype('int')
-  params = _shaped_ordered_params(fit)
-  nondiv_params = dict((key, params[key][div == 0]) for key in params)
-  div_params = dict((key, params[key][div == 1]) for key in params)
-  return nondiv_params, div_params
-
-def plot_div_pairs(fit, names, transforms):
+# Plot pairwise scatter plots with non-divergent and divergent 
+# transitions separated by color
+# @param expectand_samples A named list of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+# @param diagnostics A named list of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+# @params transforms Vector of flags configurating which if any
+#                    transformation to apply to each named expectand:
+#                      0: identity
+#                      1: log
+#                      2: logit
+# @params plot_mode Plotting style configuration: 
+#                     0: Non-divergent transitions are plotted in 
+#                        transparent red while divergent transitions are
+#                        plotted in transparent green.
+#                     1: Non-divergent transitions are plotted in gray 
+#                        while divergent transitions are plotted in 
+#                        different shades of teal depending on the 
+#                        trajectory length.  Transitions from shorter
+#                        trajectories should cluster somewhat closer to 
+#                        the neighborhoods with problematic geometries.
+# @param max_width Maximum line width for printing
+def plot_div_pairs(expectand_samples, diagnostics, transforms, 
+                   plot_mode=0, max_width=72):
   """Plot pairwise scatter plots with non-divergent and divergent 
      transitions separated by color"""
-  nondiv_samples, div_samples = partition_div(fit)
-  N_nondiv = len(nondiv_samples[list(nondiv_samples.keys())[0]])
-  N_div = len(div_samples[list(div_samples.keys())[0]])
-       
-  N = len(names)
-  N_plots = math.comb(N, 2)
-  N_cols = 2
-  N_rows = math.ceil(N_plots / N_cols)
-  f, axarr = plot.subplots(N_rows, N_cols)
+  if type(expectand_samples) is not dict:
+    print(('Input variable `expectand_samples` '
+           'is not a standard dictionary!'))
+    return
   
+  if type(diagnostics) is not dict:
+    print('Input variable `diagnostics` is not a standard dictionary!')
+    return
+  
+  if type(transforms) is not list:
+    print('Input variable `transforms` is not a list!')
+    return
+  
+  # Check expectand/transform compatibility
+  N = len(expectand_samples)
+  if len(transforms) != N:
+    print(('Input variables `expectand_names` and `transforms`'
+           'are not the same length!'))
+    return
+  
+  expectand_names = list(expectand_samples.keys()) 
+  for n, name in enumerate(expectand_names):
+    if transforms[n] < 0 or transforms[n] > 2:
+      desc = (f'The transform flag {transforms[n]} for '
+              f'expectand {name} is invalid.  '
+              'Defaulting to no tranformation.')
+      desc = textwrap.wrap(desc, max_width)
+      print('\n'.join(desc))
+    
+    if transforms[n] == 1:
+      if numpy.amin(expectand_samples[name]) <= 0:
+        desc = (f'Log transform requested for expectand {name} '
+                'but expectand values are not strictly positive.')
+        desc = textwrap.wrap(desc, max_width)
+        print('\n'.join(desc))
+        return
+    
+    if transforms[n] == 2:
+      if (numpy.amin(expectand_samples[name]) <= 0 or
+          numpy.amax(expectand_samples[name]) >= 1):
+        desc = (f'Logit transform requested for expectand {name} '
+                'but expectand values are not strictly confined '
+                'to the unit interval.')
+        desc = textwrap.wrap(desc, max_width)
+        print('\n'.join(desc))
+        return
+  
+  if plot_mode < 0 or plot_mode > 1:
+    print(f'Invalid `plot mode` value {plot_mode}.')
+    return
+  
+  # Extract tree-depth information
+  C = diagnostics['divergent__'].shape[0]
+  div_nlfs = [ x for c in range(C) 
+                 for x, d in zip(diagnostics['n_leapfrog__'][c],
+                                 diagnostics['divergent__'][c])
+                 if d == 1  ]
+  if len(div_nlfs) > 0:
+    max_nlf = max(div_nlfs)
+  else:
+    max_nlf = 0
+  nom_colors = [light_teal, mid_teal, dark_teal]
+  cmap = LinearSegmentedColormap.from_list("teals", nom_colors, 
+                                                    N=max_nlf)
+  
+  # Set plot layout dynamically
+  N_pairs = math.comb(N, 2)
+  
+  if N_pairs == 1:
+    N_cols = 1
+    N_rows = 1
+    N_plots = 1
+  else:
+    N_cols = 2
+    N_rows = math.ceil(N_pairs / N_cols)
+    
+  if N_rows <= 3:
+    N_plots = 1
+  else:
+    N_plots = math.ceil(N_rows / 3)
+    N_rows = 3
+    
+  # Plot!
   k = 0
   
   for n in range(N - 1):
     for m in range(n + 1, N):
-        
-      name_x = names[n]
+      if k == 0:
+        f, axarr = plot.subplots(N_rows, N_cols, squeeze=False)
       
-      if re.search('\[', name_x):
-        base_name, idxs = name_x.split('[')
-        index_name_x = base_name
-        idxs = re.sub('\]', '', idxs)
-        nondiv_idxs = tuple([slice(0, N_nondiv)]) + tuple([int(s) - 1 for s in idxs.split(',')])
-        div_idxs = tuple([slice(0, N_div)]) + tuple([int(s) - 1 for s in idxs.split(',')])
-      else:
-        index_name_x = name_x
-        nondiv_idxs = tuple([slice(0, N_nondiv)]) + (0,)
-        div_idxs = tuple([slice(0, N_div)]) + (0,)
+      name_x = expectand_names[n]
       
       if transforms[n] == 0:
-        x_nondiv_samples = nondiv_samples[index_name_x][nondiv_idxs]
-        x_div_samples = div_samples[index_name_x][div_idxs]
-        x_name = name_x
+        x_nondiv_samples = [ x for c in range(C) for x, d in 
+                             zip(expectand_samples[name_x][c], 
+                                 diagnostics['divergent__'][c]) 
+                             if d == 0  ]
+        x_div_samples = [ x for c in range(C) for x, d in 
+                          zip(expectand_samples[name_x][c], 
+                              diagnostics['divergent__'][c]) 
+                          if d == 1  ]
+        x_display_name = name_x
       elif transforms[n] == 1:
-        x_nondiv_samples = [math.log(x) for x in nondiv_samples[index_name_x][nondiv_idxs]]
-        x_div_samples = [math.log(x) for x in div_samples[index_name_x][div_idxs]]
-        x_name = "log(" + name_x + ")"
+        x_nondiv_samples = [ math.log(x) for c in range(C) for x, d in 
+                             zip(expectand_samples[name_x][c], 
+                                 diagnostics['divergent__'][c]) 
+                             if d == 0  ]
+        x_div_samples = [ math.log(x) for c in range(C) for x, d in 
+                          zip(expectand_samples[name_x][c], 
+                              diagnostics['divergent__'][c]) 
+                          if d == 1  ]
+        x_display_name = f'log({name_x})'
+      elif transforms[n] == 2:
+        x_nondiv_samples = [ math.log(x / (1 - x)) 
+                             for c in range(C) for x, d in 
+                             zip(expectand_samples[name_x][c], 
+                                 diagnostics['divergent__'][c]) 
+                             if d == 0  ]
+        x_div_samples = [ math.log(x / (1 - x)) 
+                          for c in range(C) for x, d in 
+                          zip(expectand_samples[name_x][c], 
+                              diagnostics['divergent__'][c]) 
+                          if d == 1  ]
+        x_display_name = f'logit({name_x})'
+        
       xmin = min(numpy.concatenate((x_nondiv_samples, x_div_samples)))
       xmax = max(numpy.concatenate((x_nondiv_samples, x_div_samples)))
       
-      name_y = names[m]
-      
-      if re.search('\[', name_y):
-        base_name, idxs = name_y.split('[')
-        index_name_y = base_name
-        idxs = re.sub('\]', '', idxs)
-        nondiv_idxs = tuple([slice(0, N_nondiv)]) + tuple([int(s) - 1 for s in idxs.split(',')])
-        div_idxs = tuple([slice(0, N_div)]) + tuple([int(s) - 1 for s in idxs.split(',')])
-      else:
-        index_name_y = name_y
-        nondiv_idxs = tuple([slice(0, N_nondiv)]) + (0,)
-        div_idxs = tuple([slice(0, N_div)]) + (0,)
+      name_y = expectand_names[m]
       
       if transforms[m] == 0:
-        y_nondiv_samples = nondiv_samples[index_name_y][nondiv_idxs]
-        y_div_samples = div_samples[index_name_y][div_idxs]
-        y_name = name_y
+        y_nondiv_samples = [ y for c in range(C) for y, d in 
+                             zip(expectand_samples[name_y][c], 
+                                 diagnostics['divergent__'][c]) 
+                             if d == 0  ]
+        y_div_samples = [ y for c in range(C) for y, d in 
+                          zip(expectand_samples[name_y][c], 
+                              diagnostics['divergent__'][c]) 
+                          if d == 1  ]
+        y_display_name = name_y
       elif transforms[m] == 1:
-        y_nondiv_samples = [math.log(y) for y in nondiv_samples[index_name_y][nondiv_idxs]]
-        y_div_samples = [math.log(y) for y in div_samples[index_name_y][div_idxs]]
-        y_name = "log(" + name_y + ")"
+        y_nondiv_samples = [ math.log(y) for c in range(C) for y, d in 
+                             zip(expectand_samples[name_y][c], 
+                                 diagnostics['divergent__'][c]) 
+                             if d == 0  ]
+        y_div_samples = [ math.log(y) for c in range(C) for y, d in 
+                          zip(expectand_samples[name_y][c], 
+                              diagnostics['divergent__'][c]) 
+                          if d == 1  ]
+        y_display_name = f'log({name_y})'
+      elif transforms[m] == 2:
+        y_nondiv_samples = [ math.log(y / (1 - y)) 
+                             for c in range(C) for y, d in 
+                             zip(expectand_samples[name_y][c], 
+                                 diagnostics['divergent__'][c]) 
+                             if d == 0  ]
+        y_div_samples = [ math.log(y / (1 - y)) 
+                          for c in range(C) for y, d in 
+                          zip(expectand_samples[name_y][c], 
+                              diagnostics['divergent__'][c]) 
+                          if d == 1  ]
+        y_display_name = f'logit({name_y})'
+              
       ymin = min(numpy.concatenate((y_nondiv_samples, y_div_samples)))
       ymax = max(numpy.concatenate((y_nondiv_samples, y_div_samples)))
-    
+
       idx1 = k // N_cols
       idx2 = k % N_cols
-      k += 1
       
-      if N_rows > 1:
-        axarr[idx1, idx2].scatter(x_nondiv_samples, y_nondiv_samples, s=10,
-                                  color = dark_highlight, alpha=0.05)
-        axarr[idx1, idx2].scatter(x_div_samples, y_div_samples, s=10,
-                                  color = "#00FF00", alpha=0.25)
-        axarr[idx1, idx2].set_xlabel(x_name)
-        axarr[idx1, idx2].set_xlim([xmin, xmax])
-        axarr[idx1, idx2].set_ylabel(y_name)
-        axarr[idx1, idx2].set_ylim([ymin, ymax])
-        axarr[idx1, idx2].spines["top"].set_visible(False)
-        axarr[idx1, idx2].spines["right"].set_visible(False)
-      else:
-        axarr[idx2].scatter(x_nondiv_samples, y_nondiv_samples, s=10,
-                                  color = dark_highlight, alpha=0.05)
-        axarr[idx2].scatter(x_div_samples, y_div_samples, s=10,
-                                  color = "#00FF00", alpha=0.25)
-        axarr[idx2].set_xlabel(x_name)
-        axarr[idx2].set_xlim([xmin, xmax])
-        axarr[idx2].set_ylabel(y_name)
-        axarr[idx2].set_ylim([ymin, ymax])
-        axarr[idx2].spines["top"].set_visible(False)
-        axarr[idx2].spines["right"].set_visible(False)
-    
-  for i in range(N_rows * N_cols - N_plots):
-    idx1 = k // N_cols
-    idx2 = k % N_cols
-    k += 1
-    if N_rows > 1:
-      axarr[idx1, idx2].axis('off')
-    else:
-      axarr[idx2].axis('off')
+      if plot_mode == 0:
+        axarr[idx1, idx2].scatter(x_nondiv_samples, y_nondiv_samples, s=5,
+                                  color=dark_highlight, alpha=0.05)
+        axarr[idx1, idx2].scatter(x_div_samples, y_div_samples, s=5,
+                                  color="#00FF00", alpha=0.25)
+      elif plot_mode == 1:
+        axarr[idx1, idx2].scatter(x_nondiv_samples, y_nondiv_samples, 
+                                s=5, color="#DDDDDD")
+        if len(x_div_samples) > 0:
+          axarr[idx1, idx2].scatter(x_div_samples, y_div_samples, s=5,
+                                    cmap=cmap, c=div_nlfs)
+                                
+      axarr[idx1, idx2].set_xlabel(x_display_name)
+      axarr[idx1, idx2].set_xlim([xmin, xmax])
+      axarr[idx1, idx2].set_ylabel(y_display_name)
+      axarr[idx1, idx2].set_ylim([ymin, ymax])
+      axarr[idx1, idx2].spines["top"].set_visible(False)
+      axarr[idx1, idx2].spines["right"].set_visible(False)
+      
+      k += 1
+      if k == N_rows * N_cols:
+        # Flush current plot
+        plot.subplots_adjust(hspace=0.75, wspace=0.75)
+        plot.show()
+        k = 0
   
-  if N_rows > 1:
+  # Turn off any remaining subplots 
+  if k > 0: 
+    for kk in range(k, N_rows * N_cols):
+      idx1 = kk // N_cols
+      idx2 = kk % N_cols
+      axarr[idx1, idx2].axis('off')
     plot.subplots_adjust(hspace=0.75, wspace=0.75)
-  else:
-    plot.subplots_adjust(hspace=0.75)
-  plot.show()
+    plot.show()
 
-def compute_khat(fs):
-  """Compute empirical Pareto shape for a positive sample"""
+# Compute hat{xi}, an estimate for the shape of a generalized Pareto 
+# distribution from a sample of positive values using the method 
+# introduced in "A New and Efficient Estimation Method for the 
+# Generalized Pareto Distribution" by Zhang and Stephens 
+# https://doi.org/10.1198/tech.2009.08017.
+# 
+# Within the generalized Pareto distribution family all moments up to 
+# the mth order are finite if and only if 
+#  xi < 1 / m.
+#
+# @params fs A one-dimensional array of positive values.
+# @return Shape parameter estimate.
+def compute_xi_hat(fs):
+  """Compute empirical Pareto shape configuration for a positive sample"""
   N = len(fs)
   sorted_fs = sorted(fs)
   
@@ -404,67 +651,129 @@ def compute_khat(fs):
   log_w_vec = [None] * M
   
   for m in range(M):
-    b_hat_vec[m] = 1 / sorted_fs[-1] + (1 - math.sqrt(M / (m + 0.5))) / (3 * q)
+    b_hat_vec[m] =   1 / sorted_fs[-1] \
+                   + (1 - math.sqrt(M / (m + 0.5))) / (3 * q)
     if b_hat_vec[m] != 0:
-      k_hat = - numpy.mean( [ math.log(1 - b_hat_vec[m] * f) for f in sorted_fs ] )
-      log_w_vec[m] = N * ( math.log(b_hat_vec[m] / k_hat) + k_hat - 1)
+      xi_hat = numpy.mean( [ math.log(1 - b_hat_vec[m] * f) 
+                             for f in sorted_fs ] )
+      log_w_vec[m] = N * (   math.log(-b_hat_vec[m] / xi_hat) 
+                           - xi_hat - 1)
     else:
       log_w_vec[m] = 0
 
-  # Remove terms that don't contribute to improve numerical stability of average
+  # Remove terms that don't contribute to improve numerical stability 
+  # of average
   log_w_vec = [ lw for lw in log_w_vec if lw != 0 ]
   b_hat_vec = [ b for b in b_hat_vec if b != 0 ]
 
   max_log_w = max(log_w_vec)
-  b_hat = sum( [ b * math.exp(lw - max_log_w) for b, lw in zip(b_hat_vec, log_w_vec) ] ) /\
+  b_hat = sum( [ b * math.exp(lw - max_log_w) 
+               for b, lw in zip(b_hat_vec, log_w_vec) ] ) /\
           sum( [ math.exp(lw - max_log_w) for lw in log_w_vec ] )
 
   return numpy.mean( [ math.log(1 - b_hat * f) for f in sorted_fs ] )
 
-def compute_tail_khats(fs):
-  """Compute empirical Pareto shape for upper and lower tails"""
+# Compute empirical generalized Pareto shape for upper and lower tails
+# for an arbitrary sample of expectand values, ignoring any 
+# autocorrelation between the values.
+# @param fs A one-dimensional array of expectand values.
+# @return Left and right shape estimators.
+def compute_tail_xi_hats(fs):
+  """Compute empirical Pareto shape configuration for upper and lower tails"""
   f_center = numpy.median(fs)
+  
+  # Isolate lower and upper tails which can be adequately modeled by a 
+  # generalized Pareto shape for sufficiently well-behaved distributions
   fs_left = [ math.fabs(f - f_center) for f in fs if f <= f_center ]
+  N = len(fs_left)
+  M = int(min(0.2 * N, 3 * 3 * math.sqrt(N)))
+  fs_left = fs_left[M:N]
+  
   fs_right = [ f - f_center for f in fs if f > f_center ]
+  N = len(fs_right)
+  M = int(min(0.2 * N, 3 * 3 * math.sqrt(N)))
+  fs_right = fs_right[M:N] 
   
-  # Default to -2 if left tail is ill-defined
-  khat_left = -2
+  # Default to NaN if left tail is ill-defined
+  xi_hat_left = math.nan
   if len(fs_left) > 40:
-    khat_left = compute_khat(fs_left)
+    xi_hat_left = compute_xi_hat(fs_left)
   
-  # Default to -2 if right tail is ill-defined
-  khat_right = -2
+  # Default to NaN if right tail is ill-defined
+  xi_hat_right = math.nan
   if len(fs_right) > 40:
-    khat_right = compute_khat(fs_right)
+    xi_hat_right = compute_xi_hat(fs_right)
     
-  return [khat_left, khat_right]
+  return [xi_hat_left, xi_hat_right]
 
-def check_tail_khats(unpermuted_samples):
-  """Check empirical Pareto shape for upper and lower tails of a
-     given expectand output ensemble"""
+# Check upper and lower tail behavior of a given expectand output 
+# ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param max_width Maximum line width for printing
+def check_tail_xi_hats(samples, max_width=72):
+  """Check empirical Pareto shape configuration for upper and lower 
+     tails of a given expectand output ensemble"""
+  if len(samples.shape) != 2:
+    print('Input variable `samples` is not a two-dimensional array!')
+    return
+  
+  C = samples.shape[0]
   no_warning = True
-  C = len(unpermuted_samples[0,:])
+  
   for c in range(C):
-    fs = unpermuted_samples[:,c]
-    khats = compute_tail_khats(fs)
-    if khats[0] >= 0.25 and khats[1] >= 0.25:
+    xi_hats = compute_tail_xi_hats(samples[c,:])
+    xi_hat_threshold = 0.25
+    if math.isnan(xi_hats[0]) and math.isnan(xi_hats[1]):
       no_warning = False
-      print(f'Chain {c + 1}: Both left and right tail khats exceed 0.25!')
-    elif khats[0] < 0.25 and khats[1] >= 0.25:
+      print(f'  Chain {c + 1}: Both left and right tail '
+            'hat{{xi}}s are Nan!\n')
+    elif math.isnan(xi_hats[0]):
       no_warning = False
-      print(f'Chain {c + 1}: Right tail khat exceeds 0.25!')
-    elif khats[0] >= 0.25 and khats[1] < 0.25:
+      print(f'  Chain {c + 1}: Left tail '
+            'hat{{xi}} is Nan!\n')
+    elif math.isnan(xi_hats[1]):
       no_warning = False
-      print(f'Chain {c + 1}: Left tail khat exceeds 0.25!')
+      print(f'  Chain {c + 1}: Right tail '
+            'hat{{xi}} is Nan!\n')
+    elif (    xi_hats[0] >= xi_hat_threshold 
+         and xi_hats[1] >= xi_hat_threshold):
+      no_warning = False
+      print(f'  Chain {c + 1}: Both left and right tail '
+            f'hat{{xi}}s ({xi_hats[0]:.3f}, '
+            f'{xi_hats[1]:.3f}) exceed '
+            f'{xi_hat_threshold}!\n')
+    elif (    xi_hats[0] < xi_hat_threshold 
+          and xi_hats[1] >= xi_hat_threshold):
+      no_warning = False
+      print(f'  Chain {c + 1}: Ony right tail hat{{xi}} '
+            f'({xi_hats[1]:.3f}) exceeds '
+            f'{xi_hat_threshold}!\n')
+    elif (    xi_hats[0] >= xi_hat_threshold 
+          and xi_hats[1] < xi_hat_threshold):
+      no_warning = False
+      print(f'  Chain {c + 1}: Only left tail hat{{xi}} '
+            f'({xi_hats[0]:.3f}) exceeds '
+            f'{xi_hat_threshold}!\n')
   
   if no_warning:
     print('Expectand appears to be sufficiently integrable.\n')
   else:
-    print('  Large tail khats suggest that the expectand might')
-    print('not be sufficiently integrable.\n')
+    desc = ('  Large tail xi_hats suggest that the expectand might'
+            'not be sufficiently integrable.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
 
+# Compute empirical mean and variance of a given sequence with a single
+# pass using Welford accumulators.
+# @params A one-dimensional array of expectand values.
+# @return The empirical mean and variance.
 def welford_summary(fs):
-  """Welford accumulator for empirical mean and variance of a given sequence"""
+  """Welford accumulator for empirical mean and variance of a
+     given sequence"""
   mean = 0
   var = 0
   
@@ -477,33 +786,62 @@ def welford_summary(fs):
   
   return [mean, var]
 
-def check_variances(unpermuted_samples):
+# Check expectand output ensemble for vanishing empirical variance.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param max_width Maximum line width for printing
+def check_variances(samples, max_width=72):
   """Check expectand output ensemble for vanishing empirical variance"""
+  if len(samples.shape) != 2:
+    print('Input variable `samples` is not a two-dimensional array!')
+    return
+  
+  C = samples.shape[0]
   no_warning = True
-  C = len(unpermuted_samples[0,:])
+  
   for c in range(C):
-    fs = unpermuted_samples[:,c]
-    var = welford_summary(fs)[1]
+    var = welford_summary(samples[c,:])[1]
     if var < 1e-10:
       no_warning = True
-      print(f'Chain {c + 1}: Expectand is constant!\n')
+      print(f'  Chain {c + 1}: Expectand is constant!\n')
 
   if no_warning:
-    print('Expectand is varying in all Markov chains.')
+    print('Expectand is varying in all Markov chains.\n')
   else:
-    print('  If the expectand is not expected (haha) to be')
-    print('constant then the Markov transitions are misbehaving.\n')
+    desc = ('  If the expectand is not expected (haha) to be '
+            'constant then the Markov transitions are misbehaving.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
 
+# Split a sequence of expectand values in half to create an initial and 
+# terminal Markov chains
+# @params chain A sequence of expectand values derived from a single 
+#               Markov chain.
+# @return Two subsequences of expectand values.
 def split_chain(chain):
   """Split a Markov chain into initial and terminal Markov chains"""
   N = len(chain)
   M = N // 2
   return [ chain[0:M], chain[M:N] ]
 
-def compute_split_rhat(chains):
+# Compute split hat{R} for the expectand values across a Markov chain 
+# ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @return Split Rhat estimate.
+def compute_split_rhat(samples):
   """Compute split hat{R} for an expectand output ensemble across
      a collection of Markov chains"""
-  split_chains = [ c for chain in chains for c in split_chain(chain) ]
+  if len(samples.shape) != 2:
+    print('Input variable `samples` is not a two-dimensional array!')
+    return
+  
+  split_chains = [ c for chain in samples for c in split_chain(chain) ]
   N_chains = len(split_chains)
   N = sum([ len(chain) for chain in split_chains ])
   
@@ -517,7 +855,8 @@ def compute_split_rhat(chains):
   
   total_mean = sum(means) / N_chains
   W = sum(vars) / N_chains
-  B = N * sum([ (mean - total_mean)**2 / (N_chains - 1) for mean in means ])
+  B = N * sum([ (mean - total_mean)**2 / (N_chains - 1) 
+                for mean in means ])
   
   rhat = math.nan
   if abs(W) > 1e-10:
@@ -525,51 +864,67 @@ def compute_split_rhat(chains):
   
   return rhat
 
-def compute_split_rhats(fit, expectand_idxs=None):
+# Compute split hat{R} for all input expectands
+# @param expectand_samples A dictionary of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+def compute_split_rhats(expectand_samples):
   """Compute split hat{R} for all expectand output ensembles across
      a collection of Markov chains"""
-  unpermuted_samples = fit.extract(permuted=False)
-  
-  input_dims = unpermuted_samples.shape
-  N = input_dims[0]
-  C = input_dims[1]
-  I = input_dims[2]
-  
-  if expectand_idxs is None:
-    expectand_idxs = range(I)
-  
-  bad_idxs = set(expectand_idxs).difference(range(I))
-  if len(bad_idxs) > 0:
-    print(f'Excluding the invalid expectand indices: {bad_idxs}')
-    expectand_idxs = set(expectand_idxs).difference(bad_idxs)
+  if type(expectand_samples) is not dict:
+    print(('Input variable `expectand_samples` '
+           'is not a standard dictionary!'))
+    return
     
   rhats = []
-  for idx in expectand_idxs:
-    chains = [ unpermuted_samples[:,c,idx] for c in range(C) ]
-    rhats.append(compute_split_rhat(chains))
+  for name in expectand_samples:
+    samples = expectand_samples[name]
+    rhats.append(compute_split_rhat(samples))
   
   return rhats
 
-def check_rhat(unpermuted_samples):
+# Check split hat{R} across a given expectand output ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param max_width Maximum line width for printing
+def check_rhat(samples, max_width=72):
   """Check split hat{R} for all expectand output ensembles across
      a collection of Markov chains"""
-  C = unpermuted_samples.shape[1]
-  chains = [ unpermuted_samples[:,c] for c in range(C) ]
-  rhat = compute_split_rhat(chains)
+  if len(samples.shape) != 2:
+    print('Input variable `samples` is not a two-dimensional array!')
+    return
+    
+  rhat = compute_split_rhat(samples)
 
   no_warning = True
+  
   if math.isnan(rhat):
-    print('All Markov chains are frozen!')
+    print('All Markov chains appear to be frozen!')
   elif rhat > 1.1:
-    print(f'Split rhat is {rhat:.3f}!')
+    print(f'Split hat{{R}} is {rhat:.3f}!')
     no_warning = False
  
   if no_warning:
-    print('Markov chains are consistent with equilibrium.')
+    desc = ('Markov chain behavior is consistent with equilibrium.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
   else:
-    print('  Split rhat larger than 1.1 is inconsistent with equilibrium.')
+    desc = ('Split hat{R} larger than 1.1 suggests that at least one '
+            'of the Markov chains has not reached an equilibrium.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
 
-def compute_tauhat(fs):
+# Compute empirical integrated autocorrelation time for a sequence
+# of expectand values, known here as \hat{tau}.
+# @param fs A one-dimensional array of expectand values.
+# @return Left and right shape estimators.
+def compute_tau_hat(fs):
   """Compute empirical integrated autocorrelation time for a sequence"""
   # Compute empirical autocorrelations
   N = len(fs)
@@ -622,118 +977,122 @@ def compute_tauhat(fs):
     
     old_pair_sum = current_pair_sum
 
-def compute_min_tauhat(fit, expectand_idxs=None):
+# Compute the maximum empirical effective sample size across the 
+# Markov chains for the given expectands
+# @param expectand_samples A named list of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+def compute_min_eesss(expectand_samples):
   """Compute the minimimum empirical integrated autocorrelation time
-     across a collection of Markov chains for all expectand output ensembles"""
-  unpermuted_samples = fit.extract(permuted=False)
-  
-  input_dims = unpermuted_samples.shape
-  N = input_dims[0]
-  C = input_dims[1]
-  I = input_dims[2]
-  
-  if expectand_idxs is None:
-    expectand_idxs = range(I)
-  
-  bad_idxs = set(expectand_idxs).difference(range(I))
-  if len(bad_idxs) > 0:
-    print(f'Excluding the invalid expectand indices: {bad_idxs}')
-    expectand_idxs = set(expectand_idxs).difference(bad_idxs)
-
-  min_int_ac_times = []
-  for idx in expectand_idxs:
-    int_ac_times = [None] * C
-    for c in range(C):
-      fs = unpermuted_samples[:,c,idx]
-      int_ac_times[c] = compute_tauhat(fs)
+     across a collection of Markov chains for all expectand output
+     ensembles"""
+  if type(expectand_samples) is not dict:
+    print(('Input variable `expectand_samples` '
+           'is not a standard dictionary!'))
+    return
       
-    min_int_ac_times.append(min(int_ac_times))
-  
-  return min_int_ac_times
-
-def check_min_tauhat(unpermuted_samples):
-  """Check the empirical integrated autocorrelation times across a 
-     collection of Markov chains for all expectand output ensembles"""
-  input_dims = unpermuted_samples.shape
-  N = input_dims[0]
-  C = input_dims[1]
+  min_eesss = []
+  for name in expectand_samples:
+    samples = expectand_samples[name]
+    C = samples.shape[0]
+    S = samples.shape[0]
     
+    eesss = [None] * 4
+    for c in range(C):
+      tau_hat = compute_tau_hat(samples[c,:])
+      eesss[c] = S / tau_hat
+    
+    min_eesss.append(min(eesss))
+  
+  return min_eesss
+
+# Check the empirical effective sample size (EESS) for all a given 
+# expectand output ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param min_eess_per_chain The minimum empirical effective sample size
+#                           before a warning message is passed.
+# @param max_width Maximum line width for printing
+def check_eess(samples, min_eess_per_chain=100, max_width=72):
+  """Check the empirical effective sample size for all expectand 
+     output ensembles"""
+  if len(samples.shape) != 2:
+    print('Input variable `samples` is not a two-dimensional array!')
+    return
+  
   no_warning = True
+  C = samples.shape[0]
+  S = samples.shape[1]
+  
   for c in range(C):
-    fs = unpermuted_samples[:,c]
-    int_ac_time = compute_tauhat(fs)
-    if (int_ac_time / N) > 0.25:
-      print(  f'Chain {c + 1}: The integrated autocorrelation time'
-            + 'exceeds 0.25 * N!')
+    tau_hat = compute_tau_hat(samples[c,:])
+    eess = S / tau_hat
+    if eess < min_eess_per_chain:
+      print(f'Chain {c + 1}: The empirical effective sample size '
+            f'{eess :.1f} is too small!')
       no_warning = False
   
   if no_warning:
-    print('Autocorrelations within each Markov chain appear to be reasonable.')
+    desc = ('The empirical effective sample size is large enough for '
+            'Markov chain Monte Carlo estimation to be reliable '
+            'assuming that a central limit theorem holds.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
   else:
-    print('  Autocorrelations in at least one Markov chain are large enough')
-    print('that Markov chain Monte Carlo estimates may not be reliable.')
+    desc = ('If the empirical effective sample size is too small than '
+            'Markov chain Monte Carlo estimation may be unreliable '
+            'even when a central limit theorem holds.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
 
-def check_neff(unpermuted_samples, min_neff_per_chain=100):
-  """Check the empirical effective sample size for all expectand output ensembles"""
-  input_dims = unpermuted_samples.shape
-  N = input_dims[0]
-  C = input_dims[1]
-  
-  no_warning = True
-  for c in range(C):
-    fs = unpermuted_samples[:,c]
-    int_ac_time = compute_tauhat(fs)
-    neff = N / int_ac_time
-    if neff < min_neff_per_chain:
-      print(f'Chain {c + 1}: The effective sample size {neff:.1f} is too small!')
-      no_warning = False
-  
-  if no_warning:
-    print('All effective sample sizes are sufficiently large.')
-  else:
-    print('  If the effective sample size is too small then')
-    print('Markov chain Monte Carlo estimators will be imprecise.')
-
-def check_all_expectand_diagnostics(fit,
-                                    expectand_idxs=None,
-                                    min_neff_per_chain=100,
-                                    exclude_zvar=False):
+# Check all expectand-specific diagnostics.
+# @param expectand_samples A dictionary of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+# @param min_eess_per_chain The minimum empirical effective sample size
+#                           before a warning message is passed.
+# @param exclude_zvar Binary variable to exclude all expectands with
+#                     vanishing empirical variance from other diagnostic
+#                     checks.
+# @param max_width Maximum line width for printing
+def check_all_expectand_diagnostics(expectand_samples,
+                                    min_eess_per_chain=100,
+                                    exclude_zvar=False,
+                                    max_width=72):
   """Check all expectand diagnostics"""
-  unpermuted_samples = fit.extract(permuted=False)
+  if type(expectand_samples) is not dict:
+    print(('Input variable `expectand_samples` '
+           'is not a standard dictionary!'))
+    return
   
-  input_dims = unpermuted_samples.shape
-  N = input_dims[0]
-  C = input_dims[1]
-  I = input_dims[2]
-  
-  expectand_names = fit.flatnames + ["lp__"]
-  
-  if expectand_idxs is None:
-    expectand_idxs = range(I)
-  
-  bad_idxs = set(expectand_idxs).difference(range(I))
-  if len(bad_idxs) > 0:
-    print(f'Excluding the invalid expectand indices: {bad_idxs}')
-    expectand_idxs = set(expectand_idxs).difference(bad_idxs)
-
-  no_khat_warning = True
+  no_xi_hat_warning = True 
   no_zvar_warning = True
   no_rhat_warning = True
-  no_tauhat_warning = True
-  no_neff_warning = True
-
+  no_eess_warning = True
+  
   message = ""
-
-  for idx in expectand_idxs:
+  
+  for name in expectand_samples:
+    samples = expectand_samples[name]
+    C = samples.shape[0]
+    S = samples.shape[1]
+    
     local_warning = False
-    local_message = expectand_names[idx] + ':\n'
+    local_message = name + ':\n'
   
     if exclude_zvar:
       # Check zero variance across all Markov chains for exclusion
       any_zvar = False
       for c in range(C):
-        fs = unpermuted_samples[:,c,idx]
-        var = welford_summary(fs)[1]
+        var = welford_summary(samples[c,:])[1]
         if var < 1e-10:
           any_zvar = True
       
@@ -741,38 +1100,59 @@ def check_all_expectand_diagnostics(fit,
         continue
     
     for c in range(C):
-      fs = unpermuted_samples[:,c,idx]
+      fs = samples[c,:]
       
-      # Check tail khats in each Markov chain
-      khats = compute_tail_khats(fs)
-      khat_threshold = 0.75
-      if khats[0] >= khat_threshold and khats[1] >= khat_threshold:
-        no_khat_warning = False
+      # Check tail xi_hats in each Markov chain
+      xi_hats = compute_tail_xi_hats(fs)
+      xi_hat_threshold = 0.25
+      if math.isnan(xi_hats[0]) and math.isnan(xi_hats[1]):
+        no_xi_hat_warning = False
         local_warning = True
-        local_message +=  f'  Chain {c + 1}: Both left and right tail hat{{k}}s' \
-                        + f'({khats[0]:.3f}, {khats[1]:.3f}) exceed {khat_threshold}!\n'
-      elif khats[0] < khat_threshold and khats[1] >= khat_threshold:
-        no_khat_warning = False
+        local_message += (f'  Chain {c + 1}: Both left and right tail '
+                          'hat{{xi}}s are Nan!\n')
+      elif math.isnan(xi_hats[0]):
+        no_xi_hat_warning = False
         local_warning = True
-        local_message +=  f'  Chain {c + 1}: Right tail hat{{k}} ({khats[1]:.3f})' \
-                        + f' exceeds {khat_threshold}!\n'
-      elif khats[0] >= khat_threshold and khats[1] < khat_threshold:
-        no_khat_warning = False
+        local_message += (f'  Chain {c + 1}: Left tail '
+                          'hat{{xi}} is Nan!\n')
+      elif math.isnan(xi_hats[1]):
+        no_xi_hat_warning = False
         local_warning = True
-        local_message +=  f'  Chain {c + 1}: Left tail hat{{k}} ({khats[0]:.3f})' \
-                        + f' exceeds {khat_threshold}!\n'
+        local_message += (f'  Chain {c + 1}: Right tail '
+                          'hat{{xi}} is Nan!\n')
+      if (    xi_hats[0] >= xi_hat_threshold 
+          and xi_hats[1] >= xi_hat_threshold):
+        no_xi_hat_warning = False
+        local_warning = True
+        local_message += (f'  Chain {c + 1}: Both left and right tail '
+                          f'hat{{xi}}s ({xi_hats[0]:.3f}, '
+                          f'{xi_hats[1]:.3f}) exceed '
+                          f'{xi_hat_threshold}!\n')
+      elif (    xi_hats[0] < xi_hat_threshold 
+            and xi_hats[1] >= xi_hat_threshold):
+        no_xi_hat_warning = False
+        local_warning = True
+        local_message += (f'  Chain {c + 1}: Ony right tail hat{{xi}} '
+                          f'({xi_hats[1]:.3f}) exceeds '
+                          f'{xi_hat_threshold}!\n')
+      elif (    xi_hats[0] >= xi_hat_threshold 
+            and xi_hats[1] < xi_hat_threshold):
+        no_xi_hat_warning = False
+        local_warning = True
+        local_message += (f'  Chain {c + 1}: Only left tail hat{{xi}} '
+                          f'({xi_hats[0]:.3f}) exceeds '
+                          f'{xi_hat_threshold}!\n')
       
       # Check empirical variance in each Markov chain
       var = welford_summary(fs)[1]
       if var < 1e-10:
         no_zvar_warning = False
         local_warning = True
-        local_message += f'  Chain {c + 1}: Expectand has vanishing empirical' \
-                        + ' variance!\n'
+        local_message += (f'  Chain {c + 1}: Expectand exhibits '
+                          'vanishing empirical variance!\n')
     
     # Check split Rhat across Markov chains
-    chains = [ unpermuted_samples[:,c,idx] for c in range(C) ]
-    rhat = compute_split_rhat(chains)
+    rhat = compute_split_rhat(samples)
 
     if math.isnan(rhat):
       local_message += '  Split hat{R} is ill-defined!\n'
@@ -782,187 +1162,247 @@ def check_all_expectand_diagnostics(fit,
       local_message += f'  Split hat{{R}} ({rhat:.3f}) exceeds 1.1!\n'
 
     for c in range(C):
-      # Check empirical integrated autocorrelation time
-      fs = unpermuted_samples[:,c,idx]
-      int_ac_time = compute_tauhat(fs)
-      if (int_ac_time / N) > 0.25:
-        no_tauhat_warning = False
-        local_warning = True
-        local_message +=  f'  Chain {c + 1}: hat{{tau}} per iteration ' \
-                        + f'({int_ac_time / N:.3f}) exceeds 0.25!\n'
-      
       # Check empirical effective sample size
-      neff = N / int_ac_time
-      if neff < min_neff_per_chain:
-        no_neff_warning = False
+      fs = samples[c,:]
+      
+      tau_hat = compute_tau_hat(fs)
+      eess = S / tau_hat
+      if eess < min_eess_per_chain:
+        no_eess_warning = False
         local_warning = True
-        local_message +=  f'  Chain {c + 1}: hat{{ESS}} ({neff:.1f}) is smaller ' \
-                        + f'than desired ({min_neff_per_chain:.0f})!\n'
+        local_message += (f'  Chain {c + 1}: hat{{ESS}} ({eess:.1f}) '
+                          'is smaller than desired '
+                          f'({min_eess_per_chain:.0f})!\n')
     
-    local_message += '\n'
     if local_warning:
-      message += local_message
+      message += local_message + '\n'
   
-  if not no_khat_warning:
-    message +=  'Large tail hat{k}s suggest that the expectand' \
-              + ' might not be sufficiently integrable.\n\n'
-  
-  if not no_zvar_warning:
-    message +=  'If the expectands are not constant then zero empirical' \
-              + ' variance suggests that the Markov' \
-              + ' transitions are misbehaving.\n\n'
-  
-  if not no_rhat_warning:
-    message +=  'Split hat{R} larger than 1.1 is inconsisent with' \
-              + ' equilibrium.\n\n'
-  
-  if not no_tauhat_warning:
-    message +=  'hat{tau} larger than a quarter of the Markov chain' \
-              + ' length suggests that Markov chain Monte Carlo,' \
-              + ' estimates will be unreliable.\n\n'
-  
-  if not no_neff_warning:
-    message +=  'If hat{ESS} is too small then reliable Markov chain' \
-              + ' Monte Carlo estimators may still be too imprecise.\n\n'
-  
-  if no_khat_warning and no_zvar_warning and no_rhat_warning \
-     and no_tauhat_warning and no_neff_warning:
-    message =   'All expectands checked appear to be behaving well enough ' \
-              + 'for reliable Markov chain Monte Carlo estimation.\n'
+  if (    no_xi_hat_warning and no_zvar_warning
+      and no_rhat_warning   and no_eess_warning):
+    desc = ('All expectands checked appear to be behaving well enough '
+            'for reliable Markov chain Monte Carlo estimation.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
+    return
   
   print(message)
   
+  if not no_xi_hat_warning:
+    desc = ('Large tail hat{xi}s suggest that the expectand '
+            'might not be sufficiently integrable.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
+  
+  if not no_zvar_warning:
+    desc = ('If the expectands are not constant then zero empirical '
+            'variance suggests that the Markov transitions may be '
+            'misbehaving.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
+  
+  if not no_rhat_warning:
+    desc = ('Split Rhat larger than 1.1 suggests that at least one of '
+            'the Markov chains has not reached an equilibrium.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
+  
+  if not no_eess_warning:
+    desc = ('Small empirical effective sample sizes indicate strong '
+            'empirical autocorrelations in the realized Markov chains. '
+            'If the empirical effective sample size is too '
+            'small then Markov chain Monte Carlo estimation '
+            'may be unreliable even when a central limit '
+            'theorem holds.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
+    
+  return
 
-def expectand_diagnostics_summary(fit,
-                                  expectand_idxs=None,
-                                  min_neff_per_chain=100,
-                                  exclude_zvar=False):
+# Summary all expectand-specific diagnostics.
+# @param expectand_samples A dictionary of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+# @param min_eess_per_chain The minimum empirical effective sample size
+#                           before a warning message is passed.
+# @param exclude_zvar Binary variable to exclude all expectands with
+#                     vanishing empirical variance from other diagnostic
+#                     checks.
+# @param max_width Maximum line width for printing
+def summarize_expectand_diagnostics(expectand_samples,
+                                    min_eess_per_chain=100,
+                                    exclude_zvar=False,
+                                    max_width=72):
   """Summarize expectand diagnostics"""
-  unpermuted_samples = fit.extract(permuted=False)
+  if type(expectand_samples) is not dict:
+    print(('Input variable `expectand_samples` '
+           'is not a standard dictionary!'))
+    return
   
-  input_dims = unpermuted_samples.shape
-  N = input_dims[0]
-  C = input_dims[1]
-  I = input_dims[2]
-  
-  if expectand_idxs is None:
-    expectand_idxs = range(I)
-  
-  bad_idxs = set(expectand_idxs).difference(range(I))
-  if len(bad_idxs) > 0:
-    print(f'Excluding the invalid expectand indices: {bad_idxs}')
-    expectand_idxs = set(expectand_idxs).difference(bad_idxs)
+  failed_names = []
+  failed_xi_hat_names = []
+  failed_zvar_names = []
+  failed_rhat_names = []
+  failed_eess_names = []
 
-  failed_idx = []
-  failed_khat_idx = []
-  failed_zvar_idx = []
-  failed_rhat_idx = []
-  failed_tauhat_idx = []
-  failed_neff_idx = []
-
-  for idx in expectand_idxs:
+  for name in expectand_samples:
+    samples = expectand_samples[name]
+    C = samples.shape[0]
+    S = samples.shape[1]
+    
     if exclude_zvar:
       # Check zero variance across all Markov chains for exclusion
       any_zvar = False
       for c in range(C):
-        fs = unpermuted_samples[:,c,idx]
-        var = welford_summary(fs)[1]
+        var = welford_summary(samples[c,:])[1]
         if var < 1e-10:
           any_zvar = True
       if any_zvar:
         continue
     
     for c in range(C):
-      # Check tail khats in each Markov chain
-      fs = unpermuted_samples[:,c,idx]
-      khats = compute_tail_khats(fs)
-      khat_threshold = 0.75
-      if khats[0] >= khat_threshold or khats[1] >= khat_threshold:
-        failed_idx.append(idx)
-        failed_khat_idx.append(idx)
+      fs = samples[c,:]
+            
+      # Check tail xi_hats in each Markov chain
+      xi_hats = compute_tail_xi_hats(fs)
+      xi_hat_threshold = 0.25
+      if math.isnan(xi_hats[0]) or math.isnan(xi_hats[1]):
+        failed_names.append(name)
+        failed_xi_hat_names.append(name)
+      if xi_hats[0] >= xi_hat_threshold or xi_hats[1] >= xi_hat_threshold:
+        failed_names.append(name)
+        failed_xi_hat_names.append(name)
     
       # Check empirical variance in each Markov chain
       var = welford_summary(fs)[1]
       if var < 1e-10:
-        failed_idx.append(idx)
-        failed_zvar_idx.append(idx)
+        failed_names.append(name)
+        failed_zvar_names.append(name)
     
     # Check split Rhat across Markov chains
-    chains = [ unpermuted_samples[:,c,idx] for c in range(C) ]
-    rhat = compute_split_rhat(chains)
+    rhat = compute_split_rhat(samples)
     
     if math.isnan(rhat):
-      failed_idx.append(idx)
-      failed_rhat_idx.append(idx)
+      failed_names.append(name)
+      failed_rhat_names.append(name)
     elif rhat > 1.1:
-      failed_idx.append(idx)
-      failed_rhat_idx.append(idx)
+      failed_names.append(name)
+      failed_rhat_names.append(name)
     
     for c in range(C):
-      # Check empirical integrated autocorrelation time
-      fs = unpermuted_samples[:,c,idx]
-      int_ac_time = compute_tauhat(fs)
-      if (int_ac_time / N) > 0.25:
-        failed_idx.append(idx)
-        failed_tauhat_idx.append(idx)
-      
       # Check empirical effective sample size
-      neff = N / int_ac_time
-      if neff < min_neff_per_chain:
-        failed_idx.append(idx)
-        failed_neff_idx.append(idx)
+      tau_hat = compute_tau_hat(samples[c,:])
+      eess = S / tau_hat
+      
+      if eess < min_eess_per_chain:
+        failed_names.append(name)
+        failed_eess_names.append(name)
   
-  failed_idx = list(numpy.unique(failed_idx))
-  if len(failed_idx):
-    print( f'The expectands {str(failed_idx).replace("[", "").replace("]", "")}' \
-          + ' triggered diagnostic warnings.\n')
+  failed_names = list(numpy.unique(failed_names))
+  if len(failed_names):
+    desc = (f'The expectands {", ".join(failed_names)} '
+             'triggered diagnostic warnings.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
   else:
-    print(  'All expectands checked appear to be behaving' \
-          + 'well enough for Markov chain Monte Carlo estimation.')
+    desc = ('All expectands checked appear to be behaving well enough '
+            'for reliable Markov chain Monte Carlo estimation.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
   
-  failed_khat_idx = list(numpy.unique(failed_khat_idx))
-  if len(failed_khat_idx):
-    print( f'The expectands {str(failed_khat_idx).replace("[", "").replace("]", "")}' \
-          + ' triggered hat{k} warnings.\n')
-    print(  '  Large tail hat{k}s suggest that the expectand' \
-          + ' might not be sufficiently integrable.\n\n')
+  failed_xi_hat_names = list(numpy.unique(failed_xi_hat_names))
+  if len(failed_xi_hat_names):
+    desc = (f'The expectands {", ".join(failed_xi_hat_names)} '
+             'triggered tail hat{xi} warnings.')
+    desc = textwrap.wrap(desc, max_width)
+    print('\n'.join(desc))
+    
+    desc = ('  Large tail hat{k}s suggest that the expectand '
+            'might not be sufficiently integrable.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
   
-  failed_zvar_idx = list(numpy.unique(failed_zvar_idx))
-  if len(failed_zvar_idx):
-    print(  f'The expectands {str(failed_zvar_idx).replace("[", "").replace("]", "")}' \
-          + ' triggered zero variance warnings.\n')
-    print(  '  If the expectands are not constant then zero empirical' \
-          + ' variance suggests that the Markov' \
-          + ' transitions are misbehaving.\n\n')
-  
-  failed_rhat_idx = list(numpy.unique(failed_rhat_idx))
-  if len(failed_rhat_idx):
-    print( f'The expectands {str(failed_rhat_idx).replace("[", "").replace("]", "")}' \
-          + ' triggered hat{R} warnings.\n')
-    print(  '  Split hat{R} larger than 1.1 is inconsistent with' \
-          + ' equilibrium.\n\n')
-  
-  failed_tauhat_idx = list(numpy.unique(failed_tauhat_idx))
-  if len(failed_tauhat_idx):
-    print( f'The expectands {str(failed_tauhat_idx).replace("[", "").replace("]", "")}' \
-          + ' triggered hat{tau} warnings.\n')
-    print(  '  hat{tau} larger than a quarter of the Markov chain' \
-          + ' length suggests that Markov chain Monte Carlo' \
-          + ' estimates may be unreliable.\n\n')
-  
-  failed_neff_idx = list(numpy.unique(failed_neff_idx))
-  if len(failed_neff_idx):
-    print( f'The expectands {str(failed_neff_idx).replace("[", "").replace("]", "")}' \
-          + ' triggered hat{ESS} warnings.\n')
-    print(  '  If hat{ESS} is too small then even reliable Markov chain' \
-          + ' Monte Carlo estimators may still be too imprecise.\n\n')
+  failed_zvar_names = list(numpy.unique(failed_zvar_names))
+  if len(failed_zvar_names):
+    desc = (f'The expectands {", ".join(failed_zvar_names)} '
+             'triggered zero variance warnings.')
+    desc = textwrap.wrap(desc, max_width)
+    print('\n'.join(desc))
+    
+    desc = ('  If the expectands are not constant then zero empirical'
+            ' variance suggests that the Markov'
+            ' transitions may be misbehaving.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
+      
+  failed_rhat_names = list(numpy.unique(failed_rhat_names))
+  if len(failed_rhat_names):
+    desc = (f'The expectands {", ".join(failed_rhat_names)} '
+             'triggered hat{R} warnings.')
+    desc = textwrap.wrap(desc, max_width)
+    print('\n'.join(desc))
+    
+    desc = ('  Split Rhat larger than 1.1 suggests that at '
+            'least one of the Markov chains has not reached '
+            'an equilibrium.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
+   
+  failed_eess_names = list(numpy.unique(failed_eess_names))
+  if len(failed_eess_names):
+    desc = (f'The expectands {", ".join(failed_rhat_names)} '
+             'triggered hat{ESS} warnings.')
+    desc = textwrap.wrap(desc, max_width)
+    print('\n'.join(desc))
+    
+    desc = ('Small empirical effective sample sizes indicate strong '
+            'empirical autocorrelations in the realized Markov chains. '
+            'If the empirical effective sample size is too '
+            'small then Markov chain Monte Carlo estimation '
+            'may be unreliable even when a central limit '
+            'theorem holds.')
+    desc = textwrap.wrap(desc, max_width)
+    desc.append(' ')
+    print('\n'.join(desc))
 
-
-def summarize_all_diagnostics(fit,
+# Summarize Hamiltonian Monte Carlo and expectand diagnostics
+# into a binary encoding
+# @param expectand_samples A named list of two-dimensional arrays for 
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the 
+#                          second dimension indexes the sequential 
+#                          states within each Markov chain.
+# @param diagnostics A named list of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+# @param adapt_target Target acceptance proxy statistic for step size 
+#                     adaptation.
+# @param max_treedepth The maximum numerical trajectory treedepth
+# @param min_eess_per_chain The minimum empirical effective sample size
+#                           before a warning message is passed.
+# @param exclude_zvar Binary variable to exclude all expectands with
+#                     vanishing empirical variance from other diagnostic
+#                     checks.
+# @return warning_code An eight bit binary summary of the diagnostic 
+#                      output.
+def summarize_all_diagnostics(expectand_diagnostics,
+                              diagnostics,
                               adapt_target=0.801,
                               max_treedepth=10,
-                              expectand_idxs=None,
-                              min_neff_per_chain=100,
+                              min_eess_per_chain=100,
                               exclude_zvar=False):
   """Summarize Hamiltonian Monte Carlo and expectand diagnostics
      into a binary encoding"""
@@ -972,86 +1412,70 @@ def summarize_all_diagnostics(fit,
   sampler_params = fit.get_sampler_params(inc_warmup=False)
   
   # Check divergences
-  divergent = [x for y in sampler_params for x in y['divergent__']]
-  n = sum(divergent)
-  N = len(divergent)
-  
-  if n > 0: 
+  if sum(diagnostics['divergent__'].flatten()) > 0: 
     no_warning = False
     warning_code = warning_code | (1 << 0)
   
   # Check transitions that ended prematurely due to maximum tree depth limit
-  sampler_params = fit.get_sampler_params(inc_warmup=False)
-  depths = [x for y in sampler_params for x in y['treedepth__']]
-  n = sum(1 for x in depths if x == max_treedepth)
-  N = len(depths)
-  
-  if n > 0:
+  if sum([ 1 for td in diagnostics['treedepth__'].flatten() 
+           if td == max_treedepth ]) > 0:
     warning_code = warning_code | (1 << 1)
   
-  # Checks the energy fraction of missing information (E-FMI)
+  C = diagnostics['energy__'].shape[0]
   no_efmi_warning = True
-  for chain_num, s in enumerate(sampler_params):
-    energies = s['energy__']
+  no_accept_warning = True
+  
+  for c in range(C):
+  # Checks the energy fraction of missing information (E-FMI)
+    energies = diagnostics['energy__'][c,:]
     numer = sum((energies[i] - energies[i - 1])**2 for 
                 i in range(1, len(energies))) / len(energies)
     denom = numpy.var(energies)
     if numer / denom < 0.2:
       no_efmi_warning = False
+      
+    # Check convergence of the stepsize adaptation
+    ave_accept_proxy = numpy.mean(diagnostics['accept_stat__'][c,:])
+    if ave_accept_proxy < 0.9 * adapt_target:
+      no_accept_warning = False
 
   if not no_efmi_warning:
     warning_code = warning_code | (1 << 2)
-
-  # Check convergence of the stepsize adaptation
-  no_accept_warning = True
-  for chain_num, s in enumerate(sampler_params):
-    ave_accept_proxy = numpy.mean(s['accept_stat__'])
-    if ave_accept_proxy < 0.9 * adapt_target:
-      no_accept_warning = False
   
   if not no_accept_warning:
     warning_code = warning_code | (1 << 3)
   
-  unpermuted_samples = fit.extract(permuted=False)
-  
-  input_dims = unpermuted_samples.shape
-  N = input_dims[0]
-  C = input_dims[1]
-  I = input_dims[2]
-  
-  if expectand_idxs is None:
-    expectand_idxs = range(I)
-  
-  bad_idxs = set(expectand_idxs).difference(range(I))
-  if len(bad_idxs) > 0:
-    print(f'Excluding the invalid expectand indices: {bad_idxs}')
-    expectand_idxs = set(expectand_idxs).difference(bad_idxs)
-
-  khat_warning = False
   zvar_warning = False
+  xi_hat_warning = False
   rhat_warning = False
-  tauhat_warning = False
-  neff_warning = False
-
-  for idx in expectand_idxs:
+  eess_warning = False
+  
+  for name in expectand_samples:
+    samples = expectand_samples[name]
+    C = samples.shape[0]
+    S = samples.shape[1]
+    
     if exclude_zvar:
       # Check zero variance across all Markov chains for exclusion
       any_zvar = False
       for c in range(C):
-        fs = unpermuted_samples[:,c,idx]
-        var = welford_summary(fs)[1]
+        var = welford_summary(samples[c,])[1]
         if var < 1e-10:
           any_zvar = True
       if any_zvar:
         continue
     
     for c in range(C):
-      # Check tail khats in each Markov chain
-      fs = unpermuted_samples[:,c,idx]
-      khats = compute_tail_khats(fs)
-      khat_threshold = 0.75
-      if khats[0] >= khat_threshold or khats[1] >= khat_threshold:
-        khat_warning = True
+      fs = samples[c,:]
+       
+      # Check tail xi_hats in each Markov chain
+      xi_hats = compute_tail_xi_hats(fs)
+      xi_hat_threshold = 0.25
+      if math.isnan(xi_hats[0]) or math.isnan(xi_hats[1]):
+        xi_hat_warning = True
+      elif (   xi_hats[0] >= xi_hat_threshold 
+            or xi_hats[1] >= xi_hat_threshold):
+        xi_hat_warning = True
     
       # Check empirical variance in each Markov chain
       var = welford_summary(fs)[1]
@@ -1059,8 +1483,7 @@ def summarize_all_diagnostics(fit,
         zvar_warning = True
     
     # Check split Rhat across Markov chains
-    chains = [ unpermuted_samples[:,c,idx] for c in range(C) ]
-    rhat = compute_split_rhat(chains)
+    rhat = compute_split_rhat(samples)
     
     if math.isnan(rhat):
       rhat_warning = True
@@ -1068,30 +1491,26 @@ def summarize_all_diagnostics(fit,
       rhat_warning = True
     
     for c in range(C):
-      # Check empirical integrated autocorrelation time
-      fs = unpermuted_samples[:,c,idx]
-      int_ac_time = compute_tauhat(fs)
-      if (int_ac_time / N) > 0.25:
-        tauhat_warning = True
-      
-      # Check empirical effective sample size
-      neff = N / int_ac_time
-      if neff < min_neff_per_chain:
-        neff_warning = True
+       # Check empirical effective sample size
+      tau_hat = compute_tauhat(samples[c,:])
+      eess = S / tau_hat
+      if neff < min_eess_per_chain:
+        eess_warning = True
   
-  if khat_warning:
+  if xi_hat_warning:
     warning_code = warning_code | (1 << 4)
   if zvar_warning:
     warning_code = warning_code | (1 << 5)
   if rhat_warning:
     warning_code = warning_code | (1 << 6)  
-  if tauhat_warning:
+  if eess_warning:
     warning_code = warning_code | (1 << 7)
-  if neff_warning:
-    warning_code = warning_code | (1 << 8)
   
   return warning_code
 
+# Translate binary diagnostic codes to human readable output.
+# @params warning_code An eight bit binary summary of the diagnostic 
+#                      output.
 def parse_warning_code(warning_code):
     """Parses warning code into individual failures"""
     if warning_code & (1 << 0):
@@ -1103,16 +1522,18 @@ def parse_warning_code(warning_code):
     if warning_code & (1 << 3):
         print("  average acceptance proxy warning")
     if warning_code & (1 << 4):
-        print("  khat warning")
-    if warning_code & (1 << 4):
+        print("  xi_hat warning")
+    if warning_code & (1 << 5):
         print("  zero variance warning")
-    if warning_code & (1 << 4):
+    if warning_code & (1 << 6):
         print("  Rhat warning")
-    if warning_code & (1 << 4):
-        print("  tauhat warning")
-    if warning_code & (1 << 4):
-        print("  min effective sample size warning")
+    if warning_code & (1 << 7):
+        print("  min empirical effective sample size warning")
 
+# Compute empirical autocorrelations for a given Markov chain sequence
+# @parmas fs A one-dimensional array of sequential expectand values.
+# @return A one-dimensional array of empirical autocorrelations at each 
+#         lag up to the length of the sequence.
 def compute_rhos(fs):
   """Visualize empirical autocorrelations for a given sequence"""
   # Compute empirical autocorrelations
@@ -1166,22 +1587,35 @@ def compute_rhos(fs):
   
   return rhos
 
+# Plot empirical correlograms for a given expectand across a Markov 
+# chain ensemble.
+# @ax Matplotlib axis object
+# @param fs A two-dimensional array of scalar Markov chain states 
+#           with the first dimension indexing the Markov chains and 
+#           the second dimension indexing the sequential states 
+#           within each Markov chain.
+# @param max_L Maximum autocorrelation lag
+# @param rho_lim Plotting range of autocorrelation values
+# @display_name Name of expectand
 def plot_empirical_correlogram(ax,
-                               unpermuted_fs,
+                               fs,
                                max_L,
-                               rholim=[-0.2, 1.1],
+                               rho_lim=[-0.2, 1.1],
                                name=""):
   """Plot empirical correlograms for the expectand output ensembels in a
      collection of Markov chains"""
+  if len(fs.shape) != 2:
+    print('Input variable `fs` is not a two-dimensional array!')
+    return
+  C = fs.shape[0]
+  
   idxs = [ idx for idx in range(max_L) for r in range(2) ]
   xs = [ idx + delta for idx in range(max_L) for delta in [-0.5, 0.5]]
   
   colors = [dark, dark_highlight, mid, light_highlight]
-
-  C = (unpermuted_samples.shape)[1]
+  
   for c in range(C):
-    fs = unpermuted_fs[:,c]
-    rhos = compute_rhos(fs)
+    rhos = compute_rhos(fs[c,:])
     pad_rhos = [ rhos[idx] for idx in idxs ]
     ax.plot(xs, pad_rhos, colors[c % 4], linewidth=2)
   
@@ -1191,49 +1625,81 @@ def plot_empirical_correlogram(ax,
   ax.set_xlabel("Lag")
   ax.set_xlim(-0.5, max_L + 0.5)
   ax.set_ylabel("Empirical\nAutocorrelation")
-  ax.set_ylim(rholim[0], rholim[1])
+  ax.set_ylim(rho_lim[0], rho_lim[1])
   ax.spines["top"].set_visible(False)
   ax.spines["right"].set_visible(False)
 
-def plot_chain_sep_pairs(unpermuted_f1s, name_x,
-                         unpermuted_f2s, name_y):
+# Visualize the projection of a Markov chain ensemble along two 
+# expectands as a pairs plot.  Point colors darken along each Markov 
+# chain to visualize the autocorrelation.
+# @param f1s A two-dimensional array of expectand values with the first 
+#            dimension indexing the Markov chains and the second 
+#            dimension indexing the sequential states  within each 
+#            Markov chain.
+# @params display_name1 Name of first expectand
+# @param f2s A two-dimensional array of expectand values with the first 
+#            dimension indexing the Markov chains and the second 
+#            dimension indexing the sequential states  within each 
+#            Markov chain.
+# @params display_name2 Name of second expectand
+def plot_chain_sep_pairs(f1s, display_name1,
+                         f2s, display_name2):
   """Plot two expectand output ensembles againt each other separated by
      Markov chain """
-  input_dims = unpermuted_f1s.shape
-  N = input_dims[0]
-  C = input_dims[1]
-
+  if len(f1s.shape) != 2:
+    print('Input variable `f1s` is not a two-dimensional array!')
+    return
+  C1 = f1s.shape[0]
+  S1 = f1s.shape[1]
+  
+  if len(f2s.shape) != 2:
+    print('Input variable `f2s` is not a two-dimensional array!')
+    return
+  C2 = f2s.shape[0]
+  S2 = f2s.shape[1]
+    
+  if C1 != C2:
+    C = min(C1, C2)
+    C1 = C
+    C2 = C
+    print(f'Plotting only {C} Markov chains.')
+  
+  if S1 != S2:
+    S = min(S1, S2)
+    S1 = S
+    S2 = S
+    print(f'Plotting only {S} samples per Markov chain.')
+  
   colors = ["#DCBCBC", "#C79999", "#B97C7C",
             "#A25050", "#8F2727", "#7C0000"]
-  cmap = LinearSegmentedColormap.from_list("reds", colors, N=N)
+  cmap = LinearSegmentedColormap.from_list("reds", colors, N=S1)
 
-  min_x = min([ min(unpermuted_f1s[:,c]) for c in range(C) ])
-  max_x = max([ max(unpermuted_f1s[:,c]) for c in range(C) ])
+  min_x = min(f1s.flatten())
+  max_x = max(f1s.flatten())
   
-  min_y = min([ min(unpermuted_f2s[:,c]) for c in range(C) ])
-  max_y = max([ max(unpermuted_f2s[:,c]) for c in range(C) ])
+  min_y = min(f2s.flatten())
+  max_y = max(f2s.flatten())
   
-  N_plots = C
+  N_plots = C1
   N_cols = 2
   N_rows = math.ceil(N_plots / N_cols)
   f, axarr = plot.subplots(N_rows, N_cols)
   k = 0
   
-  for c in range(C):
+  for c in range(C1):
     idx1 = k // N_cols
     idx2 = k % N_cols
     k += 1
     
-    axarr[idx1, idx2].scatter(unpermuted_f1s.flatten(), 
-                              unpermuted_f2s.flatten(),
-                              color="#DDDDDD", s=10, zorder=3)
-    axarr[idx1, idx2].scatter(unpermuted_f1s[:,c], unpermuted_f2s[:,c],
-                              cmap=cmap, c=range(N), s=10, zorder=4)
+    axarr[idx1, idx2].scatter(f1s.flatten(), f2s.flatten(),
+                              color="#DDDDDD", s=5, zorder=3)
+    axarr[idx1, idx2].scatter(f1s[c,:], f2s[c,:],
+                              cmap=cmap, c=range(S1), s=5, zorder=4)
     
     axarr[idx1, idx2].set_title(f'Chain {c + 1}')
-    axarr[idx1, idx2].set_xlabel(name_x)
+    axarr[idx1, idx2].set_xlabel(display_name1)
     axarr[idx1, idx2].set_xlim([min_x, max_x])
-    axarr[idx1, idx2].set_ylabel(name_y)
+    axarr[idx1, idx2].set_ylabel(display_name2)
     axarr[idx1, idx2].set_ylim([min_y, max_y])
     axarr[idx1, idx2].spines["top"].set_visible(False)
     axarr[idx1, idx2].spines["right"].set_visible(False)
@@ -1241,14 +1707,29 @@ def plot_chain_sep_pairs(unpermuted_f1s, name_x,
   plot.subplots_adjust(hspace=1.0, wspace=0.5)
   plot.show()
 
-def pushforward_chains(chains, expectand):
+# Evaluate an expectand at the states of a Markov chain ensemble.
+# @param samples A two-dimensional array of scalar Markov chain states 
+#                with the first dimension indexing the Markov chains and 
+#                the second dimension indexing the sequential states 
+#                within each Markov chain.
+# @param expectand Scalar function to be applied to the Markov chain 
+#                  states.
+# @return A two-dimensional array of expectand values with the 
+#         first dimension indexing the Markov chains and the 
+#         second dimension indexing the sequential states within 
+#         each Markov chain.
+def pushforward_chains(samples, expectand):
   """Evaluate an expectand along a Markov chain"""
-  return [ [ expectand(x) for x in chain ] for chain in chains ]
+  return numpy.vectorize(expectand)(samples)
 
+# Estimate expectand exectation value from a single Markov chain.
+# @param fs A one-dimensional array of sequential expectand values.
+# @return The Markov chain Monte Carlo estimate, its estimated standard 
+#         error, and empirical effective sample size.
 def mcmc_est(fs):
   """Estimate expectand expectation value from a Markov chain"""
-  N = len(fs)
-  if N == 1:
+  S = len(fs)
+  if S == 1:
     return [fs[0], 0, math.nan]
   
   summary = welford_summary(fs)
@@ -1256,14 +1737,26 @@ def mcmc_est(fs):
   if summary[1] == 0:
     return [summary[0], 0, math.nan]
   
-  int_ac_time = compute_tauhat(fs)
-  neff = N / int_ac_time
-  return [summary[0], math.sqrt(summary[1] / neff), neff]
+  tau_hat = compute_tau_hat(fs)
+  eess = S / tau_hat
+  return [summary[0], math.sqrt(summary[1] / eess), eess]
 
-def ensemble_mcmc_est(chains):
-  """Estimate expectand exectation value from a collection of Markov chains"""
-  C = len(chains)
-  chain_ests = [ mcmc_est(chain) for chain in chains ]
+# Estimate expectand exectation value from a Markov chain ensemble.
+# @param samples A two-dimensional array of expectand values with the 
+#                first dimension indexing the Markov chains and the 
+#                second dimension indexing the sequential states within 
+#                each Markov chain.
+# @return The ensemble Markov chain Monte Carlo estimate, its estimated
+#         standard error, and empirical effective sample size.
+def ensemble_mcmc_est(samples):
+  """Estimate expectand exectation value from a collection of 
+     Markov chains"""
+  if len(samples.shape) != 2:
+    print('Input variable `samples` is not a two-dimensional array!')
+    return [math.nan, math.nan, math.nan]
+    
+  C = samples.shape[0]
+  chain_ests = [ mcmc_est(samples[c,:]) for c in range(C) ]
   
   # Total effective sample size
   total_ess = sum([ est[2] for est in chain_ests ])
@@ -1291,13 +1784,31 @@ def ensemble_mcmc_est(chains):
 
   return [mean, math.sqrt(var / total_ess), total_ess]
 
-def plot_pushforward_hist(ax, unpermuted_samples, B, flim=None, name="f"):
+# Visualize pushforward distribution of a given expectand as a 
+# histogram, using Markov chain Monte Carlo estimators to estimate the 
+# output bin probabilities.  Bin probability estimator error is shown 
+# in gray.
+# @ax Matplotlib axis object
+# @param samples A two-dimensional array of expectand values with the 
+#                first dimension indexing the Markov chains and the 
+#                second dimension indexing the sequential states within 
+#                each Markov chain.
+# @param B The number of histogram bins
+# @param display_name Exectand name
+# @param flim Optional histogram range
+# @param baseline Optional baseline value for visual comparison
+def plot_expectand_pushforward(ax, samples, B, display_name="f", 
+                              flim=None, baseline=None):
   """Plot pushforward histogram of a given expectand using Markov chain
      Monte Carlo estimators to estimate the output bin probabilities"""
+  if len(samples.shape) != 2:
+    print('Input variable `samples` is not a two-dimensional array!')
+    return
+    
   if flim is None:
     # Automatically adjust histogram binning to range of outputs
-    min_f = min(unpermuted_samples.flatten())
-    max_f = max(unpermuted_samples.flatten())
+    min_f = min(samples.flatten())
+    max_f = max(samples.flatten())
     
     # Add bounding bins
     delta = (max_f - min_f) / B
@@ -1314,15 +1825,12 @@ def plot_pushforward_hist(ax, unpermuted_samples, B, flim=None, name="f"):
   mean_p = [0] * B
   delta_p = [0] * B
   
-  C = (unpermuted_samples.shape)[1]
-  chains = [ unpermuted_samples[:,c] for c in range(C) ]
-  
   for b in range(B):
     def bin_indicator(x):
       return 1.0 if bins[b] <= x and x < bins[b + 1] else 0.0
     
-    indicator_chains = pushforward_chains(chains, bin_indicator)
-    est = ensemble_mcmc_est(indicator_chains)
+    indicator_samples = pushforward_chains(samples, bin_indicator)
+    est = ensemble_mcmc_est(indicator_samples)
     
     # Normalize bin probabilities by bin width to allow
     # for direct comparison to probability density functions
@@ -1333,20 +1841,26 @@ def plot_pushforward_hist(ax, unpermuted_samples, B, flim=None, name="f"):
   idxs = [ idx for idx in range(B) for r in range(2) ]
   xs = [ bins[b + o] for b in range(B) for o in range(2) ]
   
-  lower_inter = [ max(mean_p[idx] - 2 * delta_p[idx], 0)         for idx in idxs ]
-  upper_inter = [ min(mean_p[idx] + 2 * delta_p[idx], 1 / width) for idx in idxs ]
+  lower_inter = [ max(mean_p[idx] - 2 * delta_p[idx], 0)
+                  for idx in idxs ]
+  upper_inter = [ min(mean_p[idx] + 2 * delta_p[idx], 1 / width) 
+                  for idx in idxs ]
   
   min_y =        min(lower_inter)
   max_y = 1.05 * max(upper_inter)
   
   ax.fill_between(xs, lower_inter, upper_inter,
-                    facecolor=light, color=light)
+                    facecolor=light, color="#DDDDDD")
   ax.plot(xs, [ mean_p[idx] for idx in idxs ], color=dark, linewidth=2)
   
+  if baseline is not None:
+    ax.axvline(x=baseline, linewidth=4, color="white")
+    ax.axvline(x=baseline, linewidth=2, color="black")
+
   ax.set_xlim(flim)
-  ax.set_xlabel(name)
+  ax.set_xlabel(display_name)
   ax.set_ylim([min_y, max_y])
-  ax.set_ylabel("Estimated Bin\nProbabilities")
+  ax.set_ylabel("Estimated Bin\nProbabilities / Bin Width")
   ax.get_yaxis().set_visible(False)
   ax.spines["top"].set_visible(False)
   ax.spines["left"].set_visible(False)

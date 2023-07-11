@@ -320,7 +320,7 @@ plot_num_leapfrog <- function(diagnostics) {
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
 #                    states within each Markov chain.
-display_ave_accept_proxy <- function(fit) {
+display_ave_accept_proxy <- function(diagnostics) {
   if (!is.vector(diagnostics)) {
     cat('Input variable `diagnostics` is not a named list!')
     return

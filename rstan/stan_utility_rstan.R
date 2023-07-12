@@ -32,10 +32,10 @@ c_dark_teal <- c("#1D4F4F")
 #         indexes the Markov chains and the second dimension indexes the 
 #         sequential states within each Markov chain. 
 extract_expectands <- function(stan_fit) {
-  nom_params <- rstan:::extract(fit, permuted=FALSE)
+  nom_params <- rstan:::extract(stan_fit, permuted=FALSE)
   N <- dim(nom_params)[3] - 1
   params <- lapply(1:N, function(n) t(nom_params[,,n]))
-  names(params) <- names(fit)[1:N]
+  names(params) <- names(stan_fit)[1:N]
   (params)
 }
 
@@ -50,7 +50,7 @@ extract_hmc_diagnostics <- function(stan_fit) {
   diagnostic_names <- c('divergent__', 'treedepth__', 'n_leapfrog__', 
                         'stepsize__', 'energy__', 'accept_stat__')
 
-  nom_params <- get_sampler_params(fit, inc_warmup=FALSE)
+  nom_params <- get_sampler_params(stan_fit, inc_warmup=FALSE)
   C <- length(nom_params)
   params <- lapply(diagnostic_names, 
                    function(name) t(sapply(1:C, function(c) 
@@ -320,7 +320,7 @@ plot_num_leapfrog <- function(diagnostics) {
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
 #                    states within each Markov chain.
-display_ave_accept_proxy <- function(fit) {
+display_ave_accept_proxy <- function(diagnostics) {
   if (!is.vector(diagnostics)) {
     cat('Input variable `diagnostics` is not a named list!')
     return

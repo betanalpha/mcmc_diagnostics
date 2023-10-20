@@ -281,3 +281,4 @@ TSWLatexianTemp*
 *_files
 *__pycache__/
 *.obj
+build

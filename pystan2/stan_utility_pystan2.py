@@ -34,7 +34,7 @@ import re
 
 def compile_model(filename, model_name=None, **kwargs):
   """This will automatically cache models.
-
+  
     See http://pystan.readthedocs.io/en/latest/avoiding_recompilation.html"""
   from hashlib import md5
   
@@ -132,14 +132,14 @@ def check_all_hmc_diagnostics(diagnostics,
                             f'transitions ({n_div / S:.2%}) diverged.')
     
     # Check for tree depth saturation
-    n_tds = sum([ td > max_treedepth 
-                  for td in diagnostics['treedepth__'][0] ])
+    n_tds = sum([ td >= max_treedepth 
+                  for td in diagnostics['treedepth__'][c] ])
     
     if n_tds > 0:
       no_warning = False
       no_treedepth_warning = False
       local_messages.append(f'  Chain {c + 1}: {n_tds:.0f} of {S} '
-                            f'transitions ({n_div / S:.2%}) saturated '
+                            f'transitions ({n_tds / S:.2%}) saturated '
                             f'the maximum treedepth of {max_treedepth}.')
     
     # Check the energy fraction of missing information (E-FMI)
@@ -158,10 +158,11 @@ def check_all_hmc_diagnostics(diagnostics,
     if ave_accept_proxy < 0.9 * adapt_target:
       no_warning = False
       no_accept_warning = False
-      local_messages.append(f'  Chain {c + 1}: Average proxy acceptance '
-                            f'statistic ({ave_accept_proxy:.3f}) is')
-      local_messages.append('                  smaller than 90% of the '
-                            f'target ({adapt_target:.3f}).')
+      local_message = (f'  Chain {c + 1}: Average proxy acceptance '
+                       f'statistic ({ave_accept_proxy:.3f}) is smaller '
+                       f'than 90% of the target ({adapt_target:.3f}).')
+      local_message = textwrap.wrap(local_message, max_width)
+      local_messages += local_message
     
     if len(local_messages) > 0:
       messages.append(local_messages)
@@ -205,7 +206,7 @@ def check_all_hmc_diagnostics(diagnostics,
     desc = textwrap.wrap(desc, max_width)
     messages.append(desc)
     messages.append([' '])
-
+  
   if not no_accept_warning:
     desc = ('A small average proxy acceptance statistic '
             'indicates that the adaptation of the numerical '
@@ -219,13 +220,11 @@ def check_all_hmc_diagnostics(diagnostics,
   print('\n'.join([ '\n'.join(m) for m in messages ]))
 
 # Plot outcome of inverse metric adaptation
-# @params adaptation_info A list containing raw adaptation text for
-#                         each Markov chain.  The output of RStan and 
-#                         PyStan's `get_adaptation_info` functions.
+# @param stan_fit A StanFit object
 # @params B The number of bins for the inverse metric element histograms.
-def plot_inv_metric(fit, B=25):
+def plot_inv_metric(stan_fit, B=25):
   """Plot outcome of inverse metric adaptation"""
-  chain_info = fit.get_adaptation_info()
+  chain_info = stan_fit.get_adaptation_info()
   C = len(chain_info)
   
   inv_metric_elems = [None] * C
@@ -244,19 +243,19 @@ def plot_inv_metric(fit, B=25):
   max_elem = max_elem + delta
   bins = numpy.arange(min_elem, max_elem + delta, delta)
   B = B + 2
-
+  
   max_y = max([ max(numpy.histogram(a, bins=bins)[0]) for a in inv_metric_elems ])
   
   idxs = [ idx for idx in range(B) for r in range(2) ]
   xs = [ bins[idx + delta] for idx in range(B) for delta in [0, 1]]
-
+  
   N_plots = C
   N_cols = 2
   N_rows = math.ceil(N_plots / N_cols)
-  f, axarr = plot.subplots(N_rows, N_cols)
+  f, axarr = plot.subplots(N_rows, N_cols, layout="constrained")
   k = 0
   
-  sampler_params = fit.get_sampler_params(inc_warmup=False)
+  sampler_params = stan_fit.get_sampler_params(inc_warmup=False)
   sci_formatter = matplotlib.ticker.FuncFormatter(lambda x, lim: f'{x:.1e}')
   
   for c in range(C):
@@ -281,7 +280,6 @@ def plot_inv_metric(fit, B=25):
     axarr[idx1, idx2].spines["left"].set_visible(False)
     axarr[idx1, idx2].spines["right"].set_visible(False)
   
-  plot.subplots_adjust(hspace=1.0, wspace=0.25)
   plot.show()
 
 # Display adapted symplectic integrator step sizes
@@ -304,13 +302,59 @@ def display_stepsizes(diagnostics):
     print(f'Chain {c + 1}: Integrator Step Size = {stepsize:.2e}')
 
 # Display symplectic integrator trajectory lengths
+# @ax Matplotlib axis object
 # @param diagnostics A dictionary of two-dimensional arrays for 
 #                    each expectand.  The first dimension of each
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
 #                    states within each Markov chain.
-def plot_num_leapfrog(diagnostics):
+# @param nlim Optional histogram range
+def plot_num_leapfrogs(ax, diagnostics, nlim=None):
   """Display symplectic integrator trajectory lenghts"""
+  if type(diagnostics) is not dict:
+    print('Input variable `diagnostics` is not a standard dictionary!')
+    return
+  
+  lengths = diagnostics['n_leapfrog__']
+  
+  C = lengths.shape[0]
+  colors = [dark_highlight, dark, mid_highlight, mid, light_highlight]
+  cmap = LinearSegmentedColormap.from_list("reds", colors, N=C)
+  
+  vals_counts = [ numpy.unique(lengths[c], return_counts=True) 
+                  for c in range(C) ] 
+  max_n = max([ max(a[0]) for a in vals_counts ]).astype(numpy.int64) + 1
+  max_counts = max([ max(a[1]) for a in vals_counts ])
+  
+  if nlim is None:
+    nlim = [0.5, max_n + 0.5]
+  
+  idxs = [ idx for idx in range(max_n) for r in range(2) ]
+  xs = [ idx + delta for idx in range(max_n) for delta in [-0.5, 0.5]]
+  
+  for c in range(C):
+    counts = numpy.histogram(lengths[c], 
+                             bins=numpy.arange(0.5, max_n + 1.5, 1))[0]
+    ys = counts[idxs]
+    
+    ax.plot(xs, ys, colors[c])
+  
+  ax.set_xlabel("Numerical Trajectory Lengths")
+  ax.set_xlim(nlim)
+  ax.set_ylabel("")
+  ax.get_yaxis().set_visible(False)
+  ax.set_ylim([0, 1.1 * max_counts])
+  ax.spines["top"].set_visible(False)
+  ax.spines["right"].set_visible(False)
+
+# Display symplectic integrator trajectory lengths by Markov chain
+# @param diagnostics A dictionary of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+def plot_num_leapfrogs_by_chain(diagnostics):
+  """Display symplectic integrator trajectory lengths"""
   if type(diagnostics) is not dict:
     print('Input variable `diagnostics` is not a standard dictionary!')
     return
@@ -329,7 +373,7 @@ def plot_num_leapfrog(diagnostics):
   N_plots = C
   N_cols = 2
   N_rows = math.ceil(N_plots / N_cols)
-  f, axarr = plot.subplots(N_rows, N_cols)
+  f, axarr = plot.subplots(N_rows, N_cols, layout="constrained")
   k = 0
   
   for c in range(C):
@@ -337,7 +381,7 @@ def plot_num_leapfrog(diagnostics):
                              bins=numpy.arange(0.5, max_n + 1.5, 1))[0]
     ys = counts[idxs]
     
-    eps = diagnostics['stepsize__'][0][0]
+    eps = diagnostics['stepsize__'][c][0]
     
     idx1 = k // N_cols
     idx2 = k % N_cols
@@ -345,7 +389,7 @@ def plot_num_leapfrog(diagnostics):
     
     axarr[idx1, idx2].plot(xs, ys, dark)
     axarr[idx1, idx2].set_title(f'Chain {c + 1}\n(Stepsize = {eps:.3e})')
-    axarr[idx1, idx2].set_xlabel("Numerical Trajectory Length")
+    axarr[idx1, idx2].set_xlabel("Numerical Trajectory Lengths")
     axarr[idx1, idx2].set_xlim([0.5, max_n + 0.5])
     axarr[idx1, idx2].set_ylabel("")
     axarr[idx1, idx2].get_yaxis().set_visible(False)
@@ -353,8 +397,67 @@ def plot_num_leapfrog(diagnostics):
     axarr[idx1, idx2].spines["top"].set_visible(False)
     axarr[idx1, idx2].spines["right"].set_visible(False)
   
-  plot.subplots_adjust(hspace=1.0, wspace=0.25)
   plot.show()
+
+# Display symplectic integrator trajectory times
+# @ax Matplotlib axis object
+# @param diagnostics A dictionary of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+# @param B The number of histogram bins
+# @param nlim Optional histogram range
+def plot_int_times(ax, diagnostics, B, tlim=None):
+  """Display symplectic integrator trajectory times"""
+  if type(diagnostics) is not dict:
+    print('Input variable `diagnostics` is not a standard dictionary!')
+    return
+  
+  lengths = diagnostics['n_leapfrog__']
+  C = lengths.shape[0]
+  eps = [ diagnostics['stepsize__'][c][0] for c in range(C) ]
+  
+  if tlim is None:
+    # Automatically adjust histogram binning to range of outputs
+    min_t = 0
+    max_t = max([ eps[c] * max(diagnostics['n_leapfrog__'][c]) 
+                  for c in range(C) ])
+    
+    # Add bounding bins
+    delta = (max_t - min_t) / B
+    min_t = min_t - delta
+    max_t = max_t + delta
+    tlim = [min_t, max_t]
+    
+    bins = numpy.arange(min_t, max_t + delta, delta)
+    B = B + 2
+  else:
+    delta = (tlim[1] - tlim[0]) / B
+    bins = numpy.arange(tlim[0], tlim[1] + delta, delta)
+  
+  colors = [dark_highlight, dark, mid_highlight, mid, light_highlight]
+  cmap = LinearSegmentedColormap.from_list("reds", colors, N=C)
+  
+  idxs = [ idx for idx in range(B) for r in range(2) ]
+  xs = [ bins[b + o] for b in range(B) for o in range(2) ]
+  
+  max_counts = 0
+  
+  for c in range(C):
+    counts = numpy.histogram(eps[c] * lengths[c], bins=bins)[0]
+    ys = counts[idxs]
+    max_counts = max(max_counts, max(counts))
+    
+    ax.plot(xs, ys, colors[c])
+  
+  ax.set_xlabel("Trajectory Integration Times")
+  ax.set_xlim(tlim)
+  ax.set_ylabel("")
+  ax.get_yaxis().set_visible(False)
+  ax.set_ylim([0, 1.1 * max_counts])
+  ax.spines["top"].set_visible(False)
+  ax.spines["right"].set_visible(False)
 
 # Display empirical average of the proxy acceptance statistic across 
 # each Markov chain
@@ -379,24 +482,72 @@ def display_ave_accept_proxy(diagnostics):
     print(  f'Chain {c + 1}: Average proxy acceptance '
           + f'statistic = {proxy_stat:.3f}')
 
+# Apply transformation identity, log, or logit transformation to
+# named samples and flatten the output.  Transformation defaults to 
+# identity if name is not included in `transforms` dictionary.  A 
+# ValueError is thrown if samples are not properly constrained.
+# @param name Expectand name.
+# @param samples A named list of two-dimensional arrays for 
+#                each expectand.  The first dimension of each element 
+#                indexes the Markov chains and the second dimension 
+#                indexes the sequential states within each Markov chain.
+# @param transforms A dictionary with expectand names for keys and
+#                   transformation flags for values.
+# @return The transformed expectand name and a one-dimensional array of
+#         flattened transformation outputs.
+def apply_transform(name, samples, transforms):
+  t = transforms.get(name, 0)
+  transformed_name = ""
+  transformed_samples = 0
+  if t == 0:
+    transformed_name = name
+    transformed_samples = samples[name].flatten()
+  elif t == 1:
+    if numpy.amin(samples[name]) <= 0:
+      raise ValueError( 'Log transform requested for expectand '
+                       f'{name} but expectand values are not strictly ' 
+                        'positive.')
+    transformed_name = f'log({name})'
+    transformed_samples = [ math.log(x) for x in 
+                            samples[name].flatten() ]
+  elif t == 2:
+    if (numpy.amin(samples[name]) <= 0 or
+          numpy.amax(samples[name]) >= 1):
+      raise ValueError( 'Logit transform requested for expectand '
+                       f'{name} but expectand values are not strictly '
+                        'confined to the unit interval.')
+    transformed_name = f'logit({name})'
+    transformed_samples = [ math.log(x / (1 - x)) for x in
+                            samples[name].flatten() ]
+  return transformed_name, transformed_samples
+
 # Plot pairwise scatter plots with non-divergent and divergent 
 # transitions separated by color
+# @param x_names A list of expectand names to be plotted on the x axis.
+# @param y_names A list of expectand names to be plotted on the y axis.
 # @param expectand_samples A named list of two-dimensional arrays for 
-#                          each expectand.  The first dimension of each
-#                          element indexes the Markov chains and the 
-#                          second dimension indexes the sequential 
-#                          states within each Markov chain.
+#                          each expectand to be plotted on the y axis.
+#                          The first dimension of each element indexes 
+#                          the Markov chains and the second dimension 
+#                          indexes the sequential states within each 
+#                          Markov chain.
 # @param diagnostics A named list of two-dimensional arrays for 
 #                    each expectand.  The first dimension of each
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
 #                    states within each Markov chain.
-# @params transforms Vector of flags configurating which if any
-#                    transformation to apply to each named expectand:
-#                      0: identity
-#                      1: log
-#                      2: logit
-# @params plot_mode Plotting style configuration: 
+# @param xlim       Optional global x-axis bounds for all pair plots.
+#                   Defaults to dynamic bounds for each pair plot.
+# @param ylim       Optional global y-axis bounds for all pair plots.
+#                   Defaults to dynamic bounds for each pair plot.
+# @param transforms An optional dictionary with expectand names for keys 
+#                   and transformation flags for values.  Valid flags 
+#                   are
+#                     0: identity
+#                     1: log
+#                     2: logit
+#                   Defaults to empty dictionary.
+# @params plot_mode Optional plotting style configuration: 
 #                     0: Non-divergent transitions are plotted in 
 #                        transparent red while divergent transitions are
 #                        plotted in transparent green.
@@ -406,11 +557,22 @@ def display_ave_accept_proxy(diagnostics):
 #                        trajectory length.  Transitions from shorter
 #                        trajectories should cluster somewhat closer to 
 #                        the neighborhoods with problematic geometries.
+#                   Defaults to 0.
 # @param max_width Maximum line width for printing
-def plot_div_pairs(expectand_samples, diagnostics, transforms, 
+def plot_div_pairs(x_names, y_names, expectand_samples, 
+                   diagnostics, transforms={},
+                   xlim=None, ylim=None, 
                    plot_mode=0, max_width=72):
   """Plot pairwise scatter plots with non-divergent and divergent 
      transitions separated by color"""
+  if type(x_names) is not list:
+    print(('Input variable `x_names` is not a list!'))
+    return
+  
+  if type(y_names) is not list:
+    print(('Input variable `y_names` is not a list!'))
+    return
+    
   if type(expectand_samples) is not dict:
     print(('Input variable `expectand_samples` '
            'is not a standard dictionary!'))
@@ -420,71 +582,90 @@ def plot_div_pairs(expectand_samples, diagnostics, transforms,
     print('Input variable `diagnostics` is not a standard dictionary!')
     return
   
-  if type(transforms) is not list:
-    print('Input variable `transforms` is not a list!')
+  if type(transforms) is not dict:
+    print('Input variable `transforms` is not a standard dictionary!')
     return
   
-  # Check expectand/transform compatibility
-  N = len(expectand_samples)
-  if len(transforms) != N:
-    print(('Input variables `expectand_names` and `transforms`'
-           'are not the same length!'))
-    return
-  
-  expectand_names = list(expectand_samples.keys()) 
-  for n, name in enumerate(expectand_names):
-    if transforms[n] < 0 or transforms[n] > 2:
-      desc = (f'The transform flag {transforms[n]} for '
-              f'expectand {name} is invalid.  '
-              'Defaulting to no tranformation.')
+  # Check transform flags
+  for t_name, t_value in transforms.items():
+    if t_value < 0 or t_value > 2:
+      desc = (f'The transform flag {t_value} for '
+              f'expectand {t_name} is invalid.  '
+              'Plot will default to no tranformation.')
       desc = textwrap.wrap(desc, max_width)
       print('\n'.join(desc))
-    
-    if transforms[n] == 1:
-      if numpy.amin(expectand_samples[name]) <= 0:
-        desc = (f'Log transform requested for expectand {name} '
-                'but expectand values are not strictly positive.')
-        desc = textwrap.wrap(desc, max_width)
-        print('\n'.join(desc))
-        return
-    
-    if transforms[n] == 2:
-      if (numpy.amin(expectand_samples[name]) <= 0 or
-          numpy.amax(expectand_samples[name]) >= 1):
-        desc = (f'Logit transform requested for expectand {name} '
-                'but expectand values are not strictly confined '
-                'to the unit interval.')
-        desc = textwrap.wrap(desc, max_width)
-        print('\n'.join(desc))
-        return
   
+  # Check plot mode
   if plot_mode < 0 or plot_mode > 1:
     print(f'Invalid `plot mode` value {plot_mode}.')
     return
+    
+  # Transform expectand samples
+  transformed_samples = {}
   
-  # Extract tree-depth information
-  C = diagnostics['divergent__'].shape[0]
-  div_nlfs = [ x for c in range(C) 
-                 for x, d in zip(diagnostics['n_leapfrog__'][c],
-                                 diagnostics['divergent__'][c])
+  transformed_x_names = []
+  for name in x_names:
+    try: 
+      t_name, t_samples = apply_transform(name, 
+                                          expectand_samples, 
+                                          transforms)
+    except ValueError as error:
+      desc = textwrap.wrap(error, max_width)
+      print('\n'.join(desc))
+      return
+    
+    transformed_x_names.append(t_name)
+    if not t_name in transformed_samples:
+      transformed_samples[t_name] = t_samples
+      
+  transformed_y_names = []
+  for name in y_names:
+    try: 
+      t_name, t_samples = apply_transform(name, 
+                                          expectand_samples, 
+                                          transforms)
+    except ValueError as error:
+      desc = textwrap.wrap(error, max_width)
+      print('\n'.join(desc))
+    
+    transformed_y_names.append(t_name)
+    if not t_name in transformed_samples:
+      transformed_samples[t_name] = t_samples
+      
+  # Create pairs of transformed expectands, dropping duplicates
+  pairs = []
+  for x_name in transformed_x_names:
+    for y_name in transformed_y_names:
+      if x_name == y_name: 
+        continue
+      if [x_name, y_name] in pairs or [y_name, x_name] in pairs: 
+        continue
+      pairs.append([x_name, y_name])
+  
+  # Extract diagnostic information
+  divergences = diagnostics['divergent__'].flatten()
+  
+  if plot_mode == 1:
+    div_nlfs = [ x for x, d in 
+                 zip(diagnostics['n_leapfrog__'].flatten(), divergences)
                  if d == 1  ]
-  if len(div_nlfs) > 0:
-    max_nlf = max(div_nlfs)
-  else:
-    max_nlf = 0
-  nom_colors = [light_teal, mid_teal, dark_teal]
-  cmap = LinearSegmentedColormap.from_list("teals", nom_colors, 
-                                                    N=max_nlf)
+    if len(div_nlfs) > 0:
+      max_nlf = max(div_nlfs)
+    else:
+      max_nlf = 0
+    nom_colors = [light_teal, mid_teal, dark_teal]
+    cmap = LinearSegmentedColormap.from_list("teals", nom_colors, 
+                                                      N=max_nlf)
   
   # Set plot layout dynamically
-  N_pairs = math.comb(N, 2)
+  N_pairs = len(pairs)
   
   if N_pairs == 1:
     N_cols = 1
     N_rows = 1
     N_plots = 1
   else:
-    N_cols = 2
+    N_cols = 3
     N_rows = math.ceil(N_pairs / N_cols)
     
   if N_rows <= 3:
@@ -496,123 +677,75 @@ def plot_div_pairs(expectand_samples, diagnostics, transforms,
   # Plot!
   k = 0
   
-  for n in range(N - 1):
-    for m in range(n + 1, N):
-      if k == 0:
-        f, axarr = plot.subplots(N_rows, N_cols, squeeze=False)
+  for pair in pairs:
+    if k == 0:
+      f, axarr = plot.subplots(N_rows, N_cols, layout="constrained",
+                               squeeze=False)
       
-      name_x = expectand_names[n]
-      
-      if transforms[n] == 0:
-        x_nondiv_samples = [ x for c in range(C) for x, d in 
-                             zip(expectand_samples[name_x][c], 
-                                 diagnostics['divergent__'][c]) 
-                             if d == 0  ]
-        x_div_samples = [ x for c in range(C) for x, d in 
-                          zip(expectand_samples[name_x][c], 
-                              diagnostics['divergent__'][c]) 
-                          if d == 1  ]
-        x_display_name = name_x
-      elif transforms[n] == 1:
-        x_nondiv_samples = [ math.log(x) for c in range(C) for x, d in 
-                             zip(expectand_samples[name_x][c], 
-                                 diagnostics['divergent__'][c]) 
-                             if d == 0  ]
-        x_div_samples = [ math.log(x) for c in range(C) for x, d in 
-                          zip(expectand_samples[name_x][c], 
-                              diagnostics['divergent__'][c]) 
-                          if d == 1  ]
-        x_display_name = f'log({name_x})'
-      elif transforms[n] == 2:
-        x_nondiv_samples = [ math.log(x / (1 - x)) 
-                             for c in range(C) for x, d in 
-                             zip(expectand_samples[name_x][c], 
-                                 diagnostics['divergent__'][c]) 
-                             if d == 0  ]
-        x_div_samples = [ math.log(x / (1 - x)) 
-                          for c in range(C) for x, d in 
-                          zip(expectand_samples[name_x][c], 
-                              diagnostics['divergent__'][c]) 
-                          if d == 1  ]
-        x_display_name = f'logit({name_x})'
-        
+    x_name = pair[0]
+    x_nondiv_samples = [ x for x, d in 
+                         zip(transformed_samples[x_name], divergences) 
+                         if d == 0  ]
+    x_div_samples    = [ x for x, d in 
+                         zip(transformed_samples[x_name], divergences) 
+                         if d == 1  ]
+    
+    if xlim is None:
       xmin = min(numpy.concatenate((x_nondiv_samples, x_div_samples)))
       xmax = max(numpy.concatenate((x_nondiv_samples, x_div_samples)))
-      
-      name_y = expectand_names[m]
-      
-      if transforms[m] == 0:
-        y_nondiv_samples = [ y for c in range(C) for y, d in 
-                             zip(expectand_samples[name_y][c], 
-                                 diagnostics['divergent__'][c]) 
-                             if d == 0  ]
-        y_div_samples = [ y for c in range(C) for y, d in 
-                          zip(expectand_samples[name_y][c], 
-                              diagnostics['divergent__'][c]) 
-                          if d == 1  ]
-        y_display_name = name_y
-      elif transforms[m] == 1:
-        y_nondiv_samples = [ math.log(y) for c in range(C) for y, d in 
-                             zip(expectand_samples[name_y][c], 
-                                 diagnostics['divergent__'][c]) 
-                             if d == 0  ]
-        y_div_samples = [ math.log(y) for c in range(C) for y, d in 
-                          zip(expectand_samples[name_y][c], 
-                              diagnostics['divergent__'][c]) 
-                          if d == 1  ]
-        y_display_name = f'log({name_y})'
-      elif transforms[m] == 2:
-        y_nondiv_samples = [ math.log(y / (1 - y)) 
-                             for c in range(C) for y, d in 
-                             zip(expectand_samples[name_y][c], 
-                                 diagnostics['divergent__'][c]) 
-                             if d == 0  ]
-        y_div_samples = [ math.log(y / (1 - y)) 
-                          for c in range(C) for y, d in 
-                          zip(expectand_samples[name_y][c], 
-                              diagnostics['divergent__'][c]) 
-                          if d == 1  ]
-        y_display_name = f'logit({name_y})'
-              
+      local_xlim = [xmin, xmax]
+    else:
+      local_xlim = xlim
+    
+    y_name = pair[1]
+    y_nondiv_samples = [ x for x, d in 
+                         zip(transformed_samples[y_name], divergences) 
+                         if d == 0  ]
+    y_div_samples    = [ x for x, d in 
+                         zip(transformed_samples[y_name], divergences) 
+                         if d == 1  ]
+    
+    if ylim is None:
       ymin = min(numpy.concatenate((y_nondiv_samples, y_div_samples)))
       ymax = max(numpy.concatenate((y_nondiv_samples, y_div_samples)))
-
-      idx1 = k // N_cols
-      idx2 = k % N_cols
-      
-      if plot_mode == 0:
-        axarr[idx1, idx2].scatter(x_nondiv_samples, y_nondiv_samples, s=5,
-                                  color=dark_highlight, alpha=0.05)
-        axarr[idx1, idx2].scatter(x_div_samples, y_div_samples, s=5,
-                                  color="#00FF00", alpha=0.25)
-      elif plot_mode == 1:
-        axarr[idx1, idx2].scatter(x_nondiv_samples, y_nondiv_samples, 
+      local_ylim = [ymin, ymax]
+    else:
+      local_ylim = ylim
+     
+    idx1 = k // N_cols
+    idx2 = k % N_cols
+    
+    if plot_mode == 0:
+      axarr[idx1, idx2].scatter(x_nondiv_samples, y_nondiv_samples, s=5,
+                                color=dark_highlight, alpha=0.05)
+      axarr[idx1, idx2].scatter(x_div_samples, y_div_samples, s=5,
+                                color="#00FF00", alpha=0.25)
+    elif plot_mode == 1:
+      axarr[idx1, idx2].scatter(x_nondiv_samples, y_nondiv_samples, 
                                 s=5, color="#DDDDDD")
-        if len(x_div_samples) > 0:
-          axarr[idx1, idx2].scatter(x_div_samples, y_div_samples, s=5,
-                                    cmap=cmap, c=div_nlfs)
+      if len(x_div_samples) > 0:
+        axarr[idx1, idx2].scatter(x_div_samples, y_div_samples, s=5,
+                                  cmap=cmap, c=div_nlfs)
                                 
-      axarr[idx1, idx2].set_xlabel(x_display_name)
-      axarr[idx1, idx2].set_xlim([xmin, xmax])
-      axarr[idx1, idx2].set_ylabel(y_display_name)
-      axarr[idx1, idx2].set_ylim([ymin, ymax])
-      axarr[idx1, idx2].spines["top"].set_visible(False)
-      axarr[idx1, idx2].spines["right"].set_visible(False)
-      
-      k += 1
-      if k == N_rows * N_cols:
-        # Flush current plot
-        plot.subplots_adjust(hspace=0.75, wspace=0.75)
-        plot.show()
-        k = 0
+    axarr[idx1, idx2].set_xlabel(x_name)
+    axarr[idx1, idx2].set_xlim(local_xlim)
+    axarr[idx1, idx2].set_ylabel(y_name)
+    axarr[idx1, idx2].set_ylim(local_ylim)
+    axarr[idx1, idx2].spines["top"].set_visible(False)
+    axarr[idx1, idx2].spines["right"].set_visible(False)
+    
+    k += 1
+    if k == N_rows * N_cols:
+      # Flush current plot
+      plot.show()
+      k = 0
   
-  # Turn off any remaining subplots 
+  # Turn off any remaining subplots
   if k > 0: 
     for kk in range(k, N_rows * N_cols):
       idx1 = kk // N_cols
       idx2 = kk % N_cols
       axarr[idx1, idx2].axis('off')
-    plot.subplots_adjust(hspace=0.75, wspace=0.75)
     plot.show()
 
 # Compute hat{xi}, an estimate for the shape of a generalized Pareto 
@@ -660,17 +793,17 @@ def compute_xi_hat(fs):
                            - xi_hat - 1)
     else:
       log_w_vec[m] = 0
-
+  
   # Remove terms that don't contribute to improve numerical stability 
   # of average
   log_w_vec = [ lw for lw in log_w_vec if lw != 0 ]
   b_hat_vec = [ b for b in b_hat_vec if b != 0 ]
-
+  
   max_log_w = max(log_w_vec)
   b_hat = sum( [ b * math.exp(lw - max_log_w) 
                for b, lw in zip(b_hat_vec, log_w_vec) ] ) /\
           sum( [ math.exp(lw - max_log_w) for lw in log_w_vec ] )
-
+  
   return numpy.mean( [ math.log(1 - b_hat * f) for f in sorted_fs ] )
 
 # Compute empirical generalized Pareto shape for upper and lower tails
@@ -748,13 +881,13 @@ def check_tail_xi_hats(samples, max_width=72):
     elif (    xi_hats[0] < xi_hat_threshold 
           and xi_hats[1] >= xi_hat_threshold):
       no_warning = False
-      print(f'  Chain {c + 1}: Ony right tail hat{{xi}} '
+      print(f'  Chain {c + 1}: Right tail hat{{xi}} '
             f'({xi_hats[1]:.3f}) exceeds '
             f'{xi_hat_threshold}!\n')
     elif (    xi_hats[0] >= xi_hat_threshold 
           and xi_hats[1] < xi_hat_threshold):
       no_warning = False
-      print(f'  Chain {c + 1}: Only left tail hat{{xi}} '
+      print(f'  Chain {c + 1}: Left tail hat{{xi}} '
             f'({xi_hats[0]:.3f}) exceeds '
             f'{xi_hat_threshold}!\n')
   
@@ -806,7 +939,7 @@ def check_variances(samples, max_width=72):
     if var < 1e-10:
       no_warning = True
       print(f'  Chain {c + 1}: Expectand is constant!\n')
-
+  
   if no_warning:
     print('Expectand is varying in all Markov chains.\n')
   else:
@@ -899,7 +1032,7 @@ def check_rhat(samples, max_width=72):
     return
     
   rhat = compute_split_rhat(samples)
-
+  
   no_warning = True
   
   if math.isnan(rhat):
@@ -940,7 +1073,7 @@ def compute_tau_hat(fs):
   Fs = numpy.fft.fft(zs_buff)
   Ss = numpy.abs(Fs)**2
   Rs = numpy.fft.ifft(Ss)
-
+  
   acov_buff = numpy.real(Rs)
   rhos = acov_buff[0:N] / acov_buff[0]
   
@@ -970,7 +1103,7 @@ def compute_tau_hat(fs):
       current_pair_sum = old_pair_sum
       rhos[2 * p]     = 0.5 * old_pair_sum
       rhos[2 * p + 1] = 0.5 * old_pair_sum
-
+    
     # if p == P:
       # throw some kind of error when autocorrelation
       # sequence doesn't get terminated
@@ -1132,14 +1265,14 @@ def check_all_expectand_diagnostics(expectand_samples,
             and xi_hats[1] >= xi_hat_threshold):
         no_xi_hat_warning = False
         local_warning = True
-        local_message += (f'  Chain {c + 1}: Ony right tail hat{{xi}} '
+        local_message += (f'  Chain {c + 1}: Right tail hat{{xi}} '
                           f'({xi_hats[1]:.3f}) exceeds '
                           f'{xi_hat_threshold}!\n')
       elif (    xi_hats[0] >= xi_hat_threshold 
             and xi_hats[1] < xi_hat_threshold):
         no_xi_hat_warning = False
         local_warning = True
-        local_message += (f'  Chain {c + 1}: Only left tail hat{{xi}} '
+        local_message += (f'  Chain {c + 1}: Left tail hat{{xi}} '
                           f'({xi_hats[0]:.3f}) exceeds '
                           f'{xi_hat_threshold}!\n')
       
@@ -1153,14 +1286,14 @@ def check_all_expectand_diagnostics(expectand_samples,
     
     # Check split Rhat across Markov chains
     rhat = compute_split_rhat(samples)
-
+    
     if math.isnan(rhat):
       local_message += '  Split hat{R} is ill-defined!\n'
     elif rhat > 1.1:
       no_rhat_warning = False
       local_warning = True
       local_message += f'  Split hat{{R}} ({rhat:.3f}) exceeds 1.1!\n'
-
+    
     for c in range(C):
       # Check empirical effective sample size
       fs = samples[c,:]
@@ -1250,7 +1383,7 @@ def summarize_expectand_diagnostics(expectand_samples,
   failed_zvar_names = []
   failed_rhat_names = []
   failed_eess_names = []
-
+  
   for name in expectand_samples:
     samples = expectand_samples[name]
     C = samples.shape[0]
@@ -1409,8 +1542,6 @@ def summarize_all_diagnostics(expectand_diagnostics,
   
   warning_code = 0
   
-  sampler_params = fit.get_sampler_params(inc_warmup=False)
-  
   # Check divergences
   if sum(diagnostics['divergent__'].flatten()) > 0: 
     no_warning = False
@@ -1438,7 +1569,7 @@ def summarize_all_diagnostics(expectand_diagnostics,
     ave_accept_proxy = numpy.mean(diagnostics['accept_stat__'][c,:])
     if ave_accept_proxy < 0.9 * adapt_target:
       no_accept_warning = False
-
+  
   if not no_efmi_warning:
     warning_code = warning_code | (1 << 2)
   
@@ -1492,7 +1623,7 @@ def summarize_all_diagnostics(expectand_diagnostics,
     
     for c in range(C):
        # Check empirical effective sample size
-      tau_hat = compute_tauhat(samples[c,:])
+      tau_hat = compute_tau_hat(samples[c,:])
       eess = S / tau_hat
       if neff < min_eess_per_chain:
         eess_warning = True
@@ -1642,8 +1773,8 @@ def plot_empirical_correlogram(ax,
 #            dimension indexing the sequential states  within each 
 #            Markov chain.
 # @params display_name2 Name of second expectand
-def plot_chain_sep_pairs(f1s, display_name1,
-                         f2s, display_name2):
+def plot_pairs_by_chain(f1s, display_name1,
+                        f2s, display_name2):
   """Plot two expectand output ensembles againt each other separated by
      Markov chain """
   if len(f1s.shape) != 2:
@@ -1673,7 +1804,7 @@ def plot_chain_sep_pairs(f1s, display_name1,
   colors = ["#DCBCBC", "#C79999", "#B97C7C",
             "#A25050", "#8F2727", "#7C0000"]
   cmap = LinearSegmentedColormap.from_list("reds", colors, N=S1)
-
+  
   min_x = min(f1s.flatten())
   max_x = max(f1s.flatten())
   
@@ -1683,7 +1814,7 @@ def plot_chain_sep_pairs(f1s, display_name1,
   N_plots = C1
   N_cols = 2
   N_rows = math.ceil(N_plots / N_cols)
-  f, axarr = plot.subplots(N_rows, N_cols)
+  f, axarr = plot.subplots(N_rows, N_cols, layout="constrained")
   k = 0
   
   for c in range(C1):
@@ -1704,7 +1835,6 @@ def plot_chain_sep_pairs(f1s, display_name1,
     axarr[idx1, idx2].spines["top"].set_visible(False)
     axarr[idx1, idx2].spines["right"].set_visible(False)
   
-  plot.subplots_adjust(hspace=1.0, wspace=0.5)
   plot.show()
 
 # Evaluate an expectand at the states of a Markov chain ensemble.
@@ -1768,7 +1898,7 @@ def ensemble_mcmc_est(samples):
   
   # Ensemble average weighted by effective sample size
   mean = sum([ est[0] * est[2] for est in chain_ests ]) / total_ess
-
+  
   # Ensemble variance weighed by effective sample size
   # including correction for the fact that individual Markov chain
   # variances are defined relative to the individual mean estimators
@@ -1781,7 +1911,7 @@ def ensemble_mcmc_est(samples):
     var_update = (est[0] - mean)**2
     vars[c] = est[2] * (var_update + chain_var)
   var = sum(vars) / total_ess
-
+  
   return [mean, math.sqrt(var / total_ess), total_ess]
 
 # Visualize pushforward distribution of a given expectand as a 
@@ -1798,7 +1928,7 @@ def ensemble_mcmc_est(samples):
 # @param flim Optional histogram range
 # @param baseline Optional baseline value for visual comparison
 def plot_expectand_pushforward(ax, samples, B, display_name="f", 
-                              flim=None, baseline=None):
+                               flim=None, baseline=None):
   """Plot pushforward histogram of a given expectand using Markov chain
      Monte Carlo estimators to estimate the output bin probabilities"""
   if len(samples.shape) != 2:
@@ -1850,13 +1980,13 @@ def plot_expectand_pushforward(ax, samples, B, display_name="f",
   max_y = 1.05 * max(upper_inter)
   
   ax.fill_between(xs, lower_inter, upper_inter,
-                    facecolor=light, color="#DDDDDD")
+                  facecolor=light, color="#DDDDDD")
   ax.plot(xs, [ mean_p[idx] for idx in idxs ], color=dark, linewidth=2)
   
   if baseline is not None:
     ax.axvline(x=baseline, linewidth=4, color="white")
     ax.axvline(x=baseline, linewidth=2, color="black")
-
+  
   ax.set_xlim(flim)
   ax.set_xlabel(display_name)
   ax.set_ylim([min_y, max_y])
@@ -1865,3 +1995,4 @@ def plot_expectand_pushforward(ax, samples, B, display_name="f",
   ax.spines["top"].set_visible(False)
   ax.spines["left"].set_visible(False)
   ax.spines["right"].set_visible(False)
+

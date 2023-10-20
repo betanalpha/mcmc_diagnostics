@@ -194,7 +194,7 @@
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[frame hidden, enhanced, boxrule=0pt, interior hidden, borderline west={3pt}{0pt}{shadecolor}, sharp corners, breakable]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[borderline west={3pt}{0pt}{shadecolor}, frame hidden, interior hidden, breakable, enhanced, sharp corners, boxrule=0pt]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -226,7 +226,7 @@ given Stan program into an executable and then saves the executable as a
 \begin{Highlighting}[]
 \KeywordTok{def}\NormalTok{ compile\_model(filename, model\_name}\OperatorTok{=}\VariableTok{None}\NormalTok{, }\OperatorTok{**}\NormalTok{kwargs):}
   \CommentTok{"""This will automatically cache models.}
-
+\CommentTok{  }
 \CommentTok{    See http://pystan.readthedocs.io/en/latest/avoiding\_recompilation.html"""}
   \ImportTok{from}\NormalTok{ hashlib }\ImportTok{import}\NormalTok{ md5}
   
@@ -279,12 +279,11 @@ transition. Instead the \texttt{get\_sampler\_params} function recovers
 this information, albeit it yet another output format.
 
 To facilitate the analysis of Stan output I've included my own custom
-extract functions that format the Markov chain Monte Carlo output into
-named lists, with one named element for each expectand or Hamiltonian
-Monte Carlo diagnostic. The elements themselves are two-dimensional
-arrays with the first index denoting the individual Markov chains and
-the second index denoting the iterations within an individual Markov
-chain.
+extract functions that format the sample and diagnostic outputs into
+dictionaries, with one key for each expectand or Hamiltonian Monte Carlo
+diagnostic. The elements themselves are two-dimensional arrays with the
+first index denoting the individual Markov chains and the second index
+denoting the iterations within an individual Markov chain.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -300,7 +299,11 @@ chain.
 \NormalTok{  params }\OperatorTok{=}\NormalTok{ \{ name: numpy.transpose(nom\_params[:,:,k]) }
              \ControlFlowTok{for}\NormalTok{ k, name }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(stan\_fit.flatnames) \}}
   \ControlFlowTok{return}\NormalTok{ params}
+\end{Highlighting}
+\end{Shaded}
 
+\begin{Shaded}
+\begin{Highlighting}[]
 \CommentTok{\# Extract Hamiltonian Monte Carlo diagnostics values from a StanFit}
 \CommentTok{\# object and format them for convenient access}
 \CommentTok{\# @param stan\_fit A StanFit object}
@@ -449,14 +452,14 @@ inaccurate gradient evaluations.
                             \SpecialStringTok{f\textquotesingle{}transitions (}\SpecialCharTok{\{}\NormalTok{n\_div }\OperatorTok{/}\NormalTok{ S}\SpecialCharTok{:.2\%\}}\SpecialStringTok{) diverged.\textquotesingle{}}\NormalTok{)}
     
     \CommentTok{\# Check for tree depth saturation}
-\NormalTok{    n\_tds }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{([ td }\OperatorTok{\textgreater{}}\NormalTok{ max\_treedepth }
-                  \ControlFlowTok{for}\NormalTok{ td }\KeywordTok{in}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}treedepth\_\_\textquotesingle{}}\NormalTok{][}\DecValTok{0}\NormalTok{] ])}
+\NormalTok{    n\_tds }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{([ td }\OperatorTok{\textgreater{}=}\NormalTok{ max\_treedepth }
+                  \ControlFlowTok{for}\NormalTok{ td }\KeywordTok{in}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}treedepth\_\_\textquotesingle{}}\NormalTok{][c] ])}
     
     \ControlFlowTok{if}\NormalTok{ n\_tds }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      no\_treedepth\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{n\_tds}\SpecialCharTok{:.0f\}}\SpecialStringTok{ of }\SpecialCharTok{\{}\NormalTok{S}\SpecialCharTok{\}}\SpecialStringTok{ \textquotesingle{}}
-                            \SpecialStringTok{f\textquotesingle{}transitions (}\SpecialCharTok{\{}\NormalTok{n\_div }\OperatorTok{/}\NormalTok{ S}\SpecialCharTok{:.2\%\}}\SpecialStringTok{) saturated \textquotesingle{}}
+                            \SpecialStringTok{f\textquotesingle{}transitions (}\SpecialCharTok{\{}\NormalTok{n\_tds }\OperatorTok{/}\NormalTok{ S}\SpecialCharTok{:.2\%\}}\SpecialStringTok{) saturated \textquotesingle{}}
                             \SpecialStringTok{f\textquotesingle{}the maximum treedepth of }\SpecialCharTok{\{}\NormalTok{max\_treedepth}\SpecialCharTok{\}}\SpecialStringTok{.\textquotesingle{}}\NormalTok{)}
     
     \CommentTok{\# Check the energy fraction of missing information (E{-}FMI)}
@@ -475,10 +478,11 @@ inaccurate gradient evaluations.
     \ControlFlowTok{if}\NormalTok{ ave\_accept\_proxy }\OperatorTok{\textless{}} \FloatTok{0.9} \OperatorTok{*}\NormalTok{ adapt\_target:}
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      no\_accept\_warning }\OperatorTok{=} \VariableTok{False}
-\NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Average proxy acceptance \textquotesingle{}}
-                            \SpecialStringTok{f\textquotesingle{}statistic (}\SpecialCharTok{\{}\NormalTok{ave\_accept\_proxy}\SpecialCharTok{:.3f\}}\SpecialStringTok{) is\textquotesingle{}}\NormalTok{)}
-\NormalTok{      local\_messages.append(}\StringTok{\textquotesingle{}                  smaller than 90}\SpecialCharTok{\% o}\StringTok{f the \textquotesingle{}}
-                            \SpecialStringTok{f\textquotesingle{}target (}\SpecialCharTok{\{}\NormalTok{adapt\_target}\SpecialCharTok{:.3f\}}\SpecialStringTok{).\textquotesingle{}}\NormalTok{)}
+\NormalTok{      local\_message }\OperatorTok{=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Average proxy acceptance \textquotesingle{}}
+                       \SpecialStringTok{f\textquotesingle{}statistic (}\SpecialCharTok{\{}\NormalTok{ave\_accept\_proxy}\SpecialCharTok{:.3f\}}\SpecialStringTok{) is smaller \textquotesingle{}}
+                       \SpecialStringTok{f\textquotesingle{}than 90\% of the target (}\SpecialCharTok{\{}\NormalTok{adapt\_target}\SpecialCharTok{:.3f\}}\SpecialStringTok{).\textquotesingle{}}\NormalTok{)}
+\NormalTok{      local\_message }\OperatorTok{=}\NormalTok{ textwrap.wrap(local\_message, max\_width)}
+\NormalTok{      local\_messages }\OperatorTok{+=}\NormalTok{ local\_message}
     
     \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(local\_messages) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
 \NormalTok{      messages.append(local\_messages)}
@@ -522,7 +526,7 @@ inaccurate gradient evaluations.
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    messages.append(desc)}
 \NormalTok{    messages.append([}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{])}
-
+  
   \ControlFlowTok{if} \KeywordTok{not}\NormalTok{ no\_accept\_warning:}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}A small average proxy acceptance statistic \textquotesingle{}}
             \StringTok{\textquotesingle{}indicates that the adaptation of the numerical \textquotesingle{}}
@@ -533,7 +537,6 @@ inaccurate gradient evaluations.
 \NormalTok{    messages.append(desc)}
 \NormalTok{    messages.append([}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{])}
   
-  \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join([ }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(m) }\ControlFlowTok{for}\NormalTok{ m }\KeywordTok{in}\NormalTok{ messages ]))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -554,14 +557,13 @@ different behaviors during warmup.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Plot outcome of inverse metric adaptation}
-\CommentTok{\# @params adaptation\_info A list containing raw adaptation text for}
-\CommentTok{\#                         each Markov chain.  The output of RStan and }
-\CommentTok{\#                         PyStan\textquotesingle{}s \textasciigrave{}get\_adaptation\_info\textasciigrave{} functions.}
+\CommentTok{\# @param stan\_fit A StanFit object}
 \CommentTok{\# @params B The number of bins for the inverse metric element histograms.}
-\KeywordTok{def}\NormalTok{ plot\_inv\_metric(fit, B}\OperatorTok{=}\DecValTok{25}\NormalTok{):}
+\KeywordTok{def}\NormalTok{ plot\_inv\_metric(stan\_fit, B}\OperatorTok{=}\DecValTok{25}\NormalTok{):}
   \CommentTok{"""Plot outcome of inverse metric adaptation"""}
-\NormalTok{  chain\_info }\OperatorTok{=}\NormalTok{ fit.get\_adaptation\_info()}
+\NormalTok{  chain\_info }\OperatorTok{=}\NormalTok{ stan\_fit.get\_adaptation\_info()}
 \NormalTok{  C }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(chain\_info)}
   
 \NormalTok{  inv\_metric\_elems }\OperatorTok{=}\NormalTok{ [}\VariableTok{None}\NormalTok{] }\OperatorTok{*}\NormalTok{ C}
@@ -580,19 +582,19 @@ different behaviors during warmup.
 \NormalTok{  max\_elem }\OperatorTok{=}\NormalTok{ max\_elem }\OperatorTok{+}\NormalTok{ delta}
 \NormalTok{  bins }\OperatorTok{=}\NormalTok{ numpy.arange(min\_elem, max\_elem }\OperatorTok{+}\NormalTok{ delta, delta)}
 \NormalTok{  B }\OperatorTok{=}\NormalTok{ B }\OperatorTok{+} \DecValTok{2}
-
+  
 \NormalTok{  max\_y }\OperatorTok{=} \BuiltInTok{max}\NormalTok{([ }\BuiltInTok{max}\NormalTok{(numpy.histogram(a, bins}\OperatorTok{=}\NormalTok{bins)[}\DecValTok{0}\NormalTok{]) }\ControlFlowTok{for}\NormalTok{ a }\KeywordTok{in}\NormalTok{ inv\_metric\_elems ])}
   
 \NormalTok{  idxs }\OperatorTok{=}\NormalTok{ [ idx }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(B) }\ControlFlowTok{for}\NormalTok{ r }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{2}\NormalTok{) ]}
 \NormalTok{  xs }\OperatorTok{=}\NormalTok{ [ bins[idx }\OperatorTok{+}\NormalTok{ delta] }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(B) }\ControlFlowTok{for}\NormalTok{ delta }\KeywordTok{in}\NormalTok{ [}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{]]}
-
+  
 \NormalTok{  N\_plots }\OperatorTok{=}\NormalTok{ C}
 \NormalTok{  N\_cols }\OperatorTok{=} \DecValTok{2}
 \NormalTok{  N\_rows }\OperatorTok{=}\NormalTok{ math.ceil(N\_plots }\OperatorTok{/}\NormalTok{ N\_cols)}
-\NormalTok{  f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(N\_rows, N\_cols)}
+\NormalTok{  f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(N\_rows, N\_cols, layout}\OperatorTok{=}\StringTok{"constrained"}\NormalTok{)}
 \NormalTok{  k }\OperatorTok{=} \DecValTok{0}
   
-\NormalTok{  sampler\_params }\OperatorTok{=}\NormalTok{ fit.get\_sampler\_params(inc\_warmup}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+\NormalTok{  sampler\_params }\OperatorTok{=}\NormalTok{ stan\_fit.get\_sampler\_params(inc\_warmup}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
 \NormalTok{  sci\_formatter }\OperatorTok{=}\NormalTok{ matplotlib.ticker.FuncFormatter(}\KeywordTok{lambda}\NormalTok{ x, lim: }\SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{x}\SpecialCharTok{:.1e\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
   
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
@@ -617,8 +619,6 @@ different behaviors during warmup.
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"left"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
   
-\NormalTok{  plot.subplots\_adjust(hspace}\OperatorTok{=}\FloatTok{1.0}\NormalTok{, wspace}\OperatorTok{=}\FloatTok{0.25}\NormalTok{)}
-\NormalTok{  plot.show()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -637,6 +637,7 @@ substantially different behavior during warmup.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Display adapted symplectic integrator step sizes}
 \CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
 \CommentTok{\#                    each expectand.  The first dimension of each}
@@ -654,7 +655,6 @@ substantially different behavior during warmup.
   
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
 \NormalTok{    stepsize }\OperatorTok{=}\NormalTok{ stepsizes[c, }\DecValTok{1}\NormalTok{]}
-    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Integrator Step Size = }\SpecialCharTok{\{}\NormalTok{stepsize}\SpecialCharTok{:.2e\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -669,14 +669,65 @@ distribution, and the more expensive it is to explore.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Display symplectic integrator trajectory lengths}
+\CommentTok{\# @ax Matplotlib axis object}
 \CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
 \CommentTok{\#                    each expectand.  The first dimension of each}
 \CommentTok{\#                    element indexes the Markov chains and the }
 \CommentTok{\#                    second dimension indexes the sequential }
 \CommentTok{\#                    states within each Markov chain.}
-\KeywordTok{def}\NormalTok{ plot\_num\_leapfrog(diagnostics):}
+\CommentTok{\# @param nlim Optional histogram range}
+\KeywordTok{def}\NormalTok{ plot\_num\_leapfrogs(ax, diagnostics, nlim}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
   \CommentTok{"""Display symplectic integrator trajectory lenghts"""}
+  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(diagnostics) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
+    \ControlFlowTok{return}
+  
+\NormalTok{  lengths }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}n\_leapfrog\_\_\textquotesingle{}}\NormalTok{]}
+  
+\NormalTok{  C }\OperatorTok{=}\NormalTok{ lengths.shape[}\DecValTok{0}\NormalTok{]}
+\NormalTok{  colors }\OperatorTok{=}\NormalTok{ [dark\_highlight, dark, mid\_highlight, mid, light\_highlight]}
+\NormalTok{  cmap }\OperatorTok{=}\NormalTok{ LinearSegmentedColormap.from\_list(}\StringTok{"reds"}\NormalTok{, colors, N}\OperatorTok{=}\NormalTok{C)}
+  
+\NormalTok{  vals\_counts }\OperatorTok{=}\NormalTok{ [ numpy.unique(lengths[c], return\_counts}\OperatorTok{=}\VariableTok{True}\NormalTok{) }
+                  \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) ] }
+\NormalTok{  max\_n }\OperatorTok{=} \BuiltInTok{max}\NormalTok{([ }\BuiltInTok{max}\NormalTok{(a[}\DecValTok{0}\NormalTok{]) }\ControlFlowTok{for}\NormalTok{ a }\KeywordTok{in}\NormalTok{ vals\_counts ]).astype(numpy.int64) }\OperatorTok{+} \DecValTok{1}
+\NormalTok{  max\_counts }\OperatorTok{=} \BuiltInTok{max}\NormalTok{([ }\BuiltInTok{max}\NormalTok{(a[}\DecValTok{1}\NormalTok{]) }\ControlFlowTok{for}\NormalTok{ a }\KeywordTok{in}\NormalTok{ vals\_counts ])}
+  
+  \ControlFlowTok{if}\NormalTok{ nlim }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
+\NormalTok{    nlim }\OperatorTok{=}\NormalTok{ [}\FloatTok{0.5}\NormalTok{, max\_n }\OperatorTok{+} \FloatTok{0.5}\NormalTok{]}
+  
+\NormalTok{  idxs }\OperatorTok{=}\NormalTok{ [ idx }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(max\_n) }\ControlFlowTok{for}\NormalTok{ r }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{2}\NormalTok{) ]}
+\NormalTok{  xs }\OperatorTok{=}\NormalTok{ [ idx }\OperatorTok{+}\NormalTok{ delta }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(max\_n) }\ControlFlowTok{for}\NormalTok{ delta }\KeywordTok{in}\NormalTok{ [}\OperatorTok{{-}}\FloatTok{0.5}\NormalTok{, }\FloatTok{0.5}\NormalTok{]]}
+  
+  \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
+\NormalTok{    counts }\OperatorTok{=}\NormalTok{ numpy.histogram(lengths[c], }
+\NormalTok{                             bins}\OperatorTok{=}\NormalTok{numpy.arange(}\FloatTok{0.5}\NormalTok{, max\_n }\OperatorTok{+} \FloatTok{1.5}\NormalTok{, }\DecValTok{1}\NormalTok{))[}\DecValTok{0}\NormalTok{]}
+\NormalTok{    ys }\OperatorTok{=}\NormalTok{ counts[idxs]}
+    
+\NormalTok{    ax.plot(xs, ys, colors[c])}
+  
+\NormalTok{  ax.set\_xlabel(}\StringTok{"Numerical Trajectory Lengths"}\NormalTok{)}
+\NormalTok{  ax.set\_xlim(nlim)}
+\NormalTok{  ax.set\_ylabel(}\StringTok{""}\NormalTok{)}
+\NormalTok{  ax.get\_yaxis().set\_visible(}\VariableTok{False}\NormalTok{)}
+\NormalTok{  ax.set\_ylim([}\DecValTok{0}\NormalTok{, }\FloatTok{1.1} \OperatorTok{*}\NormalTok{ max\_counts])}
+\NormalTok{  ax.spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+
+\CommentTok{\# Display symplectic integrator trajectory lengths by Markov chain}
+\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
+\CommentTok{\#                    each expectand.  The first dimension of each}
+\CommentTok{\#                    element indexes the Markov chains and the }
+\CommentTok{\#                    second dimension indexes the sequential }
+\CommentTok{\#                    states within each Markov chain.}
+\KeywordTok{def}\NormalTok{ plot\_num\_leapfrogs\_by\_chain(diagnostics):}
+  \CommentTok{"""Display symplectic integrator trajectory lengths"""}
   \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(diagnostics) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
     \ControlFlowTok{return}
@@ -695,7 +746,7 @@ distribution, and the more expensive it is to explore.
 \NormalTok{  N\_plots }\OperatorTok{=}\NormalTok{ C}
 \NormalTok{  N\_cols }\OperatorTok{=} \DecValTok{2}
 \NormalTok{  N\_rows }\OperatorTok{=}\NormalTok{ math.ceil(N\_plots }\OperatorTok{/}\NormalTok{ N\_cols)}
-\NormalTok{  f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(N\_rows, N\_cols)}
+\NormalTok{  f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(N\_rows, N\_cols, layout}\OperatorTok{=}\StringTok{"constrained"}\NormalTok{)}
 \NormalTok{  k }\OperatorTok{=} \DecValTok{0}
   
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
@@ -703,7 +754,7 @@ distribution, and the more expensive it is to explore.
 \NormalTok{                             bins}\OperatorTok{=}\NormalTok{numpy.arange(}\FloatTok{0.5}\NormalTok{, max\_n }\OperatorTok{+} \FloatTok{1.5}\NormalTok{, }\DecValTok{1}\NormalTok{))[}\DecValTok{0}\NormalTok{]}
 \NormalTok{    ys }\OperatorTok{=}\NormalTok{ counts[idxs]}
     
-\NormalTok{    eps }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}stepsize\_\_\textquotesingle{}}\NormalTok{][}\DecValTok{0}\NormalTok{][}\DecValTok{0}\NormalTok{]}
+\NormalTok{    eps }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}stepsize\_\_\textquotesingle{}}\NormalTok{][c][}\DecValTok{0}\NormalTok{]}
     
 \NormalTok{    idx1 }\OperatorTok{=}\NormalTok{ k }\OperatorTok{//}\NormalTok{ N\_cols}
 \NormalTok{    idx2 }\OperatorTok{=}\NormalTok{ k }\OperatorTok{\%}\NormalTok{ N\_cols}
@@ -711,7 +762,7 @@ distribution, and the more expensive it is to explore.
     
 \NormalTok{    axarr[idx1, idx2].plot(xs, ys, dark)}
 \NormalTok{    axarr[idx1, idx2].set\_title(}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\CharTok{\textbackslash{}n}\SpecialStringTok{(Stepsize = }\SpecialCharTok{\{}\NormalTok{eps}\SpecialCharTok{:.3e\}}\SpecialStringTok{)\textquotesingle{}}\NormalTok{)}
-\NormalTok{    axarr[idx1, idx2].set\_xlabel(}\StringTok{"Numerical Trajectory Length"}\NormalTok{)}
+\NormalTok{    axarr[idx1, idx2].set\_xlabel(}\StringTok{"Numerical Trajectory Lengths"}\NormalTok{)}
 \NormalTok{    axarr[idx1, idx2].set\_xlim([}\FloatTok{0.5}\NormalTok{, max\_n }\OperatorTok{+} \FloatTok{0.5}\NormalTok{])}
 \NormalTok{    axarr[idx1, idx2].set\_ylabel(}\StringTok{""}\NormalTok{)}
 \NormalTok{    axarr[idx1, idx2].get\_yaxis().set\_visible(}\VariableTok{False}\NormalTok{)}
@@ -719,8 +770,6 @@ distribution, and the more expensive it is to explore.
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
   
-\NormalTok{  plot.subplots\_adjust(hspace}\OperatorTok{=}\FloatTok{1.0}\NormalTok{, wspace}\OperatorTok{=}\FloatTok{0.25}\NormalTok{)}
-\NormalTok{  plot.show()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -734,6 +783,7 @@ statistics should also vary across the Markov chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Display empirical average of the proxy acceptance statistic across }
 \CommentTok{\# each Markov chain}
 \CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
@@ -755,7 +805,6 @@ statistics should also vary across the Markov chains.
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
 \NormalTok{    proxy\_stat }\OperatorTok{=}\NormalTok{ numpy.mean(proxy\_stats[c,:])}
     \BuiltInTok{print}\NormalTok{(  }\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Average proxy acceptance \textquotesingle{}}
-          \OperatorTok{+} \SpecialStringTok{f\textquotesingle{}statistic = }\SpecialCharTok{\{}\NormalTok{proxy\_stat}\SpecialCharTok{:.3f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -777,24 +826,77 @@ states themselves can be visualized with pairs plots.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
+\CommentTok{\# Apply transformation identity, log, or logit transformation to}
+\CommentTok{\# named samples and flatten the output.  Transformation defaults to }
+\CommentTok{\# identity if name is not included in \textasciigrave{}transforms\textasciigrave{} dictionary.  A }
+\CommentTok{\# ValueError is thrown if samples are not properly constrained.}
+\CommentTok{\# @param name Expectand name.}
+\CommentTok{\# @param samples A named list of two{-}dimensional arrays for }
+\CommentTok{\#                each expectand.  The first dimension of each element }
+\CommentTok{\#                indexes the Markov chains and the second dimension }
+\CommentTok{\#                indexes the sequential states within each Markov chain.}
+\CommentTok{\# @param transforms A dictionary with expectand names for keys and}
+\CommentTok{\#                   transformation flags for values.}
+\CommentTok{\# @return The transformed expectand name and a one{-}dimensional array of}
+\CommentTok{\#         flattened transformation outputs.}
+\KeywordTok{def}\NormalTok{ apply\_transform(name, samples, transforms):}
+\NormalTok{  t }\OperatorTok{=}\NormalTok{ transforms.get(name, }\DecValTok{0}\NormalTok{)}
+\NormalTok{  transformed\_name }\OperatorTok{=} \StringTok{""}
+\NormalTok{  transformed\_samples }\OperatorTok{=} \DecValTok{0}
+  \ControlFlowTok{if}\NormalTok{ t }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
+\NormalTok{    transformed\_name }\OperatorTok{=}\NormalTok{ name}
+\NormalTok{    transformed\_samples }\OperatorTok{=}\NormalTok{ samples[name].flatten()}
+  \ControlFlowTok{elif}\NormalTok{ t }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
+    \ControlFlowTok{if}\NormalTok{ numpy.amin(samples[name]) }\OperatorTok{\textless{}=} \DecValTok{0}\NormalTok{:}
+      \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{( }\StringTok{\textquotesingle{}Log transform requested for expectand \textquotesingle{}}
+                       \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{name}\SpecialCharTok{\}}\SpecialStringTok{ but expectand values are not strictly \textquotesingle{}} 
+                        \StringTok{\textquotesingle{}positive.\textquotesingle{}}\NormalTok{)}
+\NormalTok{    transformed\_name }\OperatorTok{=} \SpecialStringTok{f\textquotesingle{}log(}\SpecialCharTok{\{}\NormalTok{name}\SpecialCharTok{\}}\SpecialStringTok{)\textquotesingle{}}
+\NormalTok{    transformed\_samples }\OperatorTok{=}\NormalTok{ [ math.log(x) }\ControlFlowTok{for}\NormalTok{ x }\KeywordTok{in} 
+\NormalTok{                            samples[name].flatten() ]}
+  \ControlFlowTok{elif}\NormalTok{ t }\OperatorTok{==} \DecValTok{2}\NormalTok{:}
+    \ControlFlowTok{if}\NormalTok{ (numpy.amin(samples[name]) }\OperatorTok{\textless{}=} \DecValTok{0} \KeywordTok{or}
+\NormalTok{          numpy.amax(samples[name]) }\OperatorTok{\textgreater{}=} \DecValTok{1}\NormalTok{):}
+      \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{( }\StringTok{\textquotesingle{}Logit transform requested for expectand \textquotesingle{}}
+                       \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{name}\SpecialCharTok{\}}\SpecialStringTok{ but expectand values are not strictly \textquotesingle{}}
+                        \StringTok{\textquotesingle{}confined to the unit interval.\textquotesingle{}}\NormalTok{)}
+\NormalTok{    transformed\_name }\OperatorTok{=} \SpecialStringTok{f\textquotesingle{}logit(}\SpecialCharTok{\{}\NormalTok{name}\SpecialCharTok{\}}\SpecialStringTok{)\textquotesingle{}}
+\NormalTok{    transformed\_samples }\OperatorTok{=}\NormalTok{ [ math.log(x }\OperatorTok{/}\NormalTok{ (}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ x)) }\ControlFlowTok{for}\NormalTok{ x }\KeywordTok{in}
+\NormalTok{                            samples[name].flatten() ]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+
 \CommentTok{\# Plot pairwise scatter plots with non{-}divergent and divergent }
 \CommentTok{\# transitions separated by color}
+\CommentTok{\# @param x\_names A list of expectand names to be plotted on the x axis.}
+\CommentTok{\# @param y\_names A list of expectand names to be plotted on the y axis.}
 \CommentTok{\# @param expectand\_samples A named list of two{-}dimensional arrays for }
-\CommentTok{\#                          each expectand.  The first dimension of each}
-\CommentTok{\#                          element indexes the Markov chains and the }
-\CommentTok{\#                          second dimension indexes the sequential }
-\CommentTok{\#                          states within each Markov chain.}
+\CommentTok{\#                          each expectand to be plotted on the y axis.}
+\CommentTok{\#                          The first dimension of each element indexes }
+\CommentTok{\#                          the Markov chains and the second dimension }
+\CommentTok{\#                          indexes the sequential states within each }
+\CommentTok{\#                          Markov chain.}
 \CommentTok{\# @param diagnostics A named list of two{-}dimensional arrays for }
 \CommentTok{\#                    each expectand.  The first dimension of each}
 \CommentTok{\#                    element indexes the Markov chains and the }
 \CommentTok{\#                    second dimension indexes the sequential }
 \CommentTok{\#                    states within each Markov chain.}
-\CommentTok{\# @params transforms Vector of flags configurating which if any}
-\CommentTok{\#                    transformation to apply to each named expectand:}
-\CommentTok{\#                      0: identity}
-\CommentTok{\#                      1: log}
-\CommentTok{\#                      2: logit}
-\CommentTok{\# @params plot\_mode Plotting style configuration: }
+\CommentTok{\# @param xlim       Optional global x{-}axis bounds for all pair plots.}
+\CommentTok{\#                   Defaults to dynamic bounds for each pair plot.}
+\CommentTok{\# @param ylim       Optional global y{-}axis bounds for all pair plots.}
+\CommentTok{\#                   Defaults to dynamic bounds for each pair plot.}
+\CommentTok{\# @param transforms An optional dictionary with expectand names for keys }
+\CommentTok{\#                   and transformation flags for values.  Valid flags }
+\CommentTok{\#                   are}
+\CommentTok{\#                     0: identity}
+\CommentTok{\#                     1: log}
+\CommentTok{\#                     2: logit}
+\CommentTok{\#                   Defaults to empty dictionary.}
+\CommentTok{\# @params plot\_mode Optional plotting style configuration: }
 \CommentTok{\#                     0: Non{-}divergent transitions are plotted in }
 \CommentTok{\#                        transparent red while divergent transitions are}
 \CommentTok{\#                        plotted in transparent green.}
@@ -804,11 +906,22 @@ states themselves can be visualized with pairs plots.
 \CommentTok{\#                        trajectory length.  Transitions from shorter}
 \CommentTok{\#                        trajectories should cluster somewhat closer to }
 \CommentTok{\#                        the neighborhoods with problematic geometries.}
+\CommentTok{\#                   Defaults to 0.}
 \CommentTok{\# @param max\_width Maximum line width for printing}
-\KeywordTok{def}\NormalTok{ plot\_div\_pairs(expectand\_samples, diagnostics, transforms, }
+\KeywordTok{def}\NormalTok{ plot\_div\_pairs(x\_names, y\_names, expectand\_samples, }
+\NormalTok{                   diagnostics, transforms}\OperatorTok{=}\NormalTok{\{\},}
+\NormalTok{                   xlim}\OperatorTok{=}\VariableTok{None}\NormalTok{, ylim}\OperatorTok{=}\VariableTok{None}\NormalTok{, }
 \NormalTok{                   plot\_mode}\OperatorTok{=}\DecValTok{0}\NormalTok{, max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
   \CommentTok{"""Plot pairwise scatter plots with non{-}divergent and divergent }
 \CommentTok{     transitions separated by color"""}
+  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(x\_names) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{list}\NormalTok{:}
+    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}x\_names\textasciigrave{} is not a list!\textquotesingle{}}\NormalTok{))}
+    \ControlFlowTok{return}
+  
+  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(y\_names) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{list}\NormalTok{:}
+    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}y\_names\textasciigrave{} is not a list!\textquotesingle{}}\NormalTok{))}
+    \ControlFlowTok{return}
+    
   \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(expectand\_samples) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
     \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
            \StringTok{\textquotesingle{}is not a standard dictionary!\textquotesingle{}}\NormalTok{))}
@@ -818,71 +931,90 @@ states themselves can be visualized with pairs plots.
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
     \ControlFlowTok{return}
   
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(transforms) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{list}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}transforms\textasciigrave{} is not a list!\textquotesingle{}}\NormalTok{)}
+  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(transforms) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}transforms\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
     \ControlFlowTok{return}
   
-  \CommentTok{\# Check expectand/transform compatibility}
-\NormalTok{  N }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(expectand\_samples)}
-  \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(transforms) }\OperatorTok{!=}\NormalTok{ N:}
-    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variables \textasciigrave{}expectand\_names\textasciigrave{} and \textasciigrave{}transforms\textasciigrave{}\textquotesingle{}}
-           \StringTok{\textquotesingle{}are not the same length!\textquotesingle{}}\NormalTok{))}
-    \ControlFlowTok{return}
-  
-\NormalTok{  expectand\_names }\OperatorTok{=} \BuiltInTok{list}\NormalTok{(expectand\_samples.keys()) }
-  \ControlFlowTok{for}\NormalTok{ n, name }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(expectand\_names):}
-    \ControlFlowTok{if}\NormalTok{ transforms[n] }\OperatorTok{\textless{}} \DecValTok{0} \KeywordTok{or}\NormalTok{ transforms[n] }\OperatorTok{\textgreater{}} \DecValTok{2}\NormalTok{:}
-\NormalTok{      desc }\OperatorTok{=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}The transform flag }\SpecialCharTok{\{}\NormalTok{transforms[n]}\SpecialCharTok{\}}\SpecialStringTok{ for \textquotesingle{}}
-              \SpecialStringTok{f\textquotesingle{}expectand }\SpecialCharTok{\{}\NormalTok{name}\SpecialCharTok{\}}\SpecialStringTok{ is invalid.  \textquotesingle{}}
-              \StringTok{\textquotesingle{}Defaulting to no tranformation.\textquotesingle{}}\NormalTok{)}
+  \CommentTok{\# Check transform flags}
+  \ControlFlowTok{for}\NormalTok{ t\_name, t\_value }\KeywordTok{in}\NormalTok{ transforms.items():}
+    \ControlFlowTok{if}\NormalTok{ t\_value }\OperatorTok{\textless{}} \DecValTok{0} \KeywordTok{or}\NormalTok{ t\_value }\OperatorTok{\textgreater{}} \DecValTok{2}\NormalTok{:}
+\NormalTok{      desc }\OperatorTok{=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}The transform flag }\SpecialCharTok{\{}\NormalTok{t\_value}\SpecialCharTok{\}}\SpecialStringTok{ for \textquotesingle{}}
+              \SpecialStringTok{f\textquotesingle{}expectand }\SpecialCharTok{\{}\NormalTok{t\_name}\SpecialCharTok{\}}\SpecialStringTok{ is invalid.  \textquotesingle{}}
+              \StringTok{\textquotesingle{}Plot will default to no tranformation.\textquotesingle{}}\NormalTok{)}
 \NormalTok{      desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
       \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
-    
-    \ControlFlowTok{if}\NormalTok{ transforms[n] }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
-      \ControlFlowTok{if}\NormalTok{ numpy.amin(expectand\_samples[name]) }\OperatorTok{\textless{}=} \DecValTok{0}\NormalTok{:}
-\NormalTok{        desc }\OperatorTok{=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}Log transform requested for expectand }\SpecialCharTok{\{}\NormalTok{name}\SpecialCharTok{\}}\SpecialStringTok{ \textquotesingle{}}
-                \StringTok{\textquotesingle{}but expectand values are not strictly positive.\textquotesingle{}}\NormalTok{)}
-\NormalTok{        desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
-        \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
-        \ControlFlowTok{return}
-    
-    \ControlFlowTok{if}\NormalTok{ transforms[n] }\OperatorTok{==} \DecValTok{2}\NormalTok{:}
-      \ControlFlowTok{if}\NormalTok{ (numpy.amin(expectand\_samples[name]) }\OperatorTok{\textless{}=} \DecValTok{0} \KeywordTok{or}
-\NormalTok{          numpy.amax(expectand\_samples[name]) }\OperatorTok{\textgreater{}=} \DecValTok{1}\NormalTok{):}
-\NormalTok{        desc }\OperatorTok{=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}Logit transform requested for expectand }\SpecialCharTok{\{}\NormalTok{name}\SpecialCharTok{\}}\SpecialStringTok{ \textquotesingle{}}
-                \StringTok{\textquotesingle{}but expectand values are not strictly confined \textquotesingle{}}
-                \StringTok{\textquotesingle{}to the unit interval.\textquotesingle{}}\NormalTok{)}
-\NormalTok{        desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
-        \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
-        \ControlFlowTok{return}
   
+  \CommentTok{\# Check plot mode}
   \ControlFlowTok{if}\NormalTok{ plot\_mode }\OperatorTok{\textless{}} \DecValTok{0} \KeywordTok{or}\NormalTok{ plot\_mode }\OperatorTok{\textgreater{}} \DecValTok{1}\NormalTok{:}
     \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Invalid \textasciigrave{}plot mode\textasciigrave{} value }\SpecialCharTok{\{}\NormalTok{plot\_mode}\SpecialCharTok{\}}\SpecialStringTok{.\textquotesingle{}}\NormalTok{)}
     \ControlFlowTok{return}
+    
+  \CommentTok{\# Transform expectand samples}
+\NormalTok{  transformed\_samples }\OperatorTok{=}\NormalTok{ \{\}}
   
-  \CommentTok{\# Extract tree{-}depth information}
-\NormalTok{  C }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{].shape[}\DecValTok{0}\NormalTok{]}
-\NormalTok{  div\_nlfs }\OperatorTok{=}\NormalTok{ [ x }\ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }
-                 \ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} \BuiltInTok{zip}\NormalTok{(diagnostics[}\StringTok{\textquotesingle{}n\_leapfrog\_\_\textquotesingle{}}\NormalTok{][c],}
-\NormalTok{                                 diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c])}
+\NormalTok{  transformed\_x\_names }\OperatorTok{=}\NormalTok{ []}
+  \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ x\_names:}
+    \ControlFlowTok{try}\NormalTok{: }
+\NormalTok{      t\_name, t\_samples }\OperatorTok{=}\NormalTok{ apply\_transform(name, }
+\NormalTok{                                          expectand\_samples, }
+\NormalTok{                                          transforms)}
+    \ControlFlowTok{except} \PreprocessorTok{ValueError} \ImportTok{as}\NormalTok{ error:}
+\NormalTok{      desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(error, max\_width)}
+      \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
+      \ControlFlowTok{return}
+    
+\NormalTok{    transformed\_x\_names.append(t\_name)}
+    \ControlFlowTok{if} \KeywordTok{not}\NormalTok{ t\_name }\KeywordTok{in}\NormalTok{ transformed\_samples:}
+\NormalTok{      transformed\_samples[t\_name] }\OperatorTok{=}\NormalTok{ t\_samples}
+      
+\NormalTok{  transformed\_y\_names }\OperatorTok{=}\NormalTok{ []}
+  \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ y\_names:}
+    \ControlFlowTok{try}\NormalTok{: }
+\NormalTok{      t\_name, t\_samples }\OperatorTok{=}\NormalTok{ apply\_transform(name, }
+\NormalTok{                                          expectand\_samples, }
+\NormalTok{                                          transforms)}
+    \ControlFlowTok{except} \PreprocessorTok{ValueError} \ImportTok{as}\NormalTok{ error:}
+\NormalTok{      desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(error, max\_width)}
+      \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
+    
+\NormalTok{    transformed\_y\_names.append(t\_name)}
+    \ControlFlowTok{if} \KeywordTok{not}\NormalTok{ t\_name }\KeywordTok{in}\NormalTok{ transformed\_samples:}
+\NormalTok{      transformed\_samples[t\_name] }\OperatorTok{=}\NormalTok{ t\_samples}
+      
+  \CommentTok{\# Create pairs of transformed expectands, dropping duplicates}
+\NormalTok{  pairs }\OperatorTok{=}\NormalTok{ []}
+  \ControlFlowTok{for}\NormalTok{ x\_name }\KeywordTok{in}\NormalTok{ transformed\_x\_names:}
+    \ControlFlowTok{for}\NormalTok{ y\_name }\KeywordTok{in}\NormalTok{ transformed\_y\_names:}
+      \ControlFlowTok{if}\NormalTok{ x\_name }\OperatorTok{==}\NormalTok{ y\_name: }
+        \ControlFlowTok{continue}
+      \ControlFlowTok{if}\NormalTok{ [x\_name, y\_name] }\KeywordTok{in}\NormalTok{ pairs }\KeywordTok{or}\NormalTok{ [y\_name, x\_name] }\KeywordTok{in}\NormalTok{ pairs: }
+        \ControlFlowTok{continue}
+\NormalTok{      pairs.append([x\_name, y\_name])}
+  
+  \CommentTok{\# Extract diagnostic information}
+\NormalTok{  divergences }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{].flatten()}
+  
+  \ControlFlowTok{if}\NormalTok{ plot\_mode }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
+\NormalTok{    div\_nlfs }\OperatorTok{=}\NormalTok{ [ x }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
+                 \BuiltInTok{zip}\NormalTok{(diagnostics[}\StringTok{\textquotesingle{}n\_leapfrog\_\_\textquotesingle{}}\NormalTok{].flatten(), divergences)}
                  \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{1}\NormalTok{  ]}
-  \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(div\_nlfs) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
-\NormalTok{    max\_nlf }\OperatorTok{=} \BuiltInTok{max}\NormalTok{(div\_nlfs)}
-  \ControlFlowTok{else}\NormalTok{:}
-\NormalTok{    max\_nlf }\OperatorTok{=} \DecValTok{0}
-\NormalTok{  nom\_colors }\OperatorTok{=}\NormalTok{ [light\_teal, mid\_teal, dark\_teal]}
-\NormalTok{  cmap }\OperatorTok{=}\NormalTok{ LinearSegmentedColormap.from\_list(}\StringTok{"teals"}\NormalTok{, nom\_colors, }
-\NormalTok{                                                    N}\OperatorTok{=}\NormalTok{max\_nlf)}
+    \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(div\_nlfs) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
+\NormalTok{      max\_nlf }\OperatorTok{=} \BuiltInTok{max}\NormalTok{(div\_nlfs)}
+    \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{      max\_nlf }\OperatorTok{=} \DecValTok{0}
+\NormalTok{    nom\_colors }\OperatorTok{=}\NormalTok{ [light\_teal, mid\_teal, dark\_teal]}
+\NormalTok{    cmap }\OperatorTok{=}\NormalTok{ LinearSegmentedColormap.from\_list(}\StringTok{"teals"}\NormalTok{, nom\_colors, }
+\NormalTok{                                                      N}\OperatorTok{=}\NormalTok{max\_nlf)}
   
   \CommentTok{\# Set plot layout dynamically}
-\NormalTok{  N\_pairs }\OperatorTok{=}\NormalTok{ math.comb(N, }\DecValTok{2}\NormalTok{)}
+\NormalTok{  N\_pairs }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(pairs)}
   
   \ControlFlowTok{if}\NormalTok{ N\_pairs }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
 \NormalTok{    N\_cols }\OperatorTok{=} \DecValTok{1}
 \NormalTok{    N\_rows }\OperatorTok{=} \DecValTok{1}
 \NormalTok{    N\_plots }\OperatorTok{=} \DecValTok{1}
   \ControlFlowTok{else}\NormalTok{:}
-\NormalTok{    N\_cols }\OperatorTok{=} \DecValTok{2}
+\NormalTok{    N\_cols }\OperatorTok{=} \DecValTok{3}
 \NormalTok{    N\_rows }\OperatorTok{=}\NormalTok{ math.ceil(N\_pairs }\OperatorTok{/}\NormalTok{ N\_cols)}
     
   \ControlFlowTok{if}\NormalTok{ N\_rows }\OperatorTok{\textless{}=} \DecValTok{3}\NormalTok{:}
@@ -894,124 +1026,75 @@ states themselves can be visualized with pairs plots.
   \CommentTok{\# Plot!}
 \NormalTok{  k }\OperatorTok{=} \DecValTok{0}
   
-  \ControlFlowTok{for}\NormalTok{ n }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(N }\OperatorTok{{-}} \DecValTok{1}\NormalTok{):}
-    \ControlFlowTok{for}\NormalTok{ m }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(n }\OperatorTok{+} \DecValTok{1}\NormalTok{, N):}
-      \ControlFlowTok{if}\NormalTok{ k }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
-\NormalTok{        f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(N\_rows, N\_cols, squeeze}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+  \ControlFlowTok{for}\NormalTok{ pair }\KeywordTok{in}\NormalTok{ pairs:}
+    \ControlFlowTok{if}\NormalTok{ k }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
+\NormalTok{      f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(N\_rows, N\_cols, layout}\OperatorTok{=}\StringTok{"constrained"}\NormalTok{,}
+\NormalTok{                               squeeze}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
       
-\NormalTok{      name\_x }\OperatorTok{=}\NormalTok{ expectand\_names[n]}
-      
-      \ControlFlowTok{if}\NormalTok{ transforms[n] }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
-\NormalTok{        x\_nondiv\_samples }\OperatorTok{=}\NormalTok{ [ x }\ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
-                             \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_x][c], }
-\NormalTok{                                 diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                             \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{0}\NormalTok{  ]}
-\NormalTok{        x\_div\_samples }\OperatorTok{=}\NormalTok{ [ x }\ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
-                          \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_x][c], }
-\NormalTok{                              diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                          \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{1}\NormalTok{  ]}
-\NormalTok{        x\_display\_name }\OperatorTok{=}\NormalTok{ name\_x}
-      \ControlFlowTok{elif}\NormalTok{ transforms[n] }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
-\NormalTok{        x\_nondiv\_samples }\OperatorTok{=}\NormalTok{ [ math.log(x) }\ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
-                             \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_x][c], }
-\NormalTok{                                 diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                             \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{0}\NormalTok{  ]}
-\NormalTok{        x\_div\_samples }\OperatorTok{=}\NormalTok{ [ math.log(x) }\ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
-                          \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_x][c], }
-\NormalTok{                              diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                          \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{1}\NormalTok{  ]}
-\NormalTok{        x\_display\_name }\OperatorTok{=} \SpecialStringTok{f\textquotesingle{}log(}\SpecialCharTok{\{}\NormalTok{name\_x}\SpecialCharTok{\}}\SpecialStringTok{)\textquotesingle{}}
-      \ControlFlowTok{elif}\NormalTok{ transforms[n] }\OperatorTok{==} \DecValTok{2}\NormalTok{:}
-\NormalTok{        x\_nondiv\_samples }\OperatorTok{=}\NormalTok{ [ math.log(x }\OperatorTok{/}\NormalTok{ (}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ x)) }
-                             \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
-                             \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_x][c], }
-\NormalTok{                                 diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                             \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{0}\NormalTok{  ]}
-\NormalTok{        x\_div\_samples }\OperatorTok{=}\NormalTok{ [ math.log(x }\OperatorTok{/}\NormalTok{ (}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ x)) }
-                          \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
-                          \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_x][c], }
-\NormalTok{                              diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                          \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{1}\NormalTok{  ]}
-\NormalTok{        x\_display\_name }\OperatorTok{=} \SpecialStringTok{f\textquotesingle{}logit(}\SpecialCharTok{\{}\NormalTok{name\_x}\SpecialCharTok{\}}\SpecialStringTok{)\textquotesingle{}}
-        
+\NormalTok{    x\_name }\OperatorTok{=}\NormalTok{ pair[}\DecValTok{0}\NormalTok{]}
+\NormalTok{    x\_nondiv\_samples }\OperatorTok{=}\NormalTok{ [ x }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
+                         \BuiltInTok{zip}\NormalTok{(transformed\_samples[x\_name], divergences) }
+                         \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{0}\NormalTok{  ]}
+\NormalTok{    x\_div\_samples    }\OperatorTok{=}\NormalTok{ [ x }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
+                         \BuiltInTok{zip}\NormalTok{(transformed\_samples[x\_name], divergences) }
+                         \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{1}\NormalTok{  ]}
+    
+    \ControlFlowTok{if}\NormalTok{ xlim }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
 \NormalTok{      xmin }\OperatorTok{=} \BuiltInTok{min}\NormalTok{(numpy.concatenate((x\_nondiv\_samples, x\_div\_samples)))}
 \NormalTok{      xmax }\OperatorTok{=} \BuiltInTok{max}\NormalTok{(numpy.concatenate((x\_nondiv\_samples, x\_div\_samples)))}
-      
-\NormalTok{      name\_y }\OperatorTok{=}\NormalTok{ expectand\_names[m]}
-      
-      \ControlFlowTok{if}\NormalTok{ transforms[m] }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
-\NormalTok{        y\_nondiv\_samples }\OperatorTok{=}\NormalTok{ [ y }\ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ y, d }\KeywordTok{in} 
-                             \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_y][c], }
-\NormalTok{                                 diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                             \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{0}\NormalTok{  ]}
-\NormalTok{        y\_div\_samples }\OperatorTok{=}\NormalTok{ [ y }\ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ y, d }\KeywordTok{in} 
-                          \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_y][c], }
-\NormalTok{                              diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                          \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{1}\NormalTok{  ]}
-\NormalTok{        y\_display\_name }\OperatorTok{=}\NormalTok{ name\_y}
-      \ControlFlowTok{elif}\NormalTok{ transforms[m] }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
-\NormalTok{        y\_nondiv\_samples }\OperatorTok{=}\NormalTok{ [ math.log(y) }\ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ y, d }\KeywordTok{in} 
-                             \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_y][c], }
-\NormalTok{                                 diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                             \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{0}\NormalTok{  ]}
-\NormalTok{        y\_div\_samples }\OperatorTok{=}\NormalTok{ [ math.log(y) }\ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ y, d }\KeywordTok{in} 
-                          \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_y][c], }
-\NormalTok{                              diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                          \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{1}\NormalTok{  ]}
-\NormalTok{        y\_display\_name }\OperatorTok{=} \SpecialStringTok{f\textquotesingle{}log(}\SpecialCharTok{\{}\NormalTok{name\_y}\SpecialCharTok{\}}\SpecialStringTok{)\textquotesingle{}}
-      \ControlFlowTok{elif}\NormalTok{ transforms[m] }\OperatorTok{==} \DecValTok{2}\NormalTok{:}
-\NormalTok{        y\_nondiv\_samples }\OperatorTok{=}\NormalTok{ [ math.log(y }\OperatorTok{/}\NormalTok{ (}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ y)) }
-                             \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ y, d }\KeywordTok{in} 
-                             \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_y][c], }
-\NormalTok{                                 diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                             \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{0}\NormalTok{  ]}
-\NormalTok{        y\_div\_samples }\OperatorTok{=}\NormalTok{ [ math.log(y }\OperatorTok{/}\NormalTok{ (}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ y)) }
-                          \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) }\ControlFlowTok{for}\NormalTok{ y, d }\KeywordTok{in} 
-                          \BuiltInTok{zip}\NormalTok{(expectand\_samples[name\_y][c], }
-\NormalTok{                              diagnostics[}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{][c]) }
-                          \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{1}\NormalTok{  ]}
-\NormalTok{        y\_display\_name }\OperatorTok{=} \SpecialStringTok{f\textquotesingle{}logit(}\SpecialCharTok{\{}\NormalTok{name\_y}\SpecialCharTok{\}}\SpecialStringTok{)\textquotesingle{}}
-              
+\NormalTok{      local\_xlim }\OperatorTok{=}\NormalTok{ [xmin, xmax]}
+    \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{      local\_xlim }\OperatorTok{=}\NormalTok{ xlim}
+    
+\NormalTok{    y\_name }\OperatorTok{=}\NormalTok{ pair[}\DecValTok{1}\NormalTok{]}
+\NormalTok{    y\_nondiv\_samples }\OperatorTok{=}\NormalTok{ [ x }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
+                         \BuiltInTok{zip}\NormalTok{(transformed\_samples[y\_name], divergences) }
+                         \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{0}\NormalTok{  ]}
+\NormalTok{    y\_div\_samples    }\OperatorTok{=}\NormalTok{ [ x }\ControlFlowTok{for}\NormalTok{ x, d }\KeywordTok{in} 
+                         \BuiltInTok{zip}\NormalTok{(transformed\_samples[y\_name], divergences) }
+                         \ControlFlowTok{if}\NormalTok{ d }\OperatorTok{==} \DecValTok{1}\NormalTok{  ]}
+    
+    \ControlFlowTok{if}\NormalTok{ ylim }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
 \NormalTok{      ymin }\OperatorTok{=} \BuiltInTok{min}\NormalTok{(numpy.concatenate((y\_nondiv\_samples, y\_div\_samples)))}
 \NormalTok{      ymax }\OperatorTok{=} \BuiltInTok{max}\NormalTok{(numpy.concatenate((y\_nondiv\_samples, y\_div\_samples)))}
-
-\NormalTok{      idx1 }\OperatorTok{=}\NormalTok{ k }\OperatorTok{//}\NormalTok{ N\_cols}
-\NormalTok{      idx2 }\OperatorTok{=}\NormalTok{ k }\OperatorTok{\%}\NormalTok{ N\_cols}
-      
-      \ControlFlowTok{if}\NormalTok{ plot\_mode }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
-\NormalTok{        axarr[idx1, idx2].scatter(x\_nondiv\_samples, y\_nondiv\_samples, s}\OperatorTok{=}\DecValTok{5}\NormalTok{,}
-\NormalTok{                                  color}\OperatorTok{=}\NormalTok{dark\_highlight, alpha}\OperatorTok{=}\FloatTok{0.05}\NormalTok{)}
-\NormalTok{        axarr[idx1, idx2].scatter(x\_div\_samples, y\_div\_samples, s}\OperatorTok{=}\DecValTok{5}\NormalTok{,}
-\NormalTok{                                  color}\OperatorTok{=}\StringTok{"\#00FF00"}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.25}\NormalTok{)}
-      \ControlFlowTok{elif}\NormalTok{ plot\_mode }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
-\NormalTok{        axarr[idx1, idx2].scatter(x\_nondiv\_samples, y\_nondiv\_samples, }
+\NormalTok{      local\_ylim }\OperatorTok{=}\NormalTok{ [ymin, ymax]}
+    \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{      local\_ylim }\OperatorTok{=}\NormalTok{ ylim}
+     
+\NormalTok{    idx1 }\OperatorTok{=}\NormalTok{ k }\OperatorTok{//}\NormalTok{ N\_cols}
+\NormalTok{    idx2 }\OperatorTok{=}\NormalTok{ k }\OperatorTok{\%}\NormalTok{ N\_cols}
+    
+    \ControlFlowTok{if}\NormalTok{ plot\_mode }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
+\NormalTok{      axarr[idx1, idx2].scatter(x\_nondiv\_samples, y\_nondiv\_samples, s}\OperatorTok{=}\DecValTok{5}\NormalTok{,}
+\NormalTok{                                color}\OperatorTok{=}\NormalTok{dark\_highlight, alpha}\OperatorTok{=}\FloatTok{0.05}\NormalTok{)}
+\NormalTok{      axarr[idx1, idx2].scatter(x\_div\_samples, y\_div\_samples, s}\OperatorTok{=}\DecValTok{5}\NormalTok{,}
+\NormalTok{                                color}\OperatorTok{=}\StringTok{"\#00FF00"}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.25}\NormalTok{)}
+    \ControlFlowTok{elif}\NormalTok{ plot\_mode }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
+\NormalTok{      axarr[idx1, idx2].scatter(x\_nondiv\_samples, y\_nondiv\_samples, }
 \NormalTok{                                s}\OperatorTok{=}\DecValTok{5}\NormalTok{, color}\OperatorTok{=}\StringTok{"\#DDDDDD"}\NormalTok{)}
-        \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(x\_div\_samples) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
-\NormalTok{          axarr[idx1, idx2].scatter(x\_div\_samples, y\_div\_samples, s}\OperatorTok{=}\DecValTok{5}\NormalTok{,}
-\NormalTok{                                    cmap}\OperatorTok{=}\NormalTok{cmap, c}\OperatorTok{=}\NormalTok{div\_nlfs)}
+      \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(x\_div\_samples) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
+\NormalTok{        axarr[idx1, idx2].scatter(x\_div\_samples, y\_div\_samples, s}\OperatorTok{=}\DecValTok{5}\NormalTok{,}
+\NormalTok{                                  cmap}\OperatorTok{=}\NormalTok{cmap, c}\OperatorTok{=}\NormalTok{div\_nlfs)}
                                 
-\NormalTok{      axarr[idx1, idx2].set\_xlabel(x\_display\_name)}
-\NormalTok{      axarr[idx1, idx2].set\_xlim([xmin, xmax])}
-\NormalTok{      axarr[idx1, idx2].set\_ylabel(y\_display\_name)}
-\NormalTok{      axarr[idx1, idx2].set\_ylim([ymin, ymax])}
-\NormalTok{      axarr[idx1, idx2].spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
-\NormalTok{      axarr[idx1, idx2].spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
-      
-\NormalTok{      k }\OperatorTok{+=} \DecValTok{1}
-      \ControlFlowTok{if}\NormalTok{ k }\OperatorTok{==}\NormalTok{ N\_rows }\OperatorTok{*}\NormalTok{ N\_cols:}
-        \CommentTok{\# Flush current plot}
-\NormalTok{        plot.subplots\_adjust(hspace}\OperatorTok{=}\FloatTok{0.75}\NormalTok{, wspace}\OperatorTok{=}\FloatTok{0.75}\NormalTok{)}
-\NormalTok{        plot.show()}
-\NormalTok{        k }\OperatorTok{=} \DecValTok{0}
+\NormalTok{    axarr[idx1, idx2].set\_xlabel(x\_name)}
+\NormalTok{    axarr[idx1, idx2].set\_xlim(local\_xlim)}
+\NormalTok{    axarr[idx1, idx2].set\_ylabel(y\_name)}
+\NormalTok{    axarr[idx1, idx2].set\_ylim(local\_ylim)}
+\NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
+\NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
+    
+\NormalTok{    k }\OperatorTok{+=} \DecValTok{1}
+    \ControlFlowTok{if}\NormalTok{ k }\OperatorTok{==}\NormalTok{ N\_rows }\OperatorTok{*}\NormalTok{ N\_cols:}
+      \CommentTok{\# Flush current plot}
+\NormalTok{      plot.show()}
+\NormalTok{      k }\OperatorTok{=} \DecValTok{0}
   
-  \CommentTok{\# Turn off any remaining subplots }
+  \CommentTok{\# Turn off any remaining subplots}
   \ControlFlowTok{if}\NormalTok{ k }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{: }
     \ControlFlowTok{for}\NormalTok{ kk }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(k, N\_rows }\OperatorTok{*}\NormalTok{ N\_cols):}
 \NormalTok{      idx1 }\OperatorTok{=}\NormalTok{ kk }\OperatorTok{//}\NormalTok{ N\_cols}
 \NormalTok{      idx2 }\OperatorTok{=}\NormalTok{ kk }\OperatorTok{\%}\NormalTok{ N\_cols}
 \NormalTok{      axarr[idx1, idx2].axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
-\NormalTok{    plot.subplots\_adjust(hspace}\OperatorTok{=}\FloatTok{0.75}\NormalTok{, wspace}\OperatorTok{=}\FloatTok{0.75}\NormalTok{)}
-\NormalTok{    plot.show()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1069,6 +1152,7 @@ threshold.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Compute hat\{xi\}, an estimate for the shape of a generalized Pareto }
 \CommentTok{\# distribution from a sample of positive values using the method }
 \CommentTok{\# introduced in "A New and Efficient Estimation Method for the }
@@ -1114,18 +1198,22 @@ threshold.
                            \OperatorTok{{-}}\NormalTok{ xi\_hat }\OperatorTok{{-}} \DecValTok{1}\NormalTok{)}
     \ControlFlowTok{else}\NormalTok{:}
 \NormalTok{      log\_w\_vec[m] }\OperatorTok{=} \DecValTok{0}
-
+  
   \CommentTok{\# Remove terms that don\textquotesingle{}t contribute to improve numerical stability }
   \CommentTok{\# of average}
 \NormalTok{  log\_w\_vec }\OperatorTok{=}\NormalTok{ [ lw }\ControlFlowTok{for}\NormalTok{ lw }\KeywordTok{in}\NormalTok{ log\_w\_vec }\ControlFlowTok{if}\NormalTok{ lw }\OperatorTok{!=} \DecValTok{0}\NormalTok{ ]}
 \NormalTok{  b\_hat\_vec }\OperatorTok{=}\NormalTok{ [ b }\ControlFlowTok{for}\NormalTok{ b }\KeywordTok{in}\NormalTok{ b\_hat\_vec }\ControlFlowTok{if}\NormalTok{ b }\OperatorTok{!=} \DecValTok{0}\NormalTok{ ]}
-
+  
 \NormalTok{  max\_log\_w }\OperatorTok{=} \BuiltInTok{max}\NormalTok{(log\_w\_vec)}
 \NormalTok{  b\_hat }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{( [ b }\OperatorTok{*}\NormalTok{ math.exp(lw }\OperatorTok{{-}}\NormalTok{ max\_log\_w) }
                \ControlFlowTok{for}\NormalTok{ b, lw }\KeywordTok{in} \BuiltInTok{zip}\NormalTok{(b\_hat\_vec, log\_w\_vec) ] ) }\OperatorTok{/\textbackslash{}}
           \BuiltInTok{sum}\NormalTok{( [ math.exp(lw }\OperatorTok{{-}}\NormalTok{ max\_log\_w) }\ControlFlowTok{for}\NormalTok{ lw }\KeywordTok{in}\NormalTok{ log\_w\_vec ] )}
+  
+\end{Highlighting}
+\end{Shaded}
 
-  \ControlFlowTok{return}\NormalTok{ numpy.mean( [ math.log(}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ b\_hat }\OperatorTok{*}\NormalTok{ f) }\ControlFlowTok{for}\NormalTok{ f }\KeywordTok{in}\NormalTok{ sorted\_fs ] )}
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Compute empirical generalized Pareto shape for upper and lower tails}
 \CommentTok{\# for an arbitrary sample of expectand values, ignoring any }
@@ -1158,7 +1246,11 @@ threshold.
   \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(fs\_right) }\OperatorTok{\textgreater{}} \DecValTok{40}\NormalTok{:}
 \NormalTok{    xi\_hat\_right }\OperatorTok{=}\NormalTok{ compute\_xi\_hat(fs\_right)}
     
-  \ControlFlowTok{return}\NormalTok{ [xi\_hat\_left, xi\_hat\_right]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Check upper and lower tail behavior of a given expectand output }
 \CommentTok{\# ensemble.}
@@ -1202,13 +1294,13 @@ threshold.
     \ControlFlowTok{elif}\NormalTok{ (    xi\_hats[}\DecValTok{0}\NormalTok{] }\OperatorTok{\textless{}}\NormalTok{ xi\_hat\_threshold }
           \KeywordTok{and}\NormalTok{ xi\_hats[}\DecValTok{1}\NormalTok{] }\OperatorTok{\textgreater{}=}\NormalTok{ xi\_hat\_threshold):}
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
-      \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Ony right tail hat}\CharTok{\{\{}\SpecialStringTok{xi}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
+      \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Right tail hat}\CharTok{\{\{}\SpecialStringTok{xi}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
             \SpecialStringTok{f\textquotesingle{}(}\SpecialCharTok{\{}\NormalTok{xi\_hats[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{:.3f\}}\SpecialStringTok{) exceeds \textquotesingle{}}
             \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{xi\_hat\_threshold}\SpecialCharTok{\}}\SpecialStringTok{!}\CharTok{\textbackslash{}n}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
     \ControlFlowTok{elif}\NormalTok{ (    xi\_hats[}\DecValTok{0}\NormalTok{] }\OperatorTok{\textgreater{}=}\NormalTok{ xi\_hat\_threshold }
           \KeywordTok{and}\NormalTok{ xi\_hats[}\DecValTok{1}\NormalTok{] }\OperatorTok{\textless{}}\NormalTok{ xi\_hat\_threshold):}
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
-      \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Only left tail hat}\CharTok{\{\{}\SpecialStringTok{xi}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
+      \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Left tail hat}\CharTok{\{\{}\SpecialStringTok{xi}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
             \SpecialStringTok{f\textquotesingle{}(}\SpecialCharTok{\{}\NormalTok{xi\_hats[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{:.3f\}}\SpecialStringTok{) exceeds \textquotesingle{}}
             \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{xi\_hat\_threshold}\SpecialCharTok{\}}\SpecialStringTok{!}\CharTok{\textbackslash{}n}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
   
@@ -1219,7 +1311,6 @@ threshold.
             \StringTok{\textquotesingle{}not be sufficiently integrable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1238,6 +1329,7 @@ of the expectand values in a single sweep.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Compute empirical mean and variance of a given sequence with a single}
 \CommentTok{\# pass using Welford accumulators.}
 \CommentTok{\# @params A one{-}dimensional array of expectand values.}
@@ -1255,7 +1347,11 @@ of the expectand values in a single sweep.
     
 \NormalTok{  var }\OperatorTok{/=}\NormalTok{ (}\BuiltInTok{len}\NormalTok{(fs) }\OperatorTok{{-}} \DecValTok{1}\NormalTok{)}
   
-  \ControlFlowTok{return}\NormalTok{ [mean, var]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Check expectand output ensemble for vanishing empirical variance.}
 \CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
@@ -1277,7 +1373,7 @@ of the expectand values in a single sweep.
     \ControlFlowTok{if}\NormalTok{ var }\OperatorTok{\textless{}} \FloatTok{1e{-}10}\NormalTok{:}
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{True}
       \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Expectand is constant!}\CharTok{\textbackslash{}n}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
-
+  
   \ControlFlowTok{if}\NormalTok{ no\_warning:}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Expectand is varying in all Markov chains.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
   \ControlFlowTok{else}\NormalTok{:}
@@ -1285,7 +1381,6 @@ of the expectand values in a single sweep.
             \StringTok{\textquotesingle{}constant then the Markov transitions are misbehaving.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1316,6 +1411,7 @@ set.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Split a sequence of expectand values in half to create an initial and }
 \CommentTok{\# terminal Markov chains}
 \CommentTok{\# @params chain A sequence of expectand values derived from a single }
@@ -1325,7 +1421,11 @@ set.
   \CommentTok{"""Split a Markov chain into initial and terminal Markov chains"""}
 \NormalTok{  N }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(chain)}
 \NormalTok{  M }\OperatorTok{=}\NormalTok{ N }\OperatorTok{//} \DecValTok{2}
-  \ControlFlowTok{return}\NormalTok{ [ chain[}\DecValTok{0}\NormalTok{:M], chain[M:N] ]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Compute split hat\{R\} for the expectand values across a Markov chain }
 \CommentTok{\# ensemble.}
@@ -1362,7 +1462,11 @@ set.
   \ControlFlowTok{if} \BuiltInTok{abs}\NormalTok{(W) }\OperatorTok{\textgreater{}} \FloatTok{1e{-}10}\NormalTok{:}
 \NormalTok{    rhat }\OperatorTok{=}\NormalTok{ math.sqrt( (N }\OperatorTok{{-}} \DecValTok{1} \OperatorTok{+}\NormalTok{ B }\OperatorTok{/}\NormalTok{ W) }\OperatorTok{/}\NormalTok{ N )}
   
-  \ControlFlowTok{return}\NormalTok{ rhat}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Compute split hat\{R\} for all input expectands}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for }
@@ -1383,7 +1487,11 @@ set.
 \NormalTok{    samples }\OperatorTok{=}\NormalTok{ expectand\_samples[name]}
 \NormalTok{    rhats.append(compute\_split\_rhat(samples))}
   
-  \ControlFlowTok{return}\NormalTok{ rhats}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Check split hat\{R\} across a given expectand output ensemble.}
 \CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
@@ -1399,7 +1507,7 @@ set.
     \ControlFlowTok{return}
     
 \NormalTok{  rhat }\OperatorTok{=}\NormalTok{ compute\_split\_rhat(samples)}
-
+  
 \NormalTok{  no\_warning }\OperatorTok{=} \VariableTok{True}
   
   \ControlFlowTok{if}\NormalTok{ math.isnan(rhat):}
@@ -1418,7 +1526,6 @@ set.
             \StringTok{\textquotesingle{}of the Markov chains has not reached an equilibrium.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1446,6 +1553,7 @@ error for the particular expectand of interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Compute empirical integrated autocorrelation time for a sequence}
 \CommentTok{\# of expectand values, known here as \textbackslash{}hat\{tau\}.}
 \CommentTok{\# @param fs A one{-}dimensional array of expectand values.}
@@ -1466,7 +1574,7 @@ error for the particular expectand of interest.
 \NormalTok{  Fs }\OperatorTok{=}\NormalTok{ numpy.fft.fft(zs\_buff)}
 \NormalTok{  Ss }\OperatorTok{=}\NormalTok{ numpy.}\BuiltInTok{abs}\NormalTok{(Fs)}\OperatorTok{**}\DecValTok{2}
 \NormalTok{  Rs }\OperatorTok{=}\NormalTok{ numpy.fft.ifft(Ss)}
-
+  
 \NormalTok{  acov\_buff }\OperatorTok{=}\NormalTok{ numpy.real(Rs)}
 \NormalTok{  rhos }\OperatorTok{=}\NormalTok{ acov\_buff[}\DecValTok{0}\NormalTok{:N] }\OperatorTok{/}\NormalTok{ acov\_buff[}\DecValTok{0}\NormalTok{]}
   
@@ -1496,36 +1604,17 @@ error for the particular expectand of interest.
 \NormalTok{      current\_pair\_sum }\OperatorTok{=}\NormalTok{ old\_pair\_sum}
 \NormalTok{      rhos[}\DecValTok{2} \OperatorTok{*}\NormalTok{ p]     }\OperatorTok{=} \FloatTok{0.5} \OperatorTok{*}\NormalTok{ old\_pair\_sum}
 \NormalTok{      rhos[}\DecValTok{2} \OperatorTok{*}\NormalTok{ p }\OperatorTok{+} \DecValTok{1}\NormalTok{] }\OperatorTok{=} \FloatTok{0.5} \OperatorTok{*}\NormalTok{ old\_pair\_sum}
-
+    
     \CommentTok{\# if p == P:}
       \CommentTok{\# throw some kind of error when autocorrelation}
       \CommentTok{\# sequence doesn\textquotesingle{}t get terminated}
     
-\NormalTok{    old\_pair\_sum }\OperatorTok{=}\NormalTok{ current\_pair\_sum}
 \end{Highlighting}
 \end{Shaded}
 
-Assuming stationarity we can use the empirical effective sample size to
-estimate the Markov chain Monte Carlo standard error for any
-well-behaved expectand estimator \[
-\hat{f} \approx \mathbb{E}_{\pi}[f].
-\] The necessary effective sample size depends on the precision required
-for a given Markov chain Monte Carlo estimator. This can vary not only
-from analysis to analysis but also between multiple expectands within a
-single analysis. That said an effective sample size of \(100\) is
-sufficient for most applications and provides a useful rule of thumb.
-
-When Markov chains have not equilibrated the empirical effective sample
-size will have no relation to the error of Markov chain Monte Carlo
-estimators. To avoid any confusion we should interpret an empirical
-effective sample size simply as a quantification of the autocorrelations
-of a particular expectand within a realized Markov chain. In particular
-an empirical effective sample size below \(100\) indicates strong
-autocorrelation that will complicate Markov chain Monte Carlo estimation
-in the worst case and reduce estimator precision in the best case.
-
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Compute the maximum empirical effective sample size across the }
 \CommentTok{\# Markov chains for the given expectands}
 \CommentTok{\# @param expectand\_samples A named list of two{-}dimensional arrays for }
@@ -1555,7 +1644,30 @@ in the worst case and reduce estimator precision in the best case.
     
 \NormalTok{    min\_eesss.append(}\BuiltInTok{min}\NormalTok{(eesss))}
   
-  \ControlFlowTok{return}\NormalTok{ min\_eesss}
+\end{Highlighting}
+\end{Shaded}
+
+Assuming stationarity we can use the empirical effective sample size to
+estimate the Markov chain Monte Carlo standard error for any
+well-behaved expectand estimator \[
+\hat{f} \approx \mathbb{E}_{\pi}[f].
+\] The necessary effective sample size depends on the precision required
+for a given Markov chain Monte Carlo estimator. This can vary not only
+from analysis to analysis but also between multiple expectands within a
+single analysis. That said an effective sample size of \(100\) is
+sufficient for most applications and provides a useful rule of thumb.
+
+When Markov chains have not equilibrated the empirical effective sample
+size will have no relation to the error of Markov chain Monte Carlo
+estimators. To avoid any confusion we should interpret an empirical
+effective sample size simply as a quantification of the autocorrelations
+of a particular expectand within a realized Markov chain. In particular
+an empirical effective sample size below \(100\) indicates strong
+autocorrelation that will complicate Markov chain Monte Carlo estimation
+in the worst case and reduce estimator precision in the best case.
+
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Check the empirical effective sample size (EESS) for all a given }
 \CommentTok{\# expectand output ensemble.}
@@ -1598,7 +1710,6 @@ in the worst case and reduce estimator precision in the best case.
             \StringTok{\textquotesingle{}even when a central limit theorem holds.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1614,6 +1725,7 @@ once for each expectand of interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Check all expectand{-}specific diagnostics.}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for }
 \CommentTok{\#                          each expectand.  The first dimension of each}
@@ -1695,14 +1807,14 @@ once for each expectand of interest.
             \KeywordTok{and}\NormalTok{ xi\_hats[}\DecValTok{1}\NormalTok{] }\OperatorTok{\textgreater{}=}\NormalTok{ xi\_hat\_threshold):}
 \NormalTok{        no\_xi\_hat\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{        local\_warning }\OperatorTok{=} \VariableTok{True}
-\NormalTok{        local\_message }\OperatorTok{+=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Ony right tail hat}\CharTok{\{\{}\SpecialStringTok{xi}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
+\NormalTok{        local\_message }\OperatorTok{+=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Right tail hat}\CharTok{\{\{}\SpecialStringTok{xi}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
                           \SpecialStringTok{f\textquotesingle{}(}\SpecialCharTok{\{}\NormalTok{xi\_hats[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{:.3f\}}\SpecialStringTok{) exceeds \textquotesingle{}}
                           \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{xi\_hat\_threshold}\SpecialCharTok{\}}\SpecialStringTok{!}\CharTok{\textbackslash{}n}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
       \ControlFlowTok{elif}\NormalTok{ (    xi\_hats[}\DecValTok{0}\NormalTok{] }\OperatorTok{\textgreater{}=}\NormalTok{ xi\_hat\_threshold }
             \KeywordTok{and}\NormalTok{ xi\_hats[}\DecValTok{1}\NormalTok{] }\OperatorTok{\textless{}}\NormalTok{ xi\_hat\_threshold):}
 \NormalTok{        no\_xi\_hat\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{        local\_warning }\OperatorTok{=} \VariableTok{True}
-\NormalTok{        local\_message }\OperatorTok{+=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Only left tail hat}\CharTok{\{\{}\SpecialStringTok{xi}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
+\NormalTok{        local\_message }\OperatorTok{+=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Left tail hat}\CharTok{\{\{}\SpecialStringTok{xi}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
                           \SpecialStringTok{f\textquotesingle{}(}\SpecialCharTok{\{}\NormalTok{xi\_hats[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{:.3f\}}\SpecialStringTok{) exceeds \textquotesingle{}}
                           \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{xi\_hat\_threshold}\SpecialCharTok{\}}\SpecialStringTok{!}\CharTok{\textbackslash{}n}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
       
@@ -1716,14 +1828,14 @@ once for each expectand of interest.
     
     \CommentTok{\# Check split Rhat across Markov chains}
 \NormalTok{    rhat }\OperatorTok{=}\NormalTok{ compute\_split\_rhat(samples)}
-
+    
     \ControlFlowTok{if}\NormalTok{ math.isnan(rhat):}
 \NormalTok{      local\_message }\OperatorTok{+=} \StringTok{\textquotesingle{}  Split hat}\SpecialCharTok{\{R\}}\StringTok{ is ill{-}defined!}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}
     \ControlFlowTok{elif}\NormalTok{ rhat }\OperatorTok{\textgreater{}} \FloatTok{1.1}\NormalTok{:}
 \NormalTok{      no\_rhat\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      local\_warning }\OperatorTok{=} \VariableTok{True}
 \NormalTok{      local\_message }\OperatorTok{+=} \SpecialStringTok{f\textquotesingle{}  Split hat}\CharTok{\{\{}\SpecialStringTok{R}\CharTok{\}\}}\SpecialStringTok{ (}\SpecialCharTok{\{}\NormalTok{rhat}\SpecialCharTok{:.3f\}}\SpecialStringTok{) exceeds 1.1!}\CharTok{\textbackslash{}n}\SpecialStringTok{\textquotesingle{}}
-
+    
     \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
       \CommentTok{\# Check empirical effective sample size}
 \NormalTok{      fs }\OperatorTok{=}\NormalTok{ samples[c,:]}
@@ -1784,7 +1896,6 @@ once for each expectand of interest.
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
     
-  \ControlFlowTok{return}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1794,6 +1905,7 @@ we can summarize the output more compactly.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Summary all expectand{-}specific diagnostics.}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for }
 \CommentTok{\#                          each expectand.  The first dimension of each}
@@ -1821,7 +1933,7 @@ we can summarize the output more compactly.
 \NormalTok{  failed\_zvar\_names }\OperatorTok{=}\NormalTok{ []}
 \NormalTok{  failed\_rhat\_names }\OperatorTok{=}\NormalTok{ []}
 \NormalTok{  failed\_eess\_names }\OperatorTok{=}\NormalTok{ []}
-
+  
   \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ expectand\_samples:}
 \NormalTok{    samples }\OperatorTok{=}\NormalTok{ expectand\_samples[name]}
 \NormalTok{    C }\OperatorTok{=}\NormalTok{ samples.shape[}\DecValTok{0}\NormalTok{]}
@@ -1945,7 +2057,6 @@ we can summarize the output more compactly.
             \StringTok{\textquotesingle{}theorem holds.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1960,6 +2071,7 @@ provides a useful visualization of these estimates.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Compute empirical autocorrelations for a given Markov chain sequence}
 \CommentTok{\# @parmas fs A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return A one{-}dimensional array of empirical autocorrelations at each }
@@ -2015,7 +2127,11 @@ provides a useful visualization of these estimates.
     
 \NormalTok{    old\_pair\_sum }\OperatorTok{=}\NormalTok{ current\_pair\_sum}
   
-  \ControlFlowTok{return}\NormalTok{ rhos}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Plot empirical correlograms for a given expectand across a Markov }
 \CommentTok{\# chain ensemble.}
@@ -2057,7 +2173,6 @@ provides a useful visualization of these estimates.
 \NormalTok{  ax.set\_ylabel(}\StringTok{"Empirical}\CharTok{\textbackslash{}n}\StringTok{Autocorrelation"}\NormalTok{)}
 \NormalTok{  ax.set\_ylim(rho\_lim[}\DecValTok{0}\NormalTok{], rho\_lim[}\DecValTok{1}\NormalTok{])}
 \NormalTok{  ax.spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
-\NormalTok{  ax.spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2073,6 +2188,7 @@ chaotic spray of colors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Visualize the projection of a Markov chain ensemble along two }
 \CommentTok{\# expectands as a pairs plot.  Point colors darken along each Markov }
 \CommentTok{\# chain to visualize the autocorrelation.}
@@ -2086,8 +2202,8 @@ chaotic spray of colors.
 \CommentTok{\#            dimension indexing the sequential states  within each }
 \CommentTok{\#            Markov chain.}
 \CommentTok{\# @params display\_name2 Name of second expectand}
-\KeywordTok{def}\NormalTok{ plot\_chain\_sep\_pairs(f1s, display\_name1,}
-\NormalTok{                         f2s, display\_name2):}
+\KeywordTok{def}\NormalTok{ plot\_pairs\_by\_chain(f1s, display\_name1,}
+\NormalTok{                        f2s, display\_name2):}
   \CommentTok{"""Plot two expectand output ensembles againt each other separated by}
 \CommentTok{     Markov chain """}
   \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(f1s.shape) }\OperatorTok{!=} \DecValTok{2}\NormalTok{:}
@@ -2117,7 +2233,7 @@ chaotic spray of colors.
 \NormalTok{  colors }\OperatorTok{=}\NormalTok{ [}\StringTok{"\#DCBCBC"}\NormalTok{, }\StringTok{"\#C79999"}\NormalTok{, }\StringTok{"\#B97C7C"}\NormalTok{,}
             \StringTok{"\#A25050"}\NormalTok{, }\StringTok{"\#8F2727"}\NormalTok{, }\StringTok{"\#7C0000"}\NormalTok{]}
 \NormalTok{  cmap }\OperatorTok{=}\NormalTok{ LinearSegmentedColormap.from\_list(}\StringTok{"reds"}\NormalTok{, colors, N}\OperatorTok{=}\NormalTok{S1)}
-
+  
 \NormalTok{  min\_x }\OperatorTok{=} \BuiltInTok{min}\NormalTok{(f1s.flatten())}
 \NormalTok{  max\_x }\OperatorTok{=} \BuiltInTok{max}\NormalTok{(f1s.flatten())}
   
@@ -2127,7 +2243,7 @@ chaotic spray of colors.
 \NormalTok{  N\_plots }\OperatorTok{=}\NormalTok{ C1}
 \NormalTok{  N\_cols }\OperatorTok{=} \DecValTok{2}
 \NormalTok{  N\_rows }\OperatorTok{=}\NormalTok{ math.ceil(N\_plots }\OperatorTok{/}\NormalTok{ N\_cols)}
-\NormalTok{  f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(N\_rows, N\_cols)}
+\NormalTok{  f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(N\_rows, N\_cols, layout}\OperatorTok{=}\StringTok{"constrained"}\NormalTok{)}
 \NormalTok{  k }\OperatorTok{=} \DecValTok{0}
   
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C1):}
@@ -2148,8 +2264,6 @@ chaotic spray of colors.
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
   
-\NormalTok{  plot.subplots\_adjust(hspace}\OperatorTok{=}\FloatTok{1.0}\NormalTok{, wspace}\OperatorTok{=}\FloatTok{0.5}\NormalTok{)}
-\NormalTok{  plot.show()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2163,6 +2277,7 @@ value estimates and their standard errors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Evaluate an expectand at the states of a Markov chain ensemble.}
 \CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
 \CommentTok{\#                with the first dimension indexing the Markov chains and }
@@ -2176,7 +2291,11 @@ value estimates and their standard errors.
 \CommentTok{\#         each Markov chain.}
 \KeywordTok{def}\NormalTok{ pushforward\_chains(samples, expectand):}
   \CommentTok{"""Evaluate an expectand along a Markov chain"""}
-  \ControlFlowTok{return}\NormalTok{ numpy.vectorize(expectand)(samples)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Estimate expectand exectation value from a single Markov chain.}
 \CommentTok{\# @param fs A one{-}dimensional array of sequential expectand values.}
@@ -2195,7 +2314,11 @@ value estimates and their standard errors.
   
 \NormalTok{  tau\_hat }\OperatorTok{=}\NormalTok{ compute\_tau\_hat(fs)}
 \NormalTok{  eess }\OperatorTok{=}\NormalTok{ S }\OperatorTok{/}\NormalTok{ tau\_hat}
-  \ControlFlowTok{return}\NormalTok{ [summary[}\DecValTok{0}\NormalTok{], math.sqrt(summary[}\DecValTok{1}\NormalTok{] }\OperatorTok{/}\NormalTok{ eess), eess]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 
 \CommentTok{\# Estimate expectand exectation value from a Markov chain ensemble.}
 \CommentTok{\# @param samples A two{-}dimensional array of expectand values with the }
@@ -2224,7 +2347,7 @@ value estimates and their standard errors.
   
   \CommentTok{\# Ensemble average weighted by effective sample size}
 \NormalTok{  mean }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{([ est[}\DecValTok{0}\NormalTok{] }\OperatorTok{*}\NormalTok{ est[}\DecValTok{2}\NormalTok{] }\ControlFlowTok{for}\NormalTok{ est }\KeywordTok{in}\NormalTok{ chain\_ests ]) }\OperatorTok{/}\NormalTok{ total\_ess}
-
+  
   \CommentTok{\# Ensemble variance weighed by effective sample size}
   \CommentTok{\# including correction for the fact that individual Markov chain}
   \CommentTok{\# variances are defined relative to the individual mean estimators}
@@ -2237,8 +2360,7 @@ value estimates and their standard errors.
 \NormalTok{    var\_update }\OperatorTok{=}\NormalTok{ (est[}\DecValTok{0}\NormalTok{] }\OperatorTok{{-}}\NormalTok{ mean)}\OperatorTok{**}\DecValTok{2}
     \BuiltInTok{vars}\NormalTok{[c] }\OperatorTok{=}\NormalTok{ est[}\DecValTok{2}\NormalTok{] }\OperatorTok{*}\NormalTok{ (var\_update }\OperatorTok{+}\NormalTok{ chain\_var)}
 \NormalTok{  var }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{(}\BuiltInTok{vars}\NormalTok{) }\OperatorTok{/}\NormalTok{ total\_ess}
-
-  \ControlFlowTok{return}\NormalTok{ [mean, math.sqrt(var }\OperatorTok{/}\NormalTok{ total\_ess), total\_ess]}
+  
 \end{Highlighting}
 \end{Shaded}
 
@@ -2248,6 +2370,7 @@ by estimating the target probabilities in histogram bins.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
 \CommentTok{\# Visualize pushforward distribution of a given expectand as a }
 \CommentTok{\# histogram, using Markov chain Monte Carlo estimators to estimate the }
 \CommentTok{\# output bin probabilities.  Bin probability estimator error is shown }
@@ -2262,7 +2385,7 @@ by estimating the target probabilities in histogram bins.
 \CommentTok{\# @param flim Optional histogram range}
 \CommentTok{\# @param baseline Optional baseline value for visual comparison}
 \KeywordTok{def}\NormalTok{ plot\_expectand\_pushforward(ax, samples, B, display\_name}\OperatorTok{=}\StringTok{"f"}\NormalTok{, }
-\NormalTok{                              flim}\OperatorTok{=}\VariableTok{None}\NormalTok{, baseline}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+\NormalTok{                               flim}\OperatorTok{=}\VariableTok{None}\NormalTok{, baseline}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
   \CommentTok{"""Plot pushforward histogram of a given expectand using Markov chain}
 \CommentTok{     Monte Carlo estimators to estimate the output bin probabilities"""}
   \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(samples.shape) }\OperatorTok{!=} \DecValTok{2}\NormalTok{:}
@@ -2314,13 +2437,13 @@ by estimating the target probabilities in histogram bins.
 \NormalTok{  max\_y }\OperatorTok{=} \FloatTok{1.05} \OperatorTok{*} \BuiltInTok{max}\NormalTok{(upper\_inter)}
   
 \NormalTok{  ax.fill\_between(xs, lower\_inter, upper\_inter,}
-\NormalTok{                    facecolor}\OperatorTok{=}\NormalTok{light, color}\OperatorTok{=}\StringTok{"\#DDDDDD"}\NormalTok{)}
+\NormalTok{                  facecolor}\OperatorTok{=}\NormalTok{light, color}\OperatorTok{=}\StringTok{"\#DDDDDD"}\NormalTok{)}
 \NormalTok{  ax.plot(xs, [ mean\_p[idx] }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ idxs ], color}\OperatorTok{=}\NormalTok{dark, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
   
   \ControlFlowTok{if}\NormalTok{ baseline }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
 \NormalTok{    ax.axvline(x}\OperatorTok{=}\NormalTok{baseline, linewidth}\OperatorTok{=}\DecValTok{4}\NormalTok{, color}\OperatorTok{=}\StringTok{"white"}\NormalTok{)}
 \NormalTok{    ax.axvline(x}\OperatorTok{=}\NormalTok{baseline, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{, color}\OperatorTok{=}\StringTok{"black"}\NormalTok{)}
-
+  
 \NormalTok{  ax.set\_xlim(flim)}
 \NormalTok{  ax.set\_xlabel(display\_name)}
 \NormalTok{  ax.set\_ylim([min\_y, max\_y])}
@@ -2328,7 +2451,6 @@ by estimating the target probabilities in histogram bins.
 \NormalTok{  ax.get\_yaxis().set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{  ax.spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{  ax.spines[}\StringTok{"left"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
-\NormalTok{  ax.spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2344,10 +2466,10 @@ First we setup our local \texttt{Python} environment.
 \begin{Highlighting}[]
 \ImportTok{import}\NormalTok{ matplotlib}
 \ImportTok{import}\NormalTok{ matplotlib.pyplot }\ImportTok{as}\NormalTok{ plot}
+\NormalTok{plot.show()}
 \NormalTok{plot.rcParams[}\StringTok{\textquotesingle{}figure.figsize\textquotesingle{}}\NormalTok{] }\OperatorTok{=}\NormalTok{ [}\DecValTok{6}\NormalTok{, }\DecValTok{4}\NormalTok{]}
 \NormalTok{plot.rcParams[}\StringTok{\textquotesingle{}figure.dpi\textquotesingle{}}\NormalTok{] }\OperatorTok{=} \DecValTok{100}
 \NormalTok{plot.rcParams[}\StringTok{\textquotesingle{}font.family\textquotesingle{}}\NormalTok{] }\OperatorTok{=} \StringTok{"Serif"}
-\ImportTok{from}\NormalTok{ matplotlib.colors }\ImportTok{import}\NormalTok{ LinearSegmentedColormap}
 
 \NormalTok{light}\OperatorTok{=}\StringTok{"\#DCBCBC"}
 \NormalTok{light\_highlight}\OperatorTok{=}\StringTok{"\#C79999"}
@@ -2533,8 +2655,8 @@ Let's start with the Hamiltonian Monte Carlo diagnostics.
   Chain 2: 1009 of 1024 transitions (98.54%) diverged.
  
   Chain 3: 1014 of 1024 transitions (99.02%) diverged.
-  Chain 3: Average proxy acceptance statistic (0.700) is
-                  smaller than 90% of the target (0.801).
+  Chain 3: Average proxy acceptance statistic (0.700) is smaller than
+90% of the target (0.801).
  
   Chain 4: 1016 of 1024 transitions (99.22%) diverged.
  
@@ -2618,7 +2740,7 @@ explore as far as those in the other chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{util.plot\_num\_leapfrog(diagnostics)}
+\NormalTok{util.plot\_num\_leapfrogs\_by\_chain(diagnostics)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2637,9 +2759,9 @@ much information from the divergent-labeled pairs plots.
 \begin{Highlighting}[]
 \NormalTok{samples }\OperatorTok{=}\NormalTok{ util.extract\_expectands(fit)}
 
-\NormalTok{base\_samples }\OperatorTok{=}\NormalTok{ \{ k: samples[k] }\ControlFlowTok{for}\NormalTok{ k }\KeywordTok{in} 
-\NormalTok{                 [}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{]\}}
-\NormalTok{util.plot\_div\_pairs(base\_samples, diagnostics, [}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{])}
+\NormalTok{names }\OperatorTok{=}\NormalTok{ [}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{]}
+\NormalTok{names }\OperatorTok{+=}\NormalTok{ [ }\SpecialStringTok{f\textquotesingle{}beta[}\SpecialCharTok{\{}\NormalTok{m }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{]\textquotesingle{}} \ControlFlowTok{for}\NormalTok{ m }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(data[}\StringTok{\textquotesingle{}M\textquotesingle{}}\NormalTok{]) ]}
+\NormalTok{util.plot\_div\_pairs(names, names, samples, diagnostics)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2665,8 +2787,7 @@ not inconsistent with a boundary defined by \[
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{util.plot\_div\_pairs(base\_samples, diagnostics, }
-\NormalTok{                    [}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{], plot\_mode}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
+\NormalTok{util.plot\_div\_pairs(names, names, samples, diagnostics, plot\_mode}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3310,9 +3431,7 @@ empirical correlograms for each parameter expectand.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{unpermuted\_samples }\OperatorTok{=}\NormalTok{ fit.extract(permuted}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
-
-\NormalTok{f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{)}
+\NormalTok{f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, layout}\OperatorTok{=}\StringTok{"constrained"}\NormalTok{)}
 
 \NormalTok{util.plot\_empirical\_correlogram(axarr[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{], samples[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{], }
                                 \DecValTok{300}\NormalTok{, [}\OperatorTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{],  }\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{)}
@@ -3323,7 +3442,6 @@ empirical correlograms for each parameter expectand.
 \NormalTok{util.plot\_empirical\_correlogram(axarr[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{], samples[}\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{], }
                                 \DecValTok{300}\NormalTok{, [}\OperatorTok{{-}}\FloatTok{0.05}\NormalTok{, }\FloatTok{1.05}\NormalTok{],  }\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{)}
 
-\NormalTok{plot.subplots\_adjust(wspace}\OperatorTok{=}\FloatTok{0.5}\NormalTok{, hspace}\OperatorTok{=}\FloatTok{0.75}\NormalTok{)}
 \NormalTok{plot.show()}
 \end{Highlighting}
 \end{Shaded}
@@ -3350,8 +3468,8 @@ characteristic of a random walk.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{util.plot\_chain\_sep\_pairs(samples[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{], }\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{, }
-\NormalTok{                          samples[}\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{], }\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{)}
+\NormalTok{util.plot\_pairs\_by\_chain(samples[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{], }\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{, }
+\NormalTok{                         samples[}\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{], }\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3407,12 +3525,12 @@ Monte Carlo estimator with an estimated error. Even if that error is
 inaccurate it can sometimes communicate underlying problems.
 
 For example let's look at a pushforward histogram for each parameter
-with light red bands visualizing the standard error around the bin
-probability estimates in dark red.
+with light gray bands visualizing twice the standard error around the
+bin probability estimates in dark red.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{)}
+\NormalTok{f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, layout}\OperatorTok{=}\StringTok{"constrained"}\NormalTok{)}
 
 \NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{], samples[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{], }
                                 \DecValTok{25}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{)}
@@ -3423,7 +3541,6 @@ probability estimates in dark red.
 \NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{], samples[}\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{], }
                                 \DecValTok{25}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{)}
 
-\NormalTok{plot.subplots\_adjust(wspace}\OperatorTok{=}\FloatTok{0.1}\NormalTok{, hspace}\OperatorTok{=}\FloatTok{0.5}\NormalTok{)}
 \NormalTok{plot.show()}
 \end{Highlighting}
 \end{Shaded}
@@ -3431,42 +3548,6 @@ probability estimates in dark red.
 \begin{figure}[H]
 
 {\centering \includegraphics{mcmc_diagnostics_pystan2_files/figure-pdf/cell-20-output-1.pdf}
-
-}
-
-\end{figure}
-
-If we look at the central estimates alone we might convince ourselves of
-all kinds of interesting structure. For example potential multi-modality
-in \texttt{alpha} and \texttt{beta{[}2{]}} and platykurticity in
-\texttt{beta{[}1{]}} and \texttt{beta{[}3{]}}. These structures,
-however, are all within the scope of the relatively large standard error
-bands which suggests that they are all consistent with estimator noise.
-
-Reducing the number of bins decreases the relative standard errors but
-at the same time many of the visual artifacts recede.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{)}
-
-\NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{], samples[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{], }
-                                \DecValTok{10}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{)}
-\NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{], samples[}\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{], }
-                                \DecValTok{10}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{)}
-\NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{], samples[}\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{], }
-                                \DecValTok{10}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{)}
-\NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{], samples[}\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{], }
-                                \DecValTok{10}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{)}
-
-\NormalTok{plot.subplots\_adjust(wspace}\OperatorTok{=}\FloatTok{0.1}\NormalTok{, hspace}\OperatorTok{=}\FloatTok{0.5}\NormalTok{)}
-\NormalTok{plot.show()}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan2_files/figure-pdf/cell-21-output-1.pdf}
 
 }
 
@@ -3506,7 +3587,7 @@ Environment}\label{original-computing-environment}}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2023-07-10T12:20:35.754133-04:00
+Last updated: 2023-10-20T17:20:29.612908-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6
@@ -3523,7 +3604,7 @@ Architecture: 64bit
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\BuiltInTok{print}\NormalTok{(watermark(packages}\OperatorTok{=}\StringTok{"matplotlib,numpy,pystan"}\NormalTok{))}
+\BuiltInTok{print}\NormalTok{(watermark(packages}\OperatorTok{=}\StringTok{"matplotlib,numpy,pystan,scipy"}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3531,6 +3612,7 @@ Architecture: 64bit
 matplotlib: 3.5.2
 numpy     : 1.22.3
 pystan    : 2.19.1.1
+scipy     : 1.8.0
 \end{verbatim}
 
 

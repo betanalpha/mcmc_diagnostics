@@ -47,8 +47,7 @@ Stan executables for reuse.  This function compiles a given Stan program
 into an executable and then saves the executable as a `.pkl` object for
 later use.
 
-```{.python include="stan_utility_pystan2.py" start-line=35 end-line=56}
-```
+{{< include _includes/compile_model.qmd >}}
 
 Rarely these caches can become corrupted, in which case deleting the
 `.pkl` file and recompiling can be helpful.  On some exceptional systems
@@ -78,16 +77,16 @@ Carlo diagnostic information emitted at each transition.  Instead the
 `get_sampler_params` function recovers this information, albeit it yet 
 another output format.
 
-To facilitate the analysis of Stan output I've included my own custom 
-extract functions that format the Markov chain Monte Carlo output into 
-named lists, with one named element for each expectand or Hamiltonian 
-Monte Carlo diagnostic.  The elements themselves are two-dimensional 
-arrays with the first index denoting the individual Markov chains and 
-the second index denoting the iterations within an individual Markov 
-chain.
+To facilitate the analysis of Stan output I've included my own custom
+extract functions that format the sample and diagnostic outputs into
+dictionaries, with one key for each expectand or Hamiltonian Monte Carlo
+diagnostic.  The elements themselves are two-dimensional arrays with the
+first index denoting the individual Markov chains and the second index
+denoting the iterations within an individual Markov chain.
 
-```{.python include="stan_utility_pystan2.py" start-line=58 end-line=87}
-```
+{{< include _includes/extract_expectands.qmd >}}
+
+{{< include _includes/extract_hmc_diagnostics.qmd >}}
 
 If users are able to modify these functions to accept the output from 
 other interfaces to Stan and return the same output format then all of 
@@ -159,8 +158,7 @@ warmup periods.  Small averages indicate some obstruction to the adaptation,
 for example discontinuities in the target distribution or inaccurate gradient
 evaluations.
 
-```{.python include="stan_utility_pystan2.py" start-line=89 end-line=219}
-```
+{{< include _includes/check_all_hmc_diagnostics.qmd >}}
 
 ## Integrator Inverse Metric Elements
 
@@ -173,8 +171,7 @@ First we can look at the inverse metric adaptation in each of the Markov chains.
 Inconsistencies in the adapted inverse metric elements across the Markov chains
 are due to the individual chains encountering different behaviors during warmup.
 
-```{.python include="stan_utility_pystan2.py" start-line=221 end-line=285}
-```
+{{< include _includes/plot_inv_metric.qmd >}}
 
 Note that the adaptation information may be accessed differently in 
 other Stan interfaces, in which case this function would have to be
@@ -188,8 +185,7 @@ inverse metric elements heterogeneity in the adapted values across the Markov
 chains indicates that the Markov chains encountered substantially different
 behavior during warmup.
 
-```{.python include="stan_utility_pystan2.py" start-line=287 end-line=304}
-```
+{{< include _includes/display_stepsizes.qmd >}}
 
 ## Numerical Trajectory Lengths
 
@@ -198,8 +194,9 @@ numerical trajectories generated for each Hamiltonian Markov transition.  The
 longer these trajectories the more degenerate the target distribution, and the
 more expensive it is to explore.
 
-```{.python include="stan_utility_pystan2.py" start-line=306 end-line=357}
-```
+{{< include _includes/plot_num_leapfrogs.qmd >}}
+
+{{< include _includes/plot_num_leapfrogs_by_chain.qmd >}}
 
 ## Average Proxy Acceptance Statistic
 
@@ -207,8 +204,7 @@ When the different adaptation outcomes are due to problematic behaviors
 encountered during warmup then it the average proxy acceptance statistics should
 also vary across the Markov chains.
 
-```{.python include="stan_utility_pystan2.py" start-line=359 end-line=380}
-```
+{{< include _includes/display_ave_accept_proxy.qmd >}}
 
 ## Divergence-Labeled Pairs Plot
 
@@ -223,8 +219,9 @@ separately then we should see the divergent states concentrate towards the
 problematic behavior.  The high-dimensional states themselves can be visualized
 with pairs plots.
 
-```{.python include="stan_utility_pystan2.py" start-line=382 end-line=616}
-```
+{{< include _includes/apply_transform.qmd >}}
+
+{{< include _includes/plot_div_pairs.qmd >}}
 
 # Expectand Diagnostic Functions
 
@@ -269,8 +266,11 @@ the boundedness also guarantees that moments of all orders exist.  To make this
 diagnostic as robust as possible $\hat{\xi}$ will return $-2$ in these cases to
 avoid the diagnostic threshold.
 
-```{.python include="stan_utility_pystan2.py" start-line=618 end-line=768}
-```
+{{< include _includes/compute_xi_hat.qmd >}}
+
+{{< include _includes/compute_tail_xi_hats.qmd >}}
+
+{{< include _includes/check_tail_xi_hats.qmd >}}
 
 ## Frozen Chains
 
@@ -283,8 +283,9 @@ we can signal a constant expectand by looking at its empirical variance.
 Here we'll use a Welford accumulator to compute the empirical variance of the
 expectand values in a single sweep.
 
-```{.python include="stan_utility_pystan2.py" start-line=770 end-line=817}
-```
+{{< include _includes/welford_summary.qmd >}}
+
+{{< include _includes/check_variances.qmd >}}
 
 ## Split Rhat
 
@@ -307,8 +308,13 @@ each Markov chain halves are not consistent with each other.  This could be
 because the Markov chains have not converged to the same typical set or because
 they have not yet expanded into that typical set.
 
-```{.python include="stan_utility_pystan2.py" start-line=819 end-line=921}
-```
+{{< include _includes/split_chain.qmd >}}
+
+{{< include _includes/compute_split_rhat.qmd >}}
+
+{{< include _includes/compute_split_rhats.qmd >}}
+
+{{< include _includes/check_rhat.qmd >}}
 
 ## Integrated Autocorrelation Time
 
@@ -333,8 +339,9 @@ The effective sample size can be interpreted as how large of an ensemble
 of exact samples we would need to achieve the same estimator error for 
 the particular expectand of interest.
 
-```{.python include="stan_utility_pystan2.py" start-line=923 end-line=978}
-```
+{{< include _includes/compute_tau_hat.qmd >}}
+
+{{< include _includes/compute_min_eesss.qmd >}}
 
 Assuming stationarity we can use the empirical effective sample size to 
 estimate the Markov chain Monte Carlo standard error for any well-behaved 
@@ -357,8 +364,7 @@ size below $100$ indicates strong autocorrelation that will complicate
 Markov chain Monte Carlo estimation in the worst case and reduce estimator 
 precision in the best case.
 
-```{.python include="stan_utility_pystan2.py" start-line=980 end-line=1052}
-```
+{{< include _includes/check_eess.qmd >}}
 
 For example empirical effective sample sizes can provide a useful way to 
 distinguish if some diagnostic failures are due to Markov chains that are 
@@ -369,15 +375,13 @@ just too short or more persistent problems.
 In practice we have no reason not to check all of these diagnostics at once for
 each expectand of interest.
 
-```{.python include="stan_utility_pystan2.py" start-line=1054 end-line=1224}
-```
+{{< include _includes/check_all_expectand_diagnostics.qmd >}}
 
 That said for particularly problematic fits the output from checking all
 of the expectands can be overwhelming.  In cases where that may be a
 risk we can summarize the output more compactly.
 
-```{.python include="stan_utility_pystan2.py" start-line=1226 end-line=1377}
-```
+{{< include _includes/summarize_expectand_diagnostics.qmd >}}
 
 ## Empirical Autocorrelation Visualization
 
@@ -386,8 +390,9 @@ estimated effective sample sizes, then we may want to follow up with the
 empirical autocorrelations themselves.  An empirical correlogram provides a
 useful visualization of these estimates.
 
-```{.python include="stan_utility_pystan2.py" start-line=1533 end-line=1630}
-```
+{{< include _includes/compute_rhos.qmd >}}
+
+{{< include _includes/plot_empirical_correlogram.qmd >}}
 
 ## Chain-Separated Pairs Plot
 
@@ -396,8 +401,7 @@ Markov chain in a continuous gradient.  When neighboring states are strongly
 correlated these colors will appear to vary smoothly across the ambient space.
 More productive Markov transitions result in a more chaotic spray of colors.
 
-```{.python include="stan_utility_pystan2.py" start-line=1632 end-line=1708}
-```
+{{< include _includes/plot_pairs_by_chain.qmd >}}
 
 # Markov Chain Monte Carlo Estimation
 
@@ -405,15 +409,17 @@ If none of the diagnostics indicate an obstruction to a Markov chain Monte Carlo
 central limit theorem then we can construct expectation value estimates and
 their standard errors.
 
-```{.python include="stan_utility_pystan2.py" start-line=1710 end-line=1785}
-```
+{{< include _includes/pushforward_chains.qmd >}}
+
+{{< include _includes/mcmc_est.qmd >}}
+
+{{< include _includes/ensemble_mcmc_est.qmd >}}
 
 In addition to examining the single expectation value of an expectand we can
 also visualize the entire pushforward distribution of the expectand by
 estimating the target probabilities in histogram bins.
 
-```{.python include="stan_utility_pystan2.py" start-line=1787 end-line=1867}
-```
+{{< include _includes/plot_expectand_pushforward.qmd >}}
 
 # Demonstration
 
@@ -424,10 +430,10 @@ First we setup our local `Python` environment.
 ```{python}
 import matplotlib
 import matplotlib.pyplot as plot
+plot.show()
 plot.rcParams['figure.figsize'] = [6, 4]
 plot.rcParams['figure.dpi'] = 100
 plot.rcParams['font.family'] = "Serif"
-from matplotlib.colors import LinearSegmentedColormap
 
 light="#DCBCBC"
 light_highlight="#C79999"
@@ -516,6 +522,8 @@ with open('misc/model.obj','rb') as f:
   model = pickle.load(f)
 with open('misc/fit.obj','rb') as f:
   fit = pickle.load(f)
+  
+data = dict(M = 3, N = 1000)
 ```
 
 Let's start with the Hamiltonian Monte Carlo diagnostics.
@@ -562,7 +570,7 @@ case the dynamics driving the third Markov chain are not able to explore as far
 as those in the other chains.
 
 ```{python}
-util.plot_num_leapfrog(diagnostics)
+util.plot_num_leapfrogs_by_chain(diagnostics)
 ```
 
 Finally because nearly every transition is divergent we can't extract much
@@ -571,9 +579,9 @@ information from the divergent-labeled pairs plots.
 ```{python}
 samples = util.extract_expectands(fit)
 
-base_samples = { k: samples[k] for k in 
-                 ['alpha', 'beta[1]', 'beta[2]', 'beta[3]']}
-util.plot_div_pairs(base_samples, diagnostics, [0, 0, 0, 0])
+names = ['alpha']
+names += [ f'beta[{m + 1}]' for m in range(data['M']) ]
+util.plot_div_pairs(names, names, samples, diagnostics)
 ```
 
 We can also color the divergent transitions by their numerical 
@@ -589,8 +597,7 @@ $$
 $$
 
 ```{python}
-util.plot_div_pairs(base_samples, diagnostics, 
-                    [0, 0, 0, 0], plot_mode=1)
+util.plot_div_pairs(names, names, samples, diagnostics, plot_mode=1)
 ```
 
 Having examined the Hamiltonian Monte Carlo diagnostics let's now look through
@@ -622,9 +629,7 @@ Motivated by the small effective sample size estimates let's look at the
 empirical correlograms for each parameter expectand.
 
 ```{python}
-unpermuted_samples = fit.extract(permuted=False)
-
-f, axarr = plot.subplots(2, 2)
+f, axarr = plot.subplots(2, 2, layout="constrained")
 
 util.plot_empirical_correlogram(axarr[0, 0], samples['alpha'], 
                                 300, [-0.05, 1.05],  'alpha')
@@ -635,7 +640,6 @@ util.plot_empirical_correlogram(axarr[1, 0], samples['beta[2]'],
 util.plot_empirical_correlogram(axarr[1, 1], samples['beta[3]'], 
                                 300, [-0.05, 1.05],  'beta[3]')
 
-plot.subplots_adjust(wspace=0.5, hspace=0.75)
 plot.show()
 ```
 
@@ -651,8 +655,8 @@ devolve into diffuse random walks.  Indeed looking at the chain-separated pairs
 plots we see the spatial color continuity characteristic of a random walk.
 
 ```{python}
-util.plot_chain_sep_pairs(samples['alpha'], 'alpha', 
-                          samples['beta[1]'], 'beta[1]')
+util.plot_pairs_by_chain(samples['alpha'], 'alpha', 
+                         samples['beta[1]'], 'beta[1]')
 ```
 
 To more quantitatively blame the large split $\hat{R}$s on these strong
@@ -688,11 +692,11 @@ estimated error.  Even if that error is inaccurate it can sometimes communicate
 underlying problems.
 
 For example let's look at a pushforward histogram for each parameter with light
-red bands visualizing the standard error around the bin probability estimates in
-dark red.
+gray bands visualizing twice the standard error around the bin probability estimates 
+in dark red.
 
 ```{python}
-f, axarr = plot.subplots(2, 2)
+f, axarr = plot.subplots(2, 2, layout="constrained")
 
 util.plot_expectand_pushforward(axarr[0, 0], samples['alpha'], 
                                 25, display_name='alpha')
@@ -703,32 +707,6 @@ util.plot_expectand_pushforward(axarr[1, 0], samples['beta[2]'],
 util.plot_expectand_pushforward(axarr[1, 1], samples['beta[3]'], 
                                 25, display_name='beta[3]')
 
-plot.subplots_adjust(wspace=0.1, hspace=0.5)
-plot.show()
-```
-
-If we look at the central estimates alone we might convince ourselves of all
-kinds of interesting structure.  For example potential multi-modality in `alpha`
-and `beta[2]` and platykurticity in `beta[1]` and `beta[3]`.  These structures,
-however, are all within the scope of the relatively large standard error bands
-which suggests that they are all consistent with estimator noise.
-
-Reducing the number of bins decreases the relative standard errors but at the
-same time many of the visual artifacts recede.
-
-```{python}
-f, axarr = plot.subplots(2, 2)
-
-util.plot_expectand_pushforward(axarr[0, 0], samples['alpha'], 
-                                10, display_name='alpha')
-util.plot_expectand_pushforward(axarr[0, 1], samples['beta[1]'], 
-                                10, display_name='beta[1]')
-util.plot_expectand_pushforward(axarr[1, 0], samples['beta[2]'], 
-                                10, display_name='beta[2]')
-util.plot_expectand_pushforward(axarr[1, 1], samples['beta[3]'], 
-                                10, display_name='beta[3]')
-
-plot.subplots_adjust(wspace=0.1, hspace=0.5)
 plot.show()
 ```
 
@@ -758,5 +736,5 @@ print(watermark())
 ```
 
 ```{python}
-print(watermark(packages="matplotlib,numpy,pystan"))
+print(watermark(packages="matplotlib,numpy,pystan,scipy"))
 ```

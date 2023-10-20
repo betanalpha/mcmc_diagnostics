@@ -1,0 +1,708 @@
+---
+title: "Markov Chain Monte Carlo Diagnostics"
+author: "Michael Betancourt"
+date: "July 2023"
+toc: true
+number-sections: true
+highlight: pygments
+crossref:
+  lst-title: "Stan Program"
+filters:
+   - include-code-files
+format:
+  html:
+    html-math-method: katex
+    theme:
+      - lux
+      - custom.scss
+    standalone: true
+    embed-resources: true
+    code-overflow: wrap
+    linkcolor: "#B97C7C"
+  pdf:
+    keep-tex: true
+    fig-width: 5.5
+    fig-height: 5.5
+    code-overflow: wrap
+    monofontoptions:
+      - Scale=0.5
+jupyter: pystan3_env
+format-links: false
+---
+
+In this short note I will preview the new suite of Markov chain Monte Carlo
+analysis tools that I will be introducing more formally in upcoming writing.
+These tools largely focus on diagnostics but there are also a few that cover
+Markov chain Monte Carlo estimation assuming a central limit theorem.
+
+We'll start with diagnostics specific to Hamiltonian Monte Carlo then consider
+more generic diagnostics that consider each expectand of interest one at a time.
+Finally we'll look at a way to visualize one-dimensional pushforward
+distributions using Markov chain Monte Carlo to estimate bin probabilities.
+
+
+# Extraction
+
+Starting in version 3 `PyStan` stores all outputs, including the Markov 
+chain Monte Carlo samples and diagnostics, together in a single array 
+that can be accessed from the `_draws` member of a `StanFit` object.
+The variable names are stored separately in various `*_param_names`
+member variables.  The raw output from each Markov chain is also saved 
+in a binary format that can be accessed with the `stan_outputs` member 
+variable.
+
+To facilitate the analysis of Stan output I've included my own custom 
+extract functions that format the sample and diagnostic outputs into 
+dictionaries, with one key for each expectand or Hamiltonian Monte Carlo 
+diagnostic.  The elements themselves are two-dimensional arrays with the 
+first index denoting the individual Markov chains and the second index 
+denoting the iterations within an individual Markov chain.
+
+{{< include _includes/extract_expectands.qmd >}}
+
+{{< include _includes/extract_hmc_diagnostics.qmd >}}
+
+If users are able to modify these functions to accept the output from 
+other interfaces to Stan and return the same output format then all of 
+the following functions will be immediately available.  That is all 
+except for the `plot_inv_metric` function which does require a separate
+function for extracting adaptation information.
+
+# Hamiltonian Monte Carlo Diagnostics
+
+Hamiltonian Monte Carlo introduces a suite of powerful diagnostics that can
+identify obstructions to Markov chain Monte Carlo central limit theorems.  These
+diagnostics are not only extremely sensitive but also probe the behavior of the
+entire Markov chain state instead of the projections of that state through
+single expectands.
+
+## Check Hamiltonian Monte Carlo Diagnostics
+
+All of our diagnostics are assembled in this single `check_all_hmc_diagnostics`
+function.
+
+The first diagnostic looks for unstable numerical Hamiltonian trajectories, or
+divergences.  These unstable trajectories are known to obstruct typical central
+limit theorem conditions.  Divergences arise when the target distribution is
+compressed into a narrow region; this forces the Hamiltonian dynamics to
+accelerate which makes them more difficult to accurately simulate.
+
+Increasing `adapt_delta` will on average result in a less aggressive step size
+optimization that in some cases may improve the stability of the numerical
+integration but at the cost of longer, and hence more expensive, numerical
+Hamiltonian trajectories.  In most cases, however, the only productive way to
+avoid divergences is to reparameterize the ambient space to decompress these
+pinches in the target distribution.
+
+Stan's Hamiltonian Monte Carlo sampler expands the length of the numerical
+Hamiltonian trajectories dynamically to maximize the efficiency of the
+exploration.  That length, however, is capped at $2^{\text{max\_treedepth}}$
+steps to prevent trajectories from growing without bound.
+
+When numerical Hamiltonian trajectories are long but finite this truncation will
+limit the computational efficiency.  Increasing `max_treedepth` allow the
+trajectories to expand further.  While the resulting trajectories will be more
+expensive that added cost will be more than made up for by increased
+computational efficiency.
+
+The energy fraction of missing information, or E-FMI, quantifies how well the
+Hamiltonian dynamics are able to explore the target distribution.  If the E-FMI
+is too small then even the exact Hamiltonian trajectories will be limited to
+confined regions of the ambient space and full exploration will be possible only
+with the momenta resampling between trajectories.  In this case the Markov chain
+exploration devolves into less efficient, diffusive behavior where Markov chain
+Monte Carlo estimation is fragile at best.
+
+This confinement is caused by certain geometries in the target distribution,
+most commonly a funnel geometry where some subset of parameters shrink together
+as another parameter ranges across its typical values.  The only way to avoid
+these problems is to identify the problematic geometry and then find a
+reparameterization of the ambient space that transforms the geometry into
+something more pleasant.
+
+Finally the average proxy accept statistic is a summary for Stan's step size
+adaptation.  During warmup the integrator step size is dynamically tuned until
+this statistic achieves the target value which defaults to $0.801$.  Because
+this adaptation is stochastic the realized average during the main sampling
+phase can often vary between $0.75$ and $0.85$.
+
+So long as the target distribution is sufficiently well-behaved then the
+adaptation should always converge to that target, at least for long enough
+warmup periods.  Small averages indicate some obstruction to the adaptation,
+for example discontinuities in the target distribution or inaccurate gradient
+evaluations.
+
+{{< include _includes/check_all_hmc_diagnostics.qmd >}}
+
+## Integrator Inverse Metric Elements
+
+Diagnostic failures indicate the presence of problems but only hint at the
+nature of those problems.  In order to resolve the underlying problems we need
+to investigate them beyond these hints.  Fortunately Hamiltonian Monte Carlo
+provides a wealth of additional information that can assist.
+
+First we can look at the inverse metric adaptation in each of the Markov chains.
+Inconsistencies in the adapted inverse metric elements across the Markov chains
+are due to the individual chains encountering different behaviors during warmup.
+
+{{< include _includes/plot_inv_metric.qmd >}}
+
+Note that the adaptation information may be accessed differently in 
+other Stan interfaces, in which case this function would have to be
+modified accordingly.
+
+## Integrator Step Sizes
+
+The other product of Stan's adaptation is the step size of the numerical
+integrator used to build the numerical Hamiltonian trajectories.  As with the
+inverse metric elements heterogeneity in the adapted values across the Markov
+chains indicates that the Markov chains encountered substantially different
+behavior during warmup.
+
+{{< include _includes/display_stepsizes.qmd >}}
+
+## Numerical Trajectory Lengths
+
+We can see the consequence of the adapted step sizes by looking at the
+numerical trajectories generated for each Hamiltonian Markov transition.  The
+longer these trajectories the more degenerate the target distribution, and the
+more expensive it is to explore.
+
+{{< include _includes/plot_num_leapfrogs.qmd >}}
+
+{{< include _includes/plot_num_leapfrogs_by_chain.qmd >}}
+
+## Average Proxy Acceptance Statistic
+
+When the different adaptation outcomes are due to problematic behaviors
+encountered during warmup then it the average proxy acceptance statistics should
+also vary across the Markov chains.
+
+{{< include _includes/display_ave_accept_proxy.qmd >}}
+
+## Divergence-Labeled Pairs Plot
+
+One of the most powerful features of divergent transitions is that they not only
+indicate problematic geometry but also provide some spatial information on the
+source of that problematic geometry.  In particular the states generated from
+unstable numerical Hamiltonian trajectories will tend to be closer to the
+problematic geometry than those from stable trajectories.
+
+Consequently if we plot the states from divergent and non-divergent transitions
+separately then we should see the divergent states concentrate towards the
+problematic behavior.  The high-dimensional states themselves can be visualized
+with pairs plots.
+
+{{< include _includes/apply_transform.qmd >}}
+
+{{< include _includes/plot_div_pairs.qmd >}}
+
+# Expectand Diagnostic Functions
+
+The Hamiltonian Monte Carlo diagnostics exploited the particular structure of
+the Hamiltonian Markov transition.  For a general Markov transition we don't
+have any particular structure to exploit, and hence limited diagnostic options.
+In this general setting we have to investigate the behavior of not the entire
+state but instead particular expectands of interest.
+
+## xihat
+
+A Markov chain Monte Carlo central limit theorem cannot exist for the expectand
+$f : X \rightarrow \mathbb{R}$ unless both $\mathbb{E}_{\pi}[f]$ and
+$\mathbb{E}_{\pi}[f^{2}]$ are finite, in which case we say that the expectand is
+sufficiently integrable.  Moreover the smaller the following moments the faster
+the central limit theorem will kick in.
+
+$\hat{\xi}$ uses the tail behavior of a realized Markov chain to estimate the
+integrability of an expectand.  More specifically $\hat{\xi}$ estimates the shape
+of a general Pareto density function from non-central values of the expectand.  
+If the tail behavior were exactly general Pareto then the larger the shape 
+parameter $\xi$ the fewer moments of the distribution will be well-defined.
+Formally the $m$th-order moment is well-defined only if
+$$
+m < \frac{1}{\xi}.
+$$
+
+For example with $\xi = 0.9$ the expectation $\mathbb{E}_{\pi}[f]$ is 
+finite but $\mathbb{E}_{\pi}[f^{2}]$ is not.  Similarly for $\xi = 0.4$ 
+the expectations $\mathbb{E}_{\pi}[f]$ and $\mathbb{E}_{\pi}[f^{2}]$ are 
+finite but the third-order moment $\mathbb{E}_{\pi}[f^{3}]$ is not.
+
+The estimator $\hat{\xi}$ is constructed from the smallest and largest values of
+an expectand evaluated across a realized Markov chain, where the smallest and
+largest values are separated from the central values using a heuristic.  Because
+$\hat{\xi}$ only estimates the tail shape I require a conservative threshold of
+$\hat{\xi} \ge 0.25$ for the diagnostic warning to be triggered.
+
+If the expectand output is bounded then the lower and upper tail might consist
+of the same value.  In this case the $\hat{\xi}$ estimator is poorly-behaved, but
+the boundedness also guarantees that moments of all orders exist.  To make this
+diagnostic as robust as possible $\hat{\xi}$ will return $-2$ in these cases to
+avoid the diagnostic threshold.
+
+{{< include _includes/compute_xi_hat.qmd >}}
+
+{{< include _includes/compute_tail_xi_hats.qmd >}}
+
+{{< include _includes/check_tail_xi_hats.qmd >}}
+
+## Frozen Chains
+
+Another sign of problems is when all evaluations of an expectand are constant.
+This could be due to the Markov chain being stuck at a single state or just that
+the pushforward distribution of the expectand concentrates on a single value.
+We can't distinguish between these possibilities without more information, but
+we can signal a constant expectand by looking at its empirical variance.
+
+Here we'll use a Welford accumulator to compute the empirical variance of the
+expectand values in a single sweep.
+
+{{< include _includes/welford_summary.qmd >}}
+
+{{< include _includes/check_variances.qmd >}}
+
+## Split Rhat
+
+One of the key features of Markov chain equilibrium is that the distribution of
+Markov chain realizations is independent of the initialization.  In particular
+the expectand evaluations from any equilibrated Markov chain should be
+statistically equivalent to any other.  Even more the evaluations across any
+subset of Markov chain states should be equivalent.
+
+The split $\hat{R}$ statistic quantifies the heterogeneity in the expectand
+evaluations across an ensemble of Markov chains, each of which has been split in
+half.  Mathematically split $\hat{R}$ is similar to analysis of variance in that
+compares the empirical variance of the average expectand values in each chain
+half to the average of the empirical variances in each chain half; the key
+difference is that split $\hat{R}$ transforms this ratio so that in equilibrium
+the statistic decays towards $1$ from above.
+
+When split $\hat{R}$ is much larger than $1$ the expectand evaluations across
+each Markov chain halves are not consistent with each other.  This could be
+because the Markov chains have not converged to the same typical set or because
+they have not yet expanded into that typical set.
+
+{{< include _includes/split_chain.qmd >}}
+
+{{< include _includes/compute_split_rhat.qmd >}}
+
+{{< include _includes/compute_split_rhats.qmd >}}
+
+{{< include _includes/check_rhat.qmd >}}
+
+## Integrated Autocorrelation Time
+
+The information about the target distribution encoded within a Markov chain, and
+hence the potential precision of Markov chain Monte Carlo estimators, is limited
+by the autocorrelation of the internal states.  Assuming equilibrium we can
+estimate the stationary autocorrelations between the outputs of a given
+expectand from the realized Markov chain and then combine them into an estimate
+of the integrated autocorrelation time $\tau[f]$ which moderates the asymptotic 
+variance of well-behaved Markov chain Monte Carlo estimators.
+
+In practice it's often easier to interpret the effective sample size,
+$$
+\text{ESS}[f] = \frac{N}{\tau[f]},
+$$ 
+or in practice the empirical effective sample size that we estimate from 
+the realized Markov chains,
+$$
+\hat{\text{ESS}[f]} = \frac{N}{\hat{\tau}[f]}.
+$$
+The effective sample size can be interpreted as how large of an ensemble 
+of exact samples we would need to achieve the same estimator error for 
+the particular expectand of interest.
+
+{{< include _includes/compute_tau_hat.qmd >}}
+
+{{< include _includes/compute_min_eesss.qmd >}}
+
+Assuming stationarity we can use the empirical effective sample size to 
+estimate the Markov chain Monte Carlo standard error for any well-behaved 
+expectand estimator
+$$
+\hat{f} \approx \mathbb{E}_{\pi}[f].
+$$
+The necessary effective sample size depends on the precision required for a given
+Markov chain Monte Carlo estimator.  This can vary not only from analysis to
+analysis but also between multiple expectands within a single analysis.  That
+said an effective sample size of $100$ is sufficient for most applications and
+provides a useful rule of thumb.
+
+When Markov chains have not equilibrated the empirical effective sample size
+will have no relation to the error of Markov chain Monte Carlo estimators.
+To avoid any confusion we should interpret an empirical effective sample size 
+simply as a quantification of the autocorrelations of a particular expectand 
+within a realized Markov chain.  In particular an empirical effective sample 
+size below $100$ indicates strong autocorrelation that will complicate
+Markov chain Monte Carlo estimation in the worst case and reduce estimator 
+precision in the best case.
+
+{{< include _includes/check_eess.qmd >}}
+
+For example empirical effective sample sizes can provide a useful way to 
+distinguish if some diagnostic failures are due to Markov chains that are 
+just too short or more persistent problems.
+
+## All Expectand Diagnostics
+
+In practice we have no reason not to check all of these diagnostics at once for
+each expectand of interest.
+
+{{< include _includes/check_all_expectand_diagnostics.qmd >}}
+
+That said for particularly problematic fits the output from checking all
+of the expectands can be overwhelming.  In cases where that may be a
+risk we can summarize the output more compactly.
+
+{{< include _includes/summarize_expectand_diagnostics.qmd >}}
+
+## Empirical Autocorrelation Visualization
+
+If we encounter large empirical integrated autocorrelation times, or small
+estimated effective sample sizes, then we may want to follow up with the
+empirical autocorrelations themselves.  An empirical correlogram provides a
+useful visualization of these estimates.
+
+{{< include _includes/compute_rhos.qmd >}}
+
+{{< include _includes/plot_empirical_correlogram.qmd >}}
+
+## Chain-Separated Pairs Plot
+
+We can also visualize strong autocorrelations by coloring the states of each
+Markov chain in a continuous gradient.  When neighboring states are strongly
+correlated these colors will appear to vary smoothly across the ambient space.
+More productive Markov transitions result in a more chaotic spray of colors.
+
+{{< include _includes/plot_pairs_by_chain.qmd >}}
+
+# Markov Chain Monte Carlo Estimation
+
+If none of the diagnostics indicate an obstruction to a Markov chain Monte Carlo
+central limit theorem then we can construct expectation value estimates and
+their standard errors.
+
+{{< include _includes/pushforward_chains.qmd >}}
+
+{{< include _includes/mcmc_est.qmd >}}
+
+{{< include _includes/ensemble_mcmc_est.qmd >}}
+
+In addition to examining the single expectation value of an expectand we can
+also visualize the entire pushforward distribution of the expectand by
+estimating the target probabilities in histogram bins.
+
+{{< include _includes/plot_expectand_pushforward.qmd >}}
+
+# Demonstration
+
+Now let's put all of these analysis tools to use with an `PyStan` fit object.
+
+First we setup our local `Python` environment.
+
+```{python}
+import matplotlib
+import matplotlib.pyplot as plot
+plot.show()
+plot.rcParams['figure.figsize'] = [6, 4]
+plot.rcParams['figure.dpi'] = 100
+plot.rcParams['font.family'] = "Serif"
+
+light="#DCBCBC"
+light_highlight="#C79999"
+mid="#B97C7C"
+mid_highlight="#A25050"
+dark="#8F2727"
+dark_highlight="#7C0000"
+
+import numpy
+
+# Needed to run through a jupyter kernel
+import nest_asyncio
+nest_asyncio.apply()
+
+import stan
+```
+
+Next we source all of these diagnostics into a local namespace to avoid
+any conflicts with other functions.
+
+```{python}
+import stan_utility_pystan3 as util
+```
+
+Then we can simulate some binary data from a logistic regression model.
+
+```{.stan include="stan_programs/simu_logistic_reg.stan" filename="simu\\_logistic\\_reg.stan"}
+```
+
+```{python}
+#| warning: false
+#| message: false
+with open('stan_programs/simu_logistic_reg.stan', 'r') as file:
+  stan_program = file.read()
+model = stan.build(stan_program, random_seed=4838282)
+simu = model.fixed_param(num_chains=1, num_samples=1)
+
+samples = util.extract_expectands(simu)
+
+y = [ v[0][0].astype(numpy.int64) for k, v in samples.items() if 'y' in k ]
+
+N = 1000
+M = 3
+X = numpy.zeros((N, M))
+for n in range(N):
+  for m in range(M):
+    X[n, m] = samples[f'X[{n + 1},{m + 1}]'][0, 0]
+
+data = {'M': M, 'N': N, 'x0': [-1, 0, 1], 'X': X, 'y': y}
+```
+
+We'll try to fit this model not with a constraint-respecting logistic regression
+model but rather a constraint blaspheming linear probability model.  Importantly
+the resulting posterior density function is discontinuous with configurations
+`alpha + deltaX * beta > 0` resulting in finite `bernoulli_lpmf` outputs and
+those with `alpha + deltaX * beta <= 0` resulting in minus infinite outputs.
+
+```{.stan include="stan_programs/bernoulli_linear.stan" filename="bernoulli\\_linear.stan"}
+```
+Because of this awkward constraint we have to carefully initialize our Markov
+chains to satisfy the `alpha + deltaX * beta > 0` constraint.
+
+```{python}
+import scipy.stats as stats
+numpy.random.seed(seed=48383499)
+
+interval_inits = [None] * 4
+
+for c in range(4):
+  beta = [0, 0, 0]
+  alpha = stats.norm.rvs(0.5, 0.1, size=1)[0]
+  interval_inits[c] = dict(alpha = alpha, beta = beta)
+```
+
+```{python}
+#| warning: false
+#| message: false
+with open('stan_programs/bernoulli_linear.stan', 'r') as file:
+  stan_program = file.read()
+model = stan.build(stan_program, random_seed=8438338, data=data)
+fit = model.sample(num_samples=1024, init=interval_inits)
+```
+
+Stan is able to run to completion, but just how useful are the Markov chains
+that it generates?
+
+Let's start with the Hamiltonian Monte Carlo diagnostics.
+
+```{python}
+diagnostics = util.extract_hmc_diagnostics(fit)
+util.check_all_hmc_diagnostics(diagnostics)
+```
+
+Almost every transition across the four Markov chains resulted in a divergence.
+This is due to the discontinuity in the linear probability model as the sudden
+jump from a finite to a negative infinite target density results in unstable
+numerical trajectories.
+
+We also see the one of the Markov chains wasn't quite able to hit the step size
+adaptation target.  To see why let's dig into the adapted configuration of the
+Hamiltonian Markov transition.
+
+```{python}
+util.plot_inv_metric(fit, 75)
+```
+
+The problematic third Markov chain also exhibits the least variation in its 
+inverse metric elements, which in this case is probably an artifact of its warmup
+phase spending too much time close to a constraint boundary.  Inverse metric 
+elements that cannot adapt to each parameter can frustrate numerical integration 
+which can then frustrate the integrator step size adaptation.
+
+The step size in the third Markov chain is slightly larger than the others
+which explains the lower average proxy acceptance statistic.  We can also see 
+that the first Markov chain has a much smaller step size than the other which 
+results in an overly conservative average proxy acceptance statistic.
+
+```{python}
+util.display_stepsizes(diagnostics)
+```
+
+```{python}
+util.display_ave_accept_proxy(diagnostics)
+```
+
+The different inverse metric results in different Hamiltonian dynamics.  In this
+case the dynamics driving the third Markov chain are not able to explore as far
+as those in the other chains.
+
+```{python}
+util.plot_num_leapfrogs_by_chain(diagnostics)
+```
+
+Finally because nearly every transition is divergent we can't extract much
+information from the divergent-labeled pairs plots.
+
+```{python}
+samples = util.extract_expectands(fit)
+
+names = ['alpha']
+names += [ f'beta[{m + 1}]' for m in range(data['M']) ]
+util.plot_div_pairs(names, names, samples, diagnostics)
+```
+
+We can also color the divergent transitions by their numerical 
+trajectory lengths.  On average transitions from shorter numerical
+trajectories should be closer to the problematic behavior than 
+transitions from longer numerical trajectories.  Because there are so
+many divergent transitions here the point colors overlap and it's hard
+to make too much out, but there _may_ be signs of a problematic boundary.  
+For example plot of `beta[2]` against `beta[1]` is not inconsistent with 
+a boundary defined by
+$$
+\beta_{1} + \beta_{2} = \mathrm{constant}.
+$$
+
+```{python}
+util.plot_div_pairs(names, names, samples, diagnostics, plot_mode=1)
+```
+
+Having examined the Hamiltonian Monte Carlo diagnostics let's now look through
+the expectand specific diagnostics.  By default we'll look at the parameter
+projection functions as well as all of the expectands defined in the
+`generated quantities` block.
+
+Because of the Hamiltonian Monte Carlo diagnostic failures let's start by
+looking at the expectand diagnostics summary instead of the full details.
+
+```{python}
+util.summarize_expectand_diagnostics(samples)
+```
+
+That is a lot of diagnostic failures.  To avoid overwhelming ourselves with too
+many detailed diagnostic messages let's focus on the four parameter expectands.
+
+```{python}
+base_samples = { k: samples[k] for k in 
+                 ['alpha', 'beta[1]', 'beta[2]', 'beta[3]']}
+util.check_all_expectand_diagnostics(base_samples)
+```
+
+All four parameter expectands exhibit split $\hat{R}$ warnings and low empirical
+effective sample size warnings.  The question is whether or not the split
+$\hat{R}$ warnings indicate quasistationarity or just insufficient exploration.
+
+Motivated by the small effective sample size estimates let's look at the
+empirical correlograms for each parameter expectand.
+
+```{python}
+f, axarr = plot.subplots(2, 2, layout="constrained")
+
+util.plot_empirical_correlogram(axarr[0, 0], samples['alpha'], 
+                                300, [-0.05, 1.05],  'alpha')
+util.plot_empirical_correlogram(axarr[0, 1], samples['beta[1]'], 
+                                300, [-0.05, 1.05],  'beta[1]')
+util.plot_empirical_correlogram(axarr[1, 0], samples['beta[2]'], 
+                                300, [-0.05, 1.05],  'beta[2]')
+util.plot_empirical_correlogram(axarr[1, 1], samples['beta[3]'], 
+                                300, [-0.05, 1.05],  'beta[3]')
+
+plot.show()
+```
+
+Regardless of whether or not these Markov chains are stationary they are
+extremely autocorrelated.  Even assuming stationarity we wouldn't start to
+forget the beginning of each Markov chain until we've worked through a quarter
+of the total length, leaving only about four independent samples across each
+chain.
+
+This is consistent with the constraint violations breaking the coherent,
+gradient-driven exploration of Hamiltonian Monte Carlo so that the Markov chains
+devolve into diffuse random walks.  Indeed looking at the chain-separated pairs
+plots we see the spatial color continuity characteristic of a random walk.
+
+```{python}
+util.plot_pairs_by_chain(samples['alpha'], 'alpha', 
+                         samples['beta[1]'], 'beta[1]')
+```
+
+To more quantitatively blame the large split $\hat{R}$s on these strong
+autocorrelations we can plot the split $\hat{R}$ from each expectand against
+the corresponding empirical effective sample size.  Specifically for each 
+expectand we plot split $\hat{R}$ against we use the smallest empirical 
+effective sample size of the four Markov chains.
+
+```{python}
+rhats = util.compute_split_rhats(samples)
+min_eesss = util.compute_min_eesss(samples)
+
+plot.scatter(rhats, min_eesss, color=dark, s=10)
+plot.gca().set_xlim([0.95, 2])
+plot.gca().set_xlabel("Split Rhat")
+plot.gca().set_ylim([0, 5])
+plot.gca().set_ylabel("Empirical Effective\nSample Size")
+plot.gca().spines["top"].set_visible(False)
+plot.gca().spines["right"].set_visible(False)
+
+plot.show()
+```
+
+Every expectand with a large split $\hat{R}$s also exhibits a particularly
+small minimum empirical effective sample size, confirming that the latter
+are due to our Markov chains not containing enough information.
+
+If we are sloppy, ignore these diagnostics, and assume that all of our Markov
+chain Monte Carlo estimators are accurate then we are quickly mislead about the
+actual behavior of the posterior distribution.  One way to guard against this
+sloppiness is to always accompany a Markov chain Monte Carlo estimator with an
+estimated error.  Even if that error is inaccurate it can sometimes communicate
+underlying problems.
+
+For example let's look at a pushforward histogram for each parameter with light
+gray bands visualizing twice the standard error around the bin probability estimates 
+in dark red.
+
+```{python}
+f, axarr = plot.subplots(2, 2, layout="constrained")
+
+util.plot_expectand_pushforward(axarr[0, 0], samples['alpha'], 
+                                25, display_name='alpha')
+util.plot_expectand_pushforward(axarr[0, 1], samples['beta[1]'], 
+                                25, display_name='beta[1]')
+util.plot_expectand_pushforward(axarr[1, 0], samples['beta[2]'], 
+                                25, display_name='beta[2]')
+util.plot_expectand_pushforward(axarr[1, 1], samples['beta[3]'], 
+                                25, display_name='beta[3]')
+
+plot.show()
+```
+
+When the bin indicator functions enjoy Markov chain Monte Carlo central limit
+theorems these standard error bands allow us to discriminate between meaningful
+structure and accidental artifacts regardless of the histogram binning.  Even if
+central limit theorems don't hold the error bands provide one more way that we
+can potentially diagnose untrustworthy computation.
+
+# License {-}
+
+The code in this case study is copyrighted by Michael Betancourt and licensed
+under the new BSD (3-clause) license:
+
+https://opensource.org/licenses/BSD-3-Clause
+
+The text and figures in this case study are copyrighted by Michael Betancourt
+and licensed under the CC BY-NC 4.0 license:
+
+https://creativecommons.org/licenses/by-nc/4.0/
+
+# Original Computing Environment {-}
+
+```{python}
+from watermark import watermark
+print(watermark())
+```
+
+```{python}
+print(watermark(packages="matplotlib,numpy,stan,scipy"))
+```

@@ -485,7 +485,7 @@ def display_ave_accept_proxy(diagnostics):
 # identity if name is not included in `transforms` dictionary.  A 
 # ValueError is thrown if samples are not properly constrained.
 # @param name Expectand name.
-# @param samples A named list of two-dimensional arrays for 
+# @param samples A dictionary of two-dimensional arrays for
 #                each expectand.  The first dimension of each element 
 #                indexes the Markov chains and the second dimension 
 #                indexes the sequential states within each Markov chain.
@@ -523,13 +523,13 @@ def apply_transform(name, samples, transforms):
 # transitions separated by color
 # @param x_names A list of expectand names to be plotted on the x axis.
 # @param y_names A list of expectand names to be plotted on the y axis.
-# @param expectand_samples A named list of two-dimensional arrays for 
+# @param expectand_samples A dictionary of two-dimensional arrays for
 #                          each expectand to be plotted on the y axis.
 #                          The first dimension of each element indexes 
 #                          the Markov chains and the second dimension 
 #                          indexes the sequential states within each 
 #                          Markov chain.
-# @param diagnostics A named list of two-dimensional arrays for 
+# @param diagnostics A dictionary of two-dimensional arrays for
 #                    each expectand.  The first dimension of each
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
@@ -1110,7 +1110,7 @@ def compute_tau_hat(fs):
 
 # Compute the maximum empirical effective sample size across the 
 # Markov chains for the given expectands
-# @param expectand_samples A named list of two-dimensional arrays for 
+# @param expectand_samples A dictionary of two-dimensional arrays for
 #                          each expectand.  The first dimension of each
 #                          element indexes the Markov chains and the 
 #                          second dimension indexes the sequential 
@@ -1509,12 +1509,12 @@ def summarize_expectand_diagnostics(expectand_samples,
 
 # Summarize Hamiltonian Monte Carlo and expectand diagnostics
 # into a binary encoding
-# @param expectand_samples A named list of two-dimensional arrays for 
+# @param expectand_samples A dictionary of two-dimensional arrays for
 #                          each expectand.  The first dimension of each
 #                          element indexes the Markov chains and the 
 #                          second dimension indexes the sequential 
 #                          states within each Markov chain.
-# @param diagnostics A named list of two-dimensional arrays for 
+# @param diagnostics A dictionary of two-dimensional arrays for
 #                    each expectand.  The first dimension of each
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
@@ -1547,7 +1547,7 @@ def summarize_all_diagnostics(expectand_diagnostics,
   
   # Check transitions that ended prematurely due to maximum tree depth limit
   if sum([ 1 for td in diagnostics['treedepth__'].flatten() 
-           if td == max_treedepth ]) > 0:
+           if td >= max_treedepth ]) > 0:
     warning_code = warning_code | (1 << 1)
   
   C = diagnostics['energy__'].shape[0]

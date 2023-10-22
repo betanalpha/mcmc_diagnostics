@@ -194,7 +194,7 @@
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[borderline west={3pt}{0pt}{shadecolor}, frame hidden, interior hidden, breakable, enhanced, sharp corners, boxrule=0pt]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, frame hidden, enhanced, sharp corners, borderline west={3pt}{0pt}{shadecolor}, interior hidden, boxrule=0pt]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -832,7 +832,7 @@ states themselves can be visualized with pairs plots.
 \CommentTok{\# identity if name is not included in \textasciigrave{}transforms\textasciigrave{} dictionary.  A }
 \CommentTok{\# ValueError is thrown if samples are not properly constrained.}
 \CommentTok{\# @param name Expectand name.}
-\CommentTok{\# @param samples A named list of two{-}dimensional arrays for }
+\CommentTok{\# @param samples A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                each expectand.  The first dimension of each element }
 \CommentTok{\#                indexes the Markov chains and the second dimension }
 \CommentTok{\#                indexes the sequential states within each Markov chain.}
@@ -874,13 +874,13 @@ states themselves can be visualized with pairs plots.
 \CommentTok{\# transitions separated by color}
 \CommentTok{\# @param x\_names A list of expectand names to be plotted on the x axis.}
 \CommentTok{\# @param y\_names A list of expectand names to be plotted on the y axis.}
-\CommentTok{\# @param expectand\_samples A named list of two{-}dimensional arrays for }
+\CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                          each expectand to be plotted on the y axis.}
 \CommentTok{\#                          The first dimension of each element indexes }
 \CommentTok{\#                          the Markov chains and the second dimension }
 \CommentTok{\#                          indexes the sequential states within each }
 \CommentTok{\#                          Markov chain.}
-\CommentTok{\# @param diagnostics A named list of two{-}dimensional arrays for }
+\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                    each expectand.  The first dimension of each}
 \CommentTok{\#                    element indexes the Markov chains and the }
 \CommentTok{\#                    second dimension indexes the sequential }
@@ -1617,7 +1617,7 @@ error for the particular expectand of interest.
 
 \CommentTok{\# Compute the maximum empirical effective sample size across the }
 \CommentTok{\# Markov chains for the given expectands}
-\CommentTok{\# @param expectand\_samples A named list of two{-}dimensional arrays for }
+\CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                          each expectand.  The first dimension of each}
 \CommentTok{\#                          element indexes the Markov chains and the }
 \CommentTok{\#                          second dimension indexes the sequential }
@@ -3587,7 +3587,7 @@ Environment}\label{original-computing-environment}}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2023-10-20T17:20:29.612908-04:00
+Last updated: 2023-10-21T22:22:31.661620-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

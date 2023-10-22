@@ -3555,7 +3555,7 @@ vertical-align: -.125em;
 <span id="cb10-487"><a href="#cb10-487" aria-hidden="true" tabindex="-1"></a><span class="co"># identity if name is not included in `transforms` dictionary.  A </span></span>
 <span id="cb10-488"><a href="#cb10-488" aria-hidden="true" tabindex="-1"></a><span class="co"># ValueError is thrown if samples are not properly constrained.</span></span>
 <span id="cb10-489"><a href="#cb10-489" aria-hidden="true" tabindex="-1"></a><span class="co"># @param name Expectand name.</span></span>
-<span id="cb10-490"><a href="#cb10-490" aria-hidden="true" tabindex="-1"></a><span class="co"># @param samples A named list of two-dimensional arrays for </span></span>
+<span id="cb10-490"><a href="#cb10-490" aria-hidden="true" tabindex="-1"></a><span class="co"># @param samples A dictionary of two-dimensional arrays for</span></span>
 <span id="cb10-491"><a href="#cb10-491" aria-hidden="true" tabindex="-1"></a><span class="co">#                each expectand.  The first dimension of each element </span></span>
 <span id="cb10-492"><a href="#cb10-492" aria-hidden="true" tabindex="-1"></a><span class="co">#                indexes the Markov chains and the second dimension </span></span>
 <span id="cb10-493"><a href="#cb10-493" aria-hidden="true" tabindex="-1"></a><span class="co">#                indexes the sequential states within each Markov chain.</span></span>
@@ -3592,13 +3592,13 @@ vertical-align: -.125em;
 <span id="cb11-525"><a href="#cb11-525" aria-hidden="true" tabindex="-1"></a><span class="co"># transitions separated by color</span></span>
 <span id="cb11-526"><a href="#cb11-526" aria-hidden="true" tabindex="-1"></a><span class="co"># @param x_names A list of expectand names to be plotted on the x axis.</span></span>
 <span id="cb11-527"><a href="#cb11-527" aria-hidden="true" tabindex="-1"></a><span class="co"># @param y_names A list of expectand names to be plotted on the y axis.</span></span>
-<span id="cb11-528"><a href="#cb11-528" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_samples A named list of two-dimensional arrays for </span></span>
+<span id="cb11-528"><a href="#cb11-528" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_samples A dictionary of two-dimensional arrays for</span></span>
 <span id="cb11-529"><a href="#cb11-529" aria-hidden="true" tabindex="-1"></a><span class="co">#                          each expectand to be plotted on the y axis.</span></span>
 <span id="cb11-530"><a href="#cb11-530" aria-hidden="true" tabindex="-1"></a><span class="co">#                          The first dimension of each element indexes </span></span>
 <span id="cb11-531"><a href="#cb11-531" aria-hidden="true" tabindex="-1"></a><span class="co">#                          the Markov chains and the second dimension </span></span>
 <span id="cb11-532"><a href="#cb11-532" aria-hidden="true" tabindex="-1"></a><span class="co">#                          indexes the sequential states within each </span></span>
 <span id="cb11-533"><a href="#cb11-533" aria-hidden="true" tabindex="-1"></a><span class="co">#                          Markov chain.</span></span>
-<span id="cb11-534"><a href="#cb11-534" aria-hidden="true" tabindex="-1"></a><span class="co"># @param diagnostics A named list of two-dimensional arrays for </span></span>
+<span id="cb11-534"><a href="#cb11-534" aria-hidden="true" tabindex="-1"></a><span class="co"># @param diagnostics A dictionary of two-dimensional arrays for</span></span>
 <span id="cb11-535"><a href="#cb11-535" aria-hidden="true" tabindex="-1"></a><span class="co">#                    each expectand.  The first dimension of each</span></span>
 <span id="cb11-536"><a href="#cb11-536" aria-hidden="true" tabindex="-1"></a><span class="co">#                    element indexes the Markov chains and the </span></span>
 <span id="cb11-537"><a href="#cb11-537" aria-hidden="true" tabindex="-1"></a><span class="co">#                    second dimension indexes the sequential </span></span>
@@ -4203,7 +4203,7 @@ m &lt; \frac{1}{\xi}.
 <div class="sourceCode" id="cb22" data-startfrom="1112"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1111;"><span id="cb22-1112"><a href="#cb22-1112" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb22-1113"><a href="#cb22-1113" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute the maximum empirical effective sample size across the </span></span>
 <span id="cb22-1114"><a href="#cb22-1114" aria-hidden="true" tabindex="-1"></a><span class="co"># Markov chains for the given expectands</span></span>
-<span id="cb22-1115"><a href="#cb22-1115" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_samples A named list of two-dimensional arrays for </span></span>
+<span id="cb22-1115"><a href="#cb22-1115" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_samples A dictionary of two-dimensional arrays for</span></span>
 <span id="cb22-1116"><a href="#cb22-1116" aria-hidden="true" tabindex="-1"></a><span class="co">#                          each expectand.  The first dimension of each</span></span>
 <span id="cb22-1117"><a href="#cb22-1117" aria-hidden="true" tabindex="-1"></a><span class="co">#                          element indexes the Markov chains and the </span></span>
 <span id="cb22-1118"><a href="#cb22-1118" aria-hidden="true" tabindex="-1"></a><span class="co">#                          second dimension indexes the sequential </span></span>
@@ -5855,7 +5855,7 @@ estimation may be unreliable even when a central limit theorem holds.
 <div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> watermark <span class="im">import</span> watermark</span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(watermark())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Last updated: 2023-10-20T17:19:12.982511-04:00
+<pre><code>Last updated: 2023-10-21T22:21:10.414894-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

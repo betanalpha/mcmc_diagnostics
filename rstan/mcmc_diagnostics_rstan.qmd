@@ -113,8 +113,9 @@ arrays with the first index denoting the individual Markov chains and
 the second index denoting the iterations within an individual Markov 
 chain.
 
-```{.r include="stan_utility_rstan.R" start-line=27 end-line=60}
-```
+{{< include _includes/extract_expectands.qmd >}}
+
+{{< include _includes/extract_hmc_diagnostics.qmd >}}
 
 If users are able to modify these functions to accept the output from 
 other interfaces to Stan and return the same output format then all of 
@@ -186,8 +187,7 @@ warmup periods.  Small averages indicate some obstruction to the adaptation,
 for example discontinuities in the target distribution or inaccurate gradient
 evaluations.
 
-```{.r include="stan_utility_rstan.R" start-line=62 end-line=204}
-```
+{{< include _includes/check_all_hmc_diagnostics.qmd >}}
 
 ## Integrator Inverse Metric Elements
 
@@ -200,8 +200,7 @@ First we can look at the inverse metric adaptation in each of the Markov chains.
 Inconsistencies in the adapted inverse metric elements across the Markov chains
 are due to the individual chains encountering different behaviors during warmup.
 
-```{.r include="stan_utility_rstan.R" start-line=206 end-line=251}
-```
+{{< include _includes/plot_inv_metric.qmd >}}
 
 Note that the adaptation information may be accessed differently in 
 other Stan interfaces, in which case this function would have to be
@@ -215,8 +214,7 @@ inverse metric elements heterogeneity in the adapted values across the Markov
 chains indicates that the Markov chains encountered substantially different
 behavior during warmup.
 
-```{.r include="stan_utility_rstan.R" start-line=253 end-line=273}
-```
+{{< include _includes/display_stepsizes.qmd >}}
 
 ## Numerical Trajectory Lengths
 
@@ -225,8 +223,9 @@ numerical trajectories generated for each Hamiltonian Markov transition.  The
 longer these trajectories the more degenerate the target distribution, and the
 more expensive it is to explore.
 
-```{.r include="stan_utility_rstan.R" start-line=275 end-line=314}
-```
+{{< include _includes/plot_num_leapfrogs.qmd >}}
+
+{{< include _includes/plot_num_leapfrogs_by_chain.qmd >}}
 
 ## Average Proxy Acceptance Statistic
 
@@ -234,8 +233,7 @@ When the different adaptation outcomes are due to problematic behaviors
 encountered during warmup then it the average proxy acceptance statistics should
 also vary across the Markov chains.
 
-```{.r include="stan_utility_rstan.R" start-line=316 end-line=337}
-```
+{{< include _includes/display_ave_accept_proxy.qmd >}}
 
 ## Divergence-Labeled Pairs Plot
 
@@ -250,8 +248,9 @@ separately then we should see the divergent states concentrate towards the
 problematic behavior.  The high-dimensional states themselves can be visualized
 with pairs plots.
 
-```{.r include="stan_utility_rstan.R" start-line=339 end-line=526}
-```
+{{< include _includes/apply_transform.qmd >}}
+
+{{< include _includes/plot_div_pairs.qmd >}}
 
 # Expectand Diagnostic Functions
 
@@ -296,8 +295,11 @@ the boundedness also guarantees that moments of all orders exist.  To make this
 diagnostic as robust as possible $\hat{\xi}$ will return $-2$ in these cases to
 avoid the diagnostic threshold.
 
-```{.r include="stan_utility_rstan.R" start-line=540 end-line=699}
-```
+{{< include _includes/compute_xi_hat.qmd >}}
+
+{{< include _includes/compute_tail_xi_hats.qmd >}}
+
+{{< include _includes/check_tail_xi_hats.qmd >}}
 
 ## Frozen Chains
 
@@ -310,8 +312,9 @@ we can signal a constant expectand by looking at its empirical variance.
 Here we'll use a Welford accumulator to compute the empirical variance of the
 expectand values in a single sweep.
 
-```{.r include="stan_utility_rstan.R" start-line=701 end-line=758}
-```
+{{< include _includes/welford_summary.qmd >}}
+
+{{< include _includes/check_variances.qmd >}}
 
 ## Split Rhat
 
@@ -334,8 +337,13 @@ each Markov chain halves are not consistent with each other.  This could be
 because the Markov chains have not converged to the same typical set or because
 they have not yet expanded into that typical set.
 
-```{.r include="stan_utility_rstan.R" start-line=760 end-line=870}
-```
+{{< include _includes/split_chain.qmd >}}
+
+{{< include _includes/compute_split_rhat.qmd >}}
+
+{{< include _includes/compute_split_rhats.qmd >}}
+
+{{< include _includes/check_rhat.qmd >}}
 
 ## Integrated Autocorrelation Time
 
@@ -360,8 +368,9 @@ The effective sample size can be interpreted as how large of an ensemble
 of exact samples we would need to achieve the same estimator error for 
 the particular expectand of interest.
 
-```{.r include="stan_utility_rstan.R" start-line=872 end-line=958}
-```
+{{< include _includes/compute_tau_hat.qmd >}}
+
+{{< include _includes/compute_min_eesss.qmd >}}
 
 Assuming stationarity we can use the empirical effective sample size to 
 estimate the Markov chain Monte Carlo standard error for any well-behaved 
@@ -384,8 +393,7 @@ size below $100$ indicates strong autocorrelation that will complicate
 Markov chain Monte Carlo estimation in the worst case and reduce estimator 
 precision in the best case.
 
-```{.r include="stan_utility_rstan.R" start-line=960 end-line=1012}
-```
+{{< include _includes/check_eess.qmd >}}
 
 For example empirical effective sample sizes can provide a useful way to 
 distinguish if some diagnostic failures are due to Markov chains that are 
@@ -396,15 +404,13 @@ just too short or more persistent problems.
 In practice we have no reason not to check all of these diagnostics at once for
 each expectand of interest.
 
-```{.r include="stan_utility_rstan.R" start-line=1015 end-line=1208}
-```
+{{< include _includes/check_all_expectand_diagnostics.qmd >}}
 
 That said for particularly problematic fits the output from checking all
 of the expectands can be overwhelming.  In cases where that may be a
 risk we can summarize the output more compactly.
 
-```{.r include="stan_utility_rstan.R" start-line=1210 end-line=1369}
-```
+{{< include _includes/summarize_expectand_diagnostics.qmd >}}
 
 ## Empirical Autocorrelation Visualization
 
@@ -413,8 +419,9 @@ estimated effective sample sizes, then we may want to follow up with the
 empirical autocorrelations themselves.  An empirical correlogram provides a
 useful visualization of these estimates.
 
-```{.r include="stan_utility_rstan.R" start-line=1553 end-line=1641}
-```
+{{< include _includes/compute_rhos.qmd >}}
+
+{{< include _includes/plot_empirical_correlogram.qmd >}}
 
 ## Chain-Separated Pairs Plot
 
@@ -423,8 +430,7 @@ Markov chain in a continuous gradient.  When neighboring states are strongly
 correlated these colors will appear to vary smoothly across the ambient space.
 More productive Markov transitions result in a more chaotic spray of colors.
 
-```{.r include="stan_utility_rstan.R" start-line=1643 end-line=1701}
-```
+{{< include _includes/plot_pairs_by_chain.qmd >}}
 
 # Markov Chain Monte Carlo Estimation
 
@@ -432,15 +438,17 @@ If none of the diagnostics indicate an obstruction to a Markov chain Monte Carlo
 central limit theorem then we can construct expectation value estimates and
 their standard errors.
 
-```{.r include="stan_utility_rstan.R" start-line=1703 end-line=1783}
-```
+{{< include _includes/pushforward_chains.qmd >}}
+
+{{< include _includes/mcmc_est.qmd >}}
+
+{{< include _includes/ensemble_mcmc_est.qmd >}}
 
 In addition to examining the single expectation value of an expectand we can
 also visualize the entire pushforward distribution of the expectand by
 estimating the target probabilities in histogram bins.
 
-```{.r include="stan_utility_rstan.R" start-line=1785 end-line=1868}
-```
+{{< include _includes/plot_expectand_pushforward.qmd >}}
 
 # Demonstration
 
@@ -539,7 +547,7 @@ adaptation target.  To see why let's dig into the adapted configuration of the
 Hamiltonian Markov transition.
 
 ```{r}
-util$plot_inv_metric(get_adaptation_info(fit), 75)
+util$plot_inv_metric(fit, 75)
 ```
 
 The problematic Markov chain also exhibits the most variation in its inverse
@@ -565,7 +573,7 @@ case the dynamics driving the fourth Markov chain are not able to explore as far
 as those in the other chains.
 
 ```{r}
-util$plot_num_leapfrog(diagnostics)
+util$plot_num_leapfrogs_by_chain(diagnostics)
 ```
 
 Finally because nearly every transition is divergent we can't extract much
@@ -574,7 +582,9 @@ information from the divergent-labeled pairs plots.
 ```{r}
 samples <- util$extract_expectands(fit)
 
-util$plot_div_pairs(samples[1:4], diagnostics, c(0, 0, 0, 0))
+names <- c('alpha', 
+           sapply(1:data$M, function(m) paste0('beta[', m, ']')))
+util$plot_div_pairs(names, names, samples, diagnostics)
 ```
 
 We can also color the divergent transitions by their numerical 
@@ -590,8 +600,7 @@ $$
 $$
 
 ```{r}
-util$plot_div_pairs(samples[1:4], diagnostics, 
-                    c(0, 0, 0, 0), plot_mode=1)
+util$plot_div_pairs(names, names, samples, diagnostics, plot_mode=1)
 ```
 
 Having examined the Hamiltonian Monte Carlo diagnostics let's now look through
@@ -632,6 +641,7 @@ avoid completely overwhelming ourselves let's focus on the four parameter
 expectands.
 
 ```{r}
+base_samples <- samples[names]
 util$check_all_expectand_diagnostics(samples[1:4])
 ```
 
@@ -666,8 +676,8 @@ devolve into diffuse random walks.  Indeed looking at the chain-separated pairs
 plots we see the spatial color continuity characteristic of a random walk.
 
 ```{r}
-util$plot_chain_sep_pairs(samples[["alpha"]], "alpha", 
-                          samples[["beta[2]"]], "beta[2]")
+util$plot_pairs_by_chain(samples[["alpha"]], "alpha", 
+                         samples[["beta[2]"]], "beta[2]")
 ```
 
 To more quantitatively blame the large split $\hat{R}$s on these strong

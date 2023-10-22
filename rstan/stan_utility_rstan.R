@@ -107,7 +107,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
     
     # Check for tree depth saturation
     n_tds <- sum(sapply(diagnostics[['treedepth__']][c,], 
-                        function(s) s > max_treedepth))
+                        function(s) s >= max_treedepth))
     
     if (n_tds > 0) {
       no_warning <- FALSE
@@ -204,11 +204,10 @@ check_all_hmc_diagnostics <- function(diagnostics,
 }
 
 # Plot outcome of inverse metric adaptation
-# @params adaptation_info A list containing raw adaptation text for
-#                         each Markov chain.  The output of RStan and 
-#                         PyStan's `get_adaptation_info` functions.
+# @params stan_fit A StanFit object
 # @params B The number of bins for the inverse metric element histograms.
-plot_inv_metric <- function(adaptation_info, B=25) {
+plot_inv_metric <- function(stan_fit, B=25) {
+  adaptation_info <- rstan:::get_adaptation_info(stan_fit)
   C <- length(adaptation_info)
 
   inv_metric_elems <- list()
@@ -278,7 +277,45 @@ display_stepsizes <- function(diagnostics) {
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
 #                    states within each Markov chain.
-plot_num_leapfrog <- function(diagnostics) {
+plot_num_leapfrogs <- function(diagnostics) {
+  if (!is.vector(diagnostics)) {
+    cat('Input variable `diagnostics` is not a named list!')
+    return
+  }
+  
+  lengths <- diagnostics[['n_leapfrog__']]
+  C <- dim(lengths)[1]
+
+  max_length <- max(lengths) + 1
+  max_count <- max(sapply(1:C, function(c) max(table(lengths[c,]))))
+
+  colors <- c(c_dark, c_mid_highlight, c_mid, c_light_highlight)
+
+  idx <- rep(1:max_length, each=2)
+  xs <- sapply(1:length(idx), function(b) if(b %% 2 == 0) idx[b] + 0.5
+                                          else idx[b] - 0.5)
+
+  plot(0, type="n",
+       xlab="Numerical Trajectory Length", 
+       xlim=c(0.5, max_length + 0.5),
+       ylab="", ylim=c(0, 1.1 * max_count), yaxt='n')
+
+  for (c in 1:C) {
+    counts <- hist(lengths[c,], 
+                   seq(0.5, max_length + 0.5, 1), 
+                   plot=FALSE)$counts
+    pad_counts <- counts[idx]
+    lines(xs, pad_counts, lwd=2, col=colors[c])
+  }
+}
+
+# Display symplectic integrator trajectory lengths by Markov chain
+# @param diagnostics A named list of two-dimensional arrays for 
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the 
+#                    second dimension indexes the sequential 
+#                    states within each Markov chain.
+plot_num_leapfrogs_by_chain <- function(diagnostics) {
   if (!is.vector(diagnostics)) {
     cat('Input variable `diagnostics` is not a named list!')
     return
@@ -336,8 +373,58 @@ display_ave_accept_proxy <- function(fit) {
   }
 }
 
+# Apply transformation identity, log, or logit transformation to
+# named samples and flatten the output.  Transformation defaults to 
+# identity if name is not included in `transforms` dictionary.  A 
+# ValueError is thrown if samples are not properly constrained.
+# @param name Expectand name.
+# @param samples A named list of two-dimensional arrays for 
+#                each expectand.  The first dimension of each element 
+#                indexes the Markov chains and the second dimension 
+#                indexes the sequential states within each Markov chain.
+# @param transforms A named list of transformation flags for each 
+#                   expectand.
+# @return The transformed expectand name and a one-dimensional array of
+#         flattened transformation outputs.
+apply_transform <- function(name, samples, transforms) {
+  t <- transforms[[name]]
+  if (is.null(t)) t <- 0
+  
+  transformed_name <- ""
+  transformed_samples <- 0
+ 
+  if (t == 0) {
+    transformed_name <- name
+    transformed_samples <- c(t(samples[[name]]), recursive=TRUE)
+  } else if (t == 1) {
+    if (min(samples[[name]]) <= 0) {
+      cat(paste0('Log transform requested for expectand ',
+                 sprintf('%s ', name),
+                 'but expectand values are not strictly positive.'))
+      return (NULL)
+    }
+    transformed_name <- paste0('log(', name, ')')
+    transformed_samples <- log(c(t(samples[[name]]), recursive=TRUE))
+  } else if (t == 2) {
+    if (min(samples[[name]]) <= 0 | max(samples[[name]] >= 1)) {
+      cat(paste0('Logit transform requested for expectand ',
+                 sprintf('%s ' , name),
+                 'but expectand values are not strictly confined ',
+                 'to the unit interval.'))
+      return (NULL)
+    }
+    transformed_name <- paste0('logit(', name, ')')
+    transformed_samples <- sapply(c(t(samples[[name]]), recursive=TRUE), 
+                                  function(x) log(x / 1 - x))
+  }
+  return (list('t_name' = transformed_name, 
+               't_samples' = transformed_samples))
+}
+
 # Plot pairwise scatter plots with non-divergent and divergent 
 # transitions separated by color
+# @param x_names A list of expectand names to be plotted on the x axis.
+# @param y_names A list of expectand names to be plotted on the y axis.
 # @param expectand_samples A named list of two-dimensional arrays for 
 #                          each expectand.  The first dimension of each
 #                          element indexes the Markov chains and the 
@@ -348,11 +435,15 @@ display_ave_accept_proxy <- function(fit) {
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
 #                    states within each Markov chain.
-# @params transforms Vector of flags configurating which if any
+# @params transforms A named list of flags configurating which if any
 #                    transformation to apply to each named expectand:
 #                      0: identity
 #                      1: log
 #                      2: logit
+# @param xlim       Optional global x-axis bounds for all pair plots.
+#                   Defaults to dynamic bounds for each pair plot.
+# @param ylim       Optional global y-axis bounds for all pair plots.
+#                   Defaults to dynamic bounds for each pair plot.
 # @params plot_mode Plotting style configuration: 
 #                     0: Non-divergent transitions are plotted in 
 #                        transparent red while divergent transitions are
@@ -364,8 +455,20 @@ display_ave_accept_proxy <- function(fit) {
 #                        trajectories should cluster somewhat closer to 
 #                        the neighborhoods with problematic geometries.
 # @param max_width Maximum line width for printing
-plot_div_pairs <- function(expectand_samples, diagnostics, 
-                           transforms, plot_mode=0, max_width=72) {
+plot_div_pairs <- function(x_names, y_names, 
+                           expectand_samples, diagnostics, 
+                           transforms=list(), xlim=NULL, ylim=NULL,
+                           plot_mode=0, max_width=72) {
+  if (!is.vector(x_names)) {
+    cat('Input variable `x_names` is not a list!')
+    return
+  }
+  
+  if (!is.vector(y_names)) {
+    cat('Input variable `y_names` is not a list!')
+    return
+  }
+  
   if (!is.vector(expectand_samples)) {
     cat('Input variable `expectand_samples` is not a named list!')
     return
@@ -381,60 +484,59 @@ plot_div_pairs <- function(expectand_samples, diagnostics,
     return
   }
   
-  # Check expectand/transform compatibility
-  N <- length(expectand_samples)
-  if (length(transforms) != N) {
-    cat(paste0('Input variables `expectand_samples` and `transforms` ', 
-               'are not the same length!'))
-    return
-  }
-  
-  expectand_names = names(expectand_samples)
-  for (n in 1:N) {
-    if (transforms[n] < 0 | transforms[n] > 2) {
+  # Check transform flags
+  for (name in names(transforms)) {
+    if (transforms[[name]] < 0 | transforms[[name]] > 2) {
       warning <- 
         paste0(sprintf('The transform flag %s for expectand %s ', 
-                       transforms[n], expectand_names[n]),
-               'is invalid.  Defaulting to no transformation.')
+                       transforms[[name]], name),
+               'is invalid.  Plot will default to no tranformation.')
       warning <- paste0(strwrap(warning, max_width, 0), collapse='\n')
       cat(warning)
-      transforms[n] <- 0
-    }
-    
-    if (transforms[n] == 1) {
-      if (min(expectand_samples[[expectand_names[n]]]) <= 0) {
-        error <- 
-          paste0(sprintf('Log transform requested for expectand %s ', 
-                         expectand_names[n]),
-                 'but expectand values are not strictly positive.')
-        error <- paste0(strwrap(error, max_width, 0), collapse='\n')
-        cat(error)
-        return
-      }
-    }
-    
-    if (transforms[n] == 2) {
-      if (min(expectand_samples[[expectand_names[n]]]) <= 0 |
-          max(expectand_samples[[expectand_names[n]]]) >= 1) {
-        error <- 
-          paste0(sprintf('Logit transform requested for expectand %s ', 
-                         expectand_names[n]),
-                 'but expectand values are not strictly confined ',
-                 'to the unit interval.')
-        error <- paste0(strwrap(error, max_width, 0), collapse='\n')
-        cat(error)
-        return
-      }
     }
   }
   
+  # Check plot mode
   if (plot_mode < 0 | plot_mode > 1) {
     cat(sprintf('Invalid `plot_mode` value %s.', plot_mode))
     return
   }
   
-  c_dark_trans <- c("#8F272780")
-  c_green_trans <- c("#00FF0080")
+  # Transform expectand samples
+  transformed_samples = list()
+  
+  transformed_x_names <- c()
+  for (name in x_names) {
+    r <- apply_transform(name, expectand_samples, transforms)
+    if (is.null(r))
+      return (NULL)
+    transformed_x_names <- c(transformed_x_names, r$t_name)
+    if (! r$t_name %in% transformed_samples) {
+      transformed_samples[[r$t_name]] <- r$t_samples
+    }
+  }
+  
+  transformed_y_names <- c()
+  for (name in y_names) {
+    r <- apply_transform(name, expectand_samples, transforms)
+    if (is.null(r))
+      return (NULL)
+    transformed_y_names <- c(transformed_y_names, r$t_name)
+    if (! r$t_name %in% transformed_samples) {
+      transformed_samples[[r$t_name]] <- r$t_samples
+    }
+  }
+  
+  # Create pairs of transformed expectands, dropping duplicates
+  pairs <- list()
+  for (x_name in transformed_x_names) {
+    for (y_name in transformed_y_names) {
+      if (x_name == y_name) next
+      if (any(sapply(pairs, identical, c(x_name, y_name)))) next
+      if (any(sapply(pairs, identical, c(y_name, x_name)))) next
+      pairs[[length(pairs) + 1]] <- c(x_name, y_name)
+    }
+  }
   
   # Extract non-divergent and divergent transition indices
   divs <- diagnostics[['divergent__']]
@@ -450,77 +552,62 @@ plot_div_pairs <- function(expectand_samples, diagnostics,
   cmap <- colormap(colormap=nom_colors, nshades=max_nlf)
   
   # Set plot layout dynamically
-  N_cols <- 2
-  N_plots <- choose(N, N_cols)
+  N_cols <- 3
+  N_plots <- length(pairs)
   if (N_plots <= 3) {
     par(mfrow=c(1, N_plots), mar = c(5, 5, 2, 1))
   } else if (N_plots == 4) {
-    par(mfrow=c(N_cols, 2), mar = c(5, 5, 2, 1))
+    par(mfrow=c(2, 2), mar = c(5, 5, 2, 1))
+  } else if (N_plots == 6) {
+    par(mfrow=c(2, 3), mar = c(5, 5, 2, 1))
   } else {
-    par(mfrow=c(N_cols, 3), mar = c(5, 5, 2, 1))
+    par(mfrow=c(3, N_cols), mar = c(5, 5, 2, 1))
   }
   
   # Plot!
-  for (n in 1:(N - 1)) {
-    for (m in (n + 1):N) {
-      # Format x variable
-      name_x <- expectand_names[n]
-      samples <- c(sapply(1:C, 
-                          function(c) expectand_samples[[name_x]][c,]))
-      if (transforms[n] == 0) {
-        x_nondiv_samples <- samples[nondiv_filter]
-        x_div_samples <- samples[div_filter]
-        x_display_name <- name_x
-      } else if (transforms[n] == 1) {
-        x_nondiv_samples <- log(samples[nondiv_filter])
-        x_div_samples <- log(samples[div_filter])
-        x_display_name <- paste0("log(", name_x, ")")
-      } else if (transforms[n] == 2) {
-        x_nondiv_samples <- log(samples[nondiv_filter] / 
-                                  (1 - samples[nondiv_filter]))
-        x_div_samples <- log(samples[div_idxs] /
-                               (1 - samples[div_filter]))
-        x_display_name <- paste0("logit(", name_x, ")")
-      }
-      xlims <- range(c(x_nondiv_samples, x_div_samples))
-      
-      # Format y variable
-      name_y <- expectand_names[m]
-      samples <- c(sapply(1:C, 
-                          function(c) expectand_samples[[name_y]][c,]))
-      if (transforms[m] == 0) {
-        y_nondiv_samples <- samples[nondiv_filter]
-        y_div_samples <- samples[div_filter]
-        y_display_name <- name_y
-      } else if (transforms[m] == 1) {
-        y_nondiv_samples <- log(samples[nondiv_filter])
-        y_div_samples <- log(samples[div_filter])
-        y_display_name <- paste0("log(", name_y, ")")
-      } else if (transforms[m] == 2) {
-        y_nondiv_samples <- log(samples[nondiv_filter] / 
-                                  (1 - samples[nondiv_filter]))
-        y_div_samples <- log(samples[div_filter] /
-                               (1 - samples[div_filter]))
-        y_display_name <- paste0("logit(", name_y, ")")
-      }
-      ylims <- range(c(y_nondiv_samples, y_div_samples))
-      
-      if (plot_mode == 0) {
-        plot(x_nondiv_samples, y_nondiv_samples,
-             col=c_dark_trans, pch=16, main="",
-             xlab=x_display_name, xlim=xlims, 
-             ylab=y_display_name, ylim=ylims)
-        points(x_div_samples, y_div_samples,
-               col=c_green_trans, pch=16)
-      }
-      if (plot_mode == 1) {
-        plot(x_nondiv_samples, y_nondiv_samples,
-             col="#DDDDDD", pch=16, main="",
-             xlab=x_display_name, xlim=xlims, 
-             ylab=y_display_name, ylim=ylims)
-        points(x_div_samples, y_div_samples,
-               col=cmap[div_nlfs], pch=16)
-      }
+  c_dark_trans <- c("#8F272780")
+  c_green_trans <- c("#00FF0080")
+  
+  for (pair in pairs) {
+    x_name <- pair[1]
+    x_nondiv_samples <- transformed_samples[[x_name]][nondiv_filter]
+    x_div_samples    <- transformed_samples[[x_name]][div_filter]
+    
+    if (is.null(xlim)) {
+      xmin = min(transformed_samples[[x_name]])
+      xmax = max(transformed_samples[[x_name]])
+      local_xlim <- c(xmin, xmax)
+    } else {
+      local_xlim <- xlim
+    }
+    
+    y_name <- pair[2]
+    y_nondiv_samples <- transformed_samples[[y_name]][nondiv_filter]
+    y_div_samples    <- transformed_samples[[y_name]][div_filter]
+    
+    if (is.null(ylim)) {
+      ymin = min(transformed_samples[[y_name]])
+      ymax = max(transformed_samples[[y_name]])
+      local_ylim <- c(ymin, ymax)
+    } else {
+      local_ylim <- ylim
+    }
+ 
+    if (plot_mode == 0) {
+      plot(x_nondiv_samples, y_nondiv_samples,
+           col=c_dark_trans, pch=16, main="",
+           xlab=x_name, xlim=local_xlim, 
+           ylab=y_name, ylim=local_ylim)
+      points(x_div_samples, y_div_samples,
+             col=c_green_trans, pch=16)
+    }
+    if (plot_mode == 1) {
+      plot(x_nondiv_samples, y_nondiv_samples,
+           col="#DDDDDD", pch=16, main="",
+           xlab=x_name, xlim=local_xlim, 
+           ylab=y_name, ylim=local_ylim)
+      points(x_div_samples, y_div_samples,
+             col=cmap[div_nlfs], pch=16)
     }
   }
 }
@@ -671,7 +758,7 @@ check_tail_xi_hats <- function(samples, max_width=72) {
       no_warning <- FALSE
       message <-
         paste0(message,
-               sprintf('  Chain %s: Only right tail hat{k} ', c),
+               sprintf('  Chain %s: Right tail hat{k} ', c),
                sprintf('(%.3f) exceeds %.2f!\n',
                        xi_hats[2], xi_hat_threshold))
     } else if (xi_hats[1] >= xi_hat_threshold & 
@@ -679,7 +766,7 @@ check_tail_xi_hats <- function(samples, max_width=72) {
       no_warning <- FALSE
       message <-
         paste0(message,
-               sprintf('  Chain %s: Only left tail hat{k} ', c),
+               sprintf('  Chain %s: Left tail hat{k} ', c),
                sprintf('(%.3f) exceeds %.2f!\n',
                        xi_hats[1], xi_hat_threshold))
     }
@@ -1101,7 +1188,7 @@ check_all_expectand_diagnostics <- function(expectand_samples,
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Only right tail hat{k} ', c),
+                 sprintf('  Chain %s: Right tail hat{k} ', c),
                  sprintf('(%.3f) exceeds %.2f!\n',
                          xi_hats[2], xi_hat_threshold))
       } else if (xi_hats[1] >= xi_hat_threshold & 
@@ -1110,7 +1197,7 @@ check_all_expectand_diagnostics <- function(expectand_samples,
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Only left tail hat{k} ', c),
+                 sprintf('  Chain %s: Left tail hat{k} ', c),
                  sprintf('(%.3f) exceeds %.2f!\n',
                          xi_hats[1], xi_hat_threshold))
       }
@@ -1407,7 +1494,7 @@ encode_all_diagnostics <- function(expectand_samples,
   # Check transitions that ended prematurely due to maximum tree depth 
   # limit
   n = sum(sapply(1:C, function(c) 
-                      diagnostics[['treedepth__']][c,] == max_treedepth))
+                      diagnostics[['treedepth__']][c,] >= max_treedepth))
 
   if (n > 0) {
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 1))
@@ -1653,8 +1740,8 @@ plot_empirical_correlogram <- function(fs,
 #            dimension indexing the sequential states  within each 
 #            Markov chain.
 # @params display_name2 Name of second expectand
-plot_chain_sep_pairs <- function(f1s, display_name1,
-                                 f2s, display_name2) {
+plot_pairs_by_chain <- function(f1s, display_name1,
+                                f2s, display_name2) {
   if (length(dim(f1s)) != 2) {
     cat('Input variable `f1s` has the wrong dimensions!')
     return
@@ -1711,7 +1798,7 @@ plot_chain_sep_pairs <- function(f1s, display_name1,
 #         first dimension indexing the Markov chains and the 
 #         second dimension indexing the sequential states within 
 #         each Markov chain.
-pushforward_samples <- function(samples, expectand) {
+pushforward_chains <- function(samples, expectand) {
   apply(samples, 2, expectand)
 }
 
@@ -1829,7 +1916,7 @@ plot_expectand_pushforward <- function(samples, B, display_name="f",
     bin_indicator <- function(x) {
       ifelse(bins[b] <= x & x < bins[b + 1], 1, 0)
     }
-    indicator_samples <- pushforward_samples(samples, bin_indicator)
+    indicator_samples <- pushforward_chains(samples, bin_indicator)
     est <- ensemble_mcmc_est(indicator_samples)
     
     # Normalize bin probabilities by bin width to allow

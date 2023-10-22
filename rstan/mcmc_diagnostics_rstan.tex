@@ -194,7 +194,7 @@
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[boxrule=0pt, breakable, frame hidden, sharp corners, borderline west={3pt}{0pt}{shadecolor}, interior hidden, enhanced]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, interior hidden, borderline west={3pt}{0pt}{shadecolor}, frame hidden, enhanced, sharp corners, boxrule=0pt]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -275,10 +275,10 @@ chain.
 \CommentTok{\#         indexes the Markov chains and the second dimension indexes the }
 \CommentTok{\#         sequential states within each Markov chain. }
 \NormalTok{extract\_expectands }\OperatorTok{\textless{}{-}}\NormalTok{ function(stan\_fit) \{}
-\NormalTok{  nom\_params }\OperatorTok{\textless{}{-}}\NormalTok{ rstan:::extract(fit, permuted}\OperatorTok{=}\NormalTok{FALSE)}
+\NormalTok{  nom\_params }\OperatorTok{\textless{}{-}}\NormalTok{ rstan:::extract(stan\_fit, permuted}\OperatorTok{=}\NormalTok{FALSE)}
 \NormalTok{  N }\OperatorTok{\textless{}{-}}\NormalTok{ dim(nom\_params)[}\DecValTok{3}\NormalTok{] }\OperatorTok{{-}} \DecValTok{1}
 \NormalTok{  params }\OperatorTok{\textless{}{-}}\NormalTok{ lapply(}\DecValTok{1}\NormalTok{:N, function(n) t(nom\_params[,,n]))}
-\NormalTok{  names(params) }\OperatorTok{\textless{}{-}}\NormalTok{ names(fit)[}\DecValTok{1}\NormalTok{:N]}
+\NormalTok{  names(params) }\OperatorTok{\textless{}{-}}\NormalTok{ names(stan\_fit)[}\DecValTok{1}\NormalTok{:N]}
 \NormalTok{  (params)}
 \end{Highlighting}
 \end{Shaded}
@@ -296,7 +296,7 @@ chain.
 \NormalTok{  diagnostic\_names }\OperatorTok{\textless{}{-}}\NormalTok{ c(}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}treedepth\_\_\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}n\_leapfrog\_\_\textquotesingle{}}\NormalTok{, }
                         \StringTok{\textquotesingle{}stepsize\_\_\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}energy\_\_\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}accept\_stat\_\_\textquotesingle{}}\NormalTok{)}
 
-\NormalTok{  nom\_params }\OperatorTok{\textless{}{-}}\NormalTok{ get\_sampler\_params(fit, inc\_warmup}\OperatorTok{=}\NormalTok{FALSE)}
+\NormalTok{  nom\_params }\OperatorTok{\textless{}{-}}\NormalTok{ get\_sampler\_params(stan\_fit, inc\_warmup}\OperatorTok{=}\NormalTok{FALSE)}
 \NormalTok{  C }\OperatorTok{\textless{}{-}}\NormalTok{ length(nom\_params)}
 \NormalTok{  params }\OperatorTok{\textless{}{-}}\NormalTok{ lapply(diagnostic\_names, }
 \NormalTok{                   function(name) t(sapply(}\DecValTok{1}\NormalTok{:C, function(c) }
@@ -528,7 +528,7 @@ statistics should also vary across the Markov chains.
 \CommentTok{\#                    element indexes the Markov chains and the }
 \CommentTok{\#                    second dimension indexes the sequential }
 \CommentTok{\#                    states within each Markov chain.}
-\NormalTok{display\_ave\_accept\_proxy }\OperatorTok{\textless{}{-}}\NormalTok{ function(fit) \{}
+\NormalTok{display\_ave\_accept\_proxy }\OperatorTok{\textless{}{-}}\NormalTok{ function(diagnostics) \{}
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\KeywordTok{is}\NormalTok{.vector(diagnostics)) \{}
 \NormalTok{    cat(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a named list!\textquotesingle{}}\NormalTok{)}
     \ControlFlowTok{return}
@@ -1347,8 +1347,8 @@ SAMPLING FOR MODEL 'simu_logistic_reg' NOW (CHAIN 1).
 Chain 1: Iteration: 1 / 1 [100%]  (Sampling)
 Chain 1: 
 Chain 1:  Elapsed Time: 0 seconds (Warm-up)
-Chain 1:                0.001723 seconds (Sampling)
-Chain 1:                0.001723 seconds (Total)
+Chain 1:                0.001993 seconds (Sampling)
+Chain 1:                0.001993 seconds (Total)
 Chain 1: 
 \end{verbatim}
 

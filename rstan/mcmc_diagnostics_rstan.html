@@ -3149,10 +3149,10 @@ vertical-align: -.125em;
 <span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">#         indexes the Markov chains and the second dimension indexes the </span></span>
 <span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co">#         sequential states within each Markov chain. </span></span>
 <span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>extract_expectands <span class="op">&lt;-</span> function(stan_fit) {</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  nom_params <span class="op">&lt;-</span> rstan:::extract(fit, permuted<span class="op">=</span>FALSE)</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  nom_params <span class="op">&lt;-</span> rstan:::extract(stan_fit, permuted<span class="op">=</span>FALSE)</span>
 <span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>  N <span class="op">&lt;-</span> dim(nom_params)[<span class="dv">3</span>] <span class="op">-</span> <span class="dv">1</span></span>
 <span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  params <span class="op">&lt;-</span> lapply(<span class="dv">1</span>:N, function(n) t(nom_params[,,n]))</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  names(params) <span class="op">&lt;-</span> names(fit)[<span class="dv">1</span>:N]</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  names(params) <span class="op">&lt;-</span> names(stan_fit)[<span class="dv">1</span>:N]</span>
 <span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  (params)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="sourceCode" id="cb3" data-startfrom="42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 41;"><span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract Hamiltonian Monte Carlo diagnostics values from a StanFit</span></span>
 <span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="co"># object and format them for convenient access.</span></span>
@@ -3165,7 +3165,7 @@ vertical-align: -.125em;
 <span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>  diagnostic_names <span class="op">&lt;-</span> c(<span class="st">&#39;divergent__&#39;</span>, <span class="st">&#39;treedepth__&#39;</span>, <span class="st">&#39;n_leapfrog__&#39;</span>, </span>
 <span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>                        <span class="st">&#39;stepsize__&#39;</span>, <span class="st">&#39;energy__&#39;</span>, <span class="st">&#39;accept_stat__&#39;</span>)</span>
 <span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>  nom_params <span class="op">&lt;-</span> get_sampler_params(fit, inc_warmup<span class="op">=</span>FALSE)</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>  nom_params <span class="op">&lt;-</span> get_sampler_params(stan_fit, inc_warmup<span class="op">=</span>FALSE)</span>
 <span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>  C <span class="op">&lt;-</span> length(nom_params)</span>
 <span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>  params <span class="op">&lt;-</span> lapply(diagnostic_names, </span>
 <span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>                   function(name) t(sapply(<span class="dv">1</span>:C, function(c) </span>
@@ -3276,7 +3276,7 @@ vertical-align: -.125em;
 <span id="cb9-357"><a href="#cb9-357" aria-hidden="true" tabindex="-1"></a><span class="co">#                    element indexes the Markov chains and the </span></span>
 <span id="cb9-358"><a href="#cb9-358" aria-hidden="true" tabindex="-1"></a><span class="co">#                    second dimension indexes the sequential </span></span>
 <span id="cb9-359"><a href="#cb9-359" aria-hidden="true" tabindex="-1"></a><span class="co">#                    states within each Markov chain.</span></span>
-<span id="cb9-360"><a href="#cb9-360" aria-hidden="true" tabindex="-1"></a>display_ave_accept_proxy <span class="op">&lt;-</span> function(fit) {</span>
+<span id="cb9-360"><a href="#cb9-360" aria-hidden="true" tabindex="-1"></a>display_ave_accept_proxy <span class="op">&lt;-</span> function(diagnostics) {</span>
 <span id="cb9-361"><a href="#cb9-361" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.vector(diagnostics)) {</span>
 <span id="cb9-362"><a href="#cb9-362" aria-hidden="true" tabindex="-1"></a>    cat(<span class="st">&#39;Input variable `diagnostics` is not a named list!&#39;</span>)</span>
 <span id="cb9-363"><a href="#cb9-363" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span></span>
@@ -3827,8 +3827,8 @@ SAMPLING FOR MODEL &#39;simu_logistic_reg&#39; NOW (CHAIN 1).
 Chain 1: Iteration: 1 / 1 [100%]  (Sampling)
 Chain 1: 
 Chain 1:  Elapsed Time: 0 seconds (Warm-up)
-Chain 1:                0.001677 seconds (Sampling)
-Chain 1:                0.001677 seconds (Total)
+Chain 1:                0.001805 seconds (Sampling)
+Chain 1:                0.001805 seconds (Total)
 Chain 1: </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">extract</span>(simu)<span class="sc">$</span>X[<span class="dv">1</span>,,]</span>

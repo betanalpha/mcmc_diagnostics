@@ -642,7 +642,7 @@ expectands.
 
 ```{r}
 base_samples <- samples[names]
-util$check_all_expectand_diagnostics(samples[1:4])
+util$check_all_expectand_diagnostics(base_samples)
 ```
 
 All four parameter expectands exhibit split $\hat{R}$ warnings and low empirical

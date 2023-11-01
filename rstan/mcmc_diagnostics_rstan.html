@@ -3827,8 +3827,8 @@ SAMPLING FOR MODEL &#39;simu_logistic_reg&#39; NOW (CHAIN 1).
 Chain 1: Iteration: 1 / 1 [100%]  (Sampling)
 Chain 1: 
 Chain 1:  Elapsed Time: 0 seconds (Warm-up)
-Chain 1:                0.001805 seconds (Sampling)
-Chain 1:                0.001805 seconds (Total)
+Chain 1:                0.001672 seconds (Sampling)
+Chain 1:                0.001672 seconds (Total)
 Chain 1: </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">extract</span>(simu)<span class="sc">$</span>X[<span class="dv">1</span>,,]</span>
@@ -4603,7 +4603,7 @@ estimation may be unreliable even when a central limit theorem holds.
 <p>Well that output restriction proved to be prescient as most of the expectands are encountering problems; even this compact summary is overwhelming. To avoid completely overwhelming ourselves let’s focus on the four parameter expectands.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>base_samples <span class="ot">&lt;-</span> samples[names]</span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>util<span class="sc">$</span><span class="fu">check_all_expectand_diagnostics</span>(samples[<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>util<span class="sc">$</span><span class="fu">check_all_expectand_diagnostics</span>(base_samples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>alpha:
   Split hat{R} (1.575) exceeds 1.1!

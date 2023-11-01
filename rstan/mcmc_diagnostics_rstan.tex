@@ -194,7 +194,7 @@
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, interior hidden, borderline west={3pt}{0pt}{shadecolor}, frame hidden, enhanced, sharp corners, boxrule=0pt]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[borderline west={3pt}{0pt}{shadecolor}, frame hidden, enhanced, interior hidden, sharp corners, breakable, boxrule=0pt]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -1347,8 +1347,8 @@ SAMPLING FOR MODEL 'simu_logistic_reg' NOW (CHAIN 1).
 Chain 1: Iteration: 1 / 1 [100%]  (Sampling)
 Chain 1: 
 Chain 1:  Elapsed Time: 0 seconds (Warm-up)
-Chain 1:                0.001993 seconds (Sampling)
-Chain 1:                0.001993 seconds (Total)
+Chain 1:                0.001836 seconds (Sampling)
+Chain 1:                0.001836 seconds (Total)
 Chain 1: 
 \end{verbatim}
 
@@ -2248,7 +2248,7 @@ the four parameter expectands.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{base\_samples }\OtherTok{\textless{}{-}}\NormalTok{ samples[names]}
-\NormalTok{util}\SpecialCharTok{$}\FunctionTok{check\_all\_expectand\_diagnostics}\NormalTok{(samples[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{])}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{check\_all\_expectand\_diagnostics}\NormalTok{(base\_samples)}
 \end{Highlighting}
 \end{Shaded}
 

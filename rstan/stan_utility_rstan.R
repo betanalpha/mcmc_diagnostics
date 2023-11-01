@@ -115,7 +115,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
       local_message <- 
         paste0(local_message,
                sprintf('  Chain %s: %s of %s transitions (%s%%) ', 
-                       c, n_div, S, 100 * n_div / S),
+                       c, n_tds, S, 100 * n_tds / S),
                sprintf('saturated the maximum treedepth of %s.\n', 
                        max_treedepth))
     }
@@ -175,7 +175,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
   if (!no_treedepth_warning) {
     desc <- paste0('Numerical trajectories that saturate the ',
                    'maximum treedepth have terminated prematurely.  ',
-                   sprintf('Increasing max_depth above %s ', max_depth),
+                   sprintf('Increasing max_depth above %s ', max_treedepth),
                    'should result in more expensive, but more ',
                    'efficient, Hamiltonian transitions.\n\n')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
@@ -752,7 +752,7 @@ check_tail_xi_hats <- function(samples, max_width=72) {
         paste0(message,
               sprintf('  Chain %s: Both left and right tail ', c),
               sprintf('hat{xi}s (%.3f, %.3f) exceed %.2f!\n', 
-                      khats[1], khats[2], khat_threshold))
+                      xi_hats[1], xi_hats[2], xi_hat_threshold))
     } else if (xi_hats[1] < xi_hat_threshold & 
                xi_hats[2] >= xi_hat_threshold) {
       no_warning <- FALSE
@@ -1181,7 +1181,7 @@ check_all_expectand_diagnostics <- function(expectand_samples,
           paste0(local_message,
                 sprintf('  Chain %s: Both left and right tail ', c),
                 sprintf('hat{xi}s (%.3f, %.3f) exceed %.2f!\n', 
-                        khats[1], khats[2], khat_threshold))
+                        xi_hats[1], xi_hats[2], xi_hat_threshold))
       } else if (xi_hats[1] < xi_hat_threshold & 
                  xi_hats[2] >= xi_hat_threshold) {
         no_xi_hat_warning <- FALSE

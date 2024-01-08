@@ -1458,7 +1458,7 @@ def summarize_expectand_diagnostics(expectand_samples,
     desc = textwrap.wrap(desc, max_width)
     print('\n'.join(desc))
     
-    desc = ('  Large tail hat{k}s suggest that the expectand '
+    desc = ('  Large tail hat{xi}s suggest that the expectand '
             'might not be sufficiently integrable.')
     desc = textwrap.wrap(desc, max_width)
     desc.append(' ')

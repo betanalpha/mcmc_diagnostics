@@ -758,7 +758,7 @@ check_tail_xi_hats <- function(samples, max_width=72) {
       no_warning <- FALSE
       message <-
         paste0(message,
-               sprintf('  Chain %s: Right tail hat{k} ', c),
+               sprintf('  Chain %s: Right tail hat{xi} ', c),
                sprintf('(%.3f) exceeds %.2f!\n',
                        xi_hats[2], xi_hat_threshold))
     } else if (xi_hats[1] >= xi_hat_threshold & 
@@ -766,7 +766,7 @@ check_tail_xi_hats <- function(samples, max_width=72) {
       no_warning <- FALSE
       message <-
         paste0(message,
-               sprintf('  Chain %s: Left tail hat{k} ', c),
+               sprintf('  Chain %s: Left tail hat{xi} ', c),
                sprintf('(%.3f) exceeds %.2f!\n',
                        xi_hats[1], xi_hat_threshold))
     }
@@ -1188,7 +1188,7 @@ check_all_expectand_diagnostics <- function(expectand_samples,
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Right tail hat{k} ', c),
+                 sprintf('  Chain %s: Right tail hat{xi} ', c),
                  sprintf('(%.3f) exceeds %.2f!\n',
                          xi_hats[2], xi_hat_threshold))
       } else if (xi_hats[1] >= xi_hat_threshold & 
@@ -1197,7 +1197,7 @@ check_all_expectand_diagnostics <- function(expectand_samples,
         local_warning <- TRUE
         local_message <-
           paste0(local_message,
-                 sprintf('  Chain %s: Left tail hat{k} ', c),
+                 sprintf('  Chain %s: Left tail hat{xi} ', c),
                  sprintf('(%.3f) exceeds %.2f!\n',
                          xi_hats[1], xi_hat_threshold))
       }
@@ -1447,7 +1447,7 @@ summarize_expectand_diagnostics <- function(expectand_samples,
              'If the empirical effective sample size is too ',
              'small then Markov chain Monte Carlo estimation ',
              'may be unreliable even when a central limit ',
-             'theorem holds.\n\n.')
+             'theorem holds.\n\n')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }

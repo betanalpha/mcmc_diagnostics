@@ -1090,7 +1090,7 @@ check_eess <- function(samples,
                    'If the empirical effective sample size is too ',
                    'small then Markov chain Monte Carlo estimation ',
                    'may be unreliable even when a central limit ',
-                   'theorem holds.\n\n.')
+                   'theorem holds.\n\n')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
     message <- paste0(message, desc)
   }
@@ -1277,7 +1277,7 @@ check_all_expectand_diagnostics <- function(expectand_samples,
                    'If the empirical effective sample size is too ',
                    'small then Markov chain Monte Carlo estimation ',
                    'may be unreliable even when a central limit ',
-                   'theorem holds.\n\n.')
+                   'theorem holds.\n\n')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, '\n', desc)
   }

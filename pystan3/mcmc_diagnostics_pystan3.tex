@@ -194,7 +194,7 @@
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[enhanced, boxrule=0pt, frame hidden, breakable, interior hidden, borderline west={3pt}{0pt}{shadecolor}, sharp corners]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[frame hidden, sharp corners, borderline west={3pt}{0pt}{shadecolor}, enhanced, breakable, interior hidden, boxrule=0pt]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -3050,6 +3050,41 @@ bin probability estimates in dark red.
 
 \end{figure}
 
+If we look at the central estimates alone we might convince ourselves of
+all kinds of interesting structure. For example potential multi-modality
+in \texttt{alpha} and \texttt{beta{[}2{]}} and platykurticity in
+\texttt{beta{[}1{]}} and \texttt{beta{[}3{]}}. These structures,
+however, are all within the scope of the relatively large standard error
+bands which suggests that they are all consistent with estimator noise.
+
+Reducing the number of bins decreases the relative standard errors but
+at the same time many of the visual artifacts recede.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{f, axarr }\OperatorTok{=}\NormalTok{ plot.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, layout}\OperatorTok{=}\StringTok{"constrained"}\NormalTok{)}
+
+\NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{], samples[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{], }
+                                \DecValTok{10}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{)}
+\NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{], samples[}\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{], }
+                                \DecValTok{10}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{)}
+\NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{], samples[}\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{], }
+                                \DecValTok{10}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{)}
+\NormalTok{util.plot\_expectand\_pushforward(axarr[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{], samples[}\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{], }
+                                \DecValTok{10}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{plot.show()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-20-output-1.pdf}
+
+}
+
+\end{figure}
+
 When the bin indicator functions enjoy Markov chain Monte Carlo central
 limit theorems these standard error bands allow us to discriminate
 between meaningful structure and accidental artifacts regardless of the
@@ -3084,7 +3119,7 @@ Environment}\label{original-computing-environment}}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-01-29T21:44:05.475631-08:00
+Last updated: 2024-01-29T22:09:15.440363-08:00
 
 Python implementation: CPython
 Python version       : 3.9.6

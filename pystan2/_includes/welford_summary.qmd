@@ -1,2 +1,2 @@
-```{.python include="stan_utility_pystan2.py" start-line=902 end-line=919}
+```{.python include="stan_utility_pystan2.py" start-line=903 end-line=920}
 ```

@@ -190,11 +190,11 @@
 
 \title{Markov Chain Monte Carlo Diagnostics}
 \author{Michael Betancourt}
-\date{2023-07-01}
+\date{2023-01-01}
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, frame hidden, enhanced, sharp corners, borderline west={3pt}{0pt}{shadecolor}, interior hidden, boxrule=0pt]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[frame hidden, boxrule=0pt, borderline west={3pt}{0pt}{shadecolor}, sharp corners, interior hidden, enhanced, breakable]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -537,6 +537,7 @@ inaccurate gradient evaluations.
 \NormalTok{    messages.append(desc)}
 \NormalTok{    messages.append([}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{])}
   
+  \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join([ }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(m) }\ControlFlowTok{for}\NormalTok{ m }\KeywordTok{in}\NormalTok{ messages ]))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -557,7 +558,6 @@ different behaviors during warmup.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Plot outcome of inverse metric adaptation}
 \CommentTok{\# @param stan\_fit A StanFit object}
 \CommentTok{\# @params B The number of bins for the inverse metric element histograms.}
@@ -619,6 +619,7 @@ different behaviors during warmup.
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"left"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
   
+\NormalTok{  plot.show()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -637,7 +638,6 @@ substantially different behavior during warmup.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Display adapted symplectic integrator step sizes}
 \CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
 \CommentTok{\#                    each expectand.  The first dimension of each}
@@ -655,6 +655,7 @@ substantially different behavior during warmup.
   
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
 \NormalTok{    stepsize }\OperatorTok{=}\NormalTok{ stepsizes[c, }\DecValTok{1}\NormalTok{]}
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Integrator Step Size = }\SpecialCharTok{\{}\NormalTok{stepsize}\SpecialCharTok{:.2e\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -669,7 +670,6 @@ distribution, and the more expensive it is to explore.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Display symplectic integrator trajectory lengths}
 \CommentTok{\# @ax Matplotlib axis object}
 \CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
@@ -714,12 +714,12 @@ distribution, and the more expensive it is to explore.
 \NormalTok{  ax.get\_yaxis().set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{  ax.set\_ylim([}\DecValTok{0}\NormalTok{, }\FloatTok{1.1} \OperatorTok{*}\NormalTok{ max\_counts])}
 \NormalTok{  ax.spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
+\NormalTok{  ax.spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Display symplectic integrator trajectory lengths by Markov chain}
 \CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
 \CommentTok{\#                    each expectand.  The first dimension of each}
@@ -770,6 +770,7 @@ distribution, and the more expensive it is to explore.
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
   
+\NormalTok{  plot.show()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -783,7 +784,6 @@ statistics should also vary across the Markov chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Display empirical average of the proxy acceptance statistic across }
 \CommentTok{\# each Markov chain}
 \CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
@@ -805,6 +805,7 @@ statistics should also vary across the Markov chains.
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
 \NormalTok{    proxy\_stat }\OperatorTok{=}\NormalTok{ numpy.mean(proxy\_stats[c,:])}
     \BuiltInTok{print}\NormalTok{(  }\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Average proxy acceptance \textquotesingle{}}
+          \OperatorTok{+} \SpecialStringTok{f\textquotesingle{}statistic = }\SpecialCharTok{\{}\NormalTok{proxy\_stat}\SpecialCharTok{:.3f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -826,7 +827,6 @@ states themselves can be visualized with pairs plots.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Apply transformation identity, log, or logit transformation to}
 \CommentTok{\# named samples and flatten the output.  Transformation defaults to }
 \CommentTok{\# identity if name is not included in \textasciigrave{}transforms\textasciigrave{} dictionary.  A }
@@ -864,12 +864,12 @@ states themselves can be visualized with pairs plots.
 \NormalTok{    transformed\_name }\OperatorTok{=} \SpecialStringTok{f\textquotesingle{}logit(}\SpecialCharTok{\{}\NormalTok{name}\SpecialCharTok{\}}\SpecialStringTok{)\textquotesingle{}}
 \NormalTok{    transformed\_samples }\OperatorTok{=}\NormalTok{ [ math.log(x }\OperatorTok{/}\NormalTok{ (}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ x)) }\ControlFlowTok{for}\NormalTok{ x }\KeywordTok{in}
 \NormalTok{                            samples[name].flatten() ]}
+  \ControlFlowTok{return}\NormalTok{ transformed\_name, transformed\_samples}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Plot pairwise scatter plots with non{-}divergent and divergent }
 \CommentTok{\# transitions separated by color}
 \CommentTok{\# @param x\_names A list of expectand names to be plotted on the x axis.}
@@ -1095,6 +1095,7 @@ states themselves can be visualized with pairs plots.
 \NormalTok{      idx1 }\OperatorTok{=}\NormalTok{ kk }\OperatorTok{//}\NormalTok{ N\_cols}
 \NormalTok{      idx2 }\OperatorTok{=}\NormalTok{ kk }\OperatorTok{\%}\NormalTok{ N\_cols}
 \NormalTok{      axarr[idx1, idx2].axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
+\NormalTok{    plot.show()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1152,7 +1153,6 @@ threshold.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Compute hat\{xi\}, an estimate for the shape of a generalized Pareto }
 \CommentTok{\# distribution from a sample of positive values using the method }
 \CommentTok{\# introduced in "A New and Efficient Estimation Method for the }
@@ -1209,12 +1209,12 @@ threshold.
                \ControlFlowTok{for}\NormalTok{ b, lw }\KeywordTok{in} \BuiltInTok{zip}\NormalTok{(b\_hat\_vec, log\_w\_vec) ] ) }\OperatorTok{/\textbackslash{}}
           \BuiltInTok{sum}\NormalTok{( [ math.exp(lw }\OperatorTok{{-}}\NormalTok{ max\_log\_w) }\ControlFlowTok{for}\NormalTok{ lw }\KeywordTok{in}\NormalTok{ log\_w\_vec ] )}
   
+  \ControlFlowTok{return}\NormalTok{ numpy.mean( [ math.log(}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ b\_hat }\OperatorTok{*}\NormalTok{ f) }\ControlFlowTok{for}\NormalTok{ f }\KeywordTok{in}\NormalTok{ sorted\_fs ] )}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Compute empirical generalized Pareto shape for upper and lower tails}
 \CommentTok{\# for an arbitrary sample of expectand values, ignoring any }
 \CommentTok{\# autocorrelation between the values.}
@@ -1246,12 +1246,12 @@ threshold.
   \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(fs\_right) }\OperatorTok{\textgreater{}} \DecValTok{40}\NormalTok{:}
 \NormalTok{    xi\_hat\_right }\OperatorTok{=}\NormalTok{ compute\_xi\_hat(fs\_right)}
     
+  \ControlFlowTok{return}\NormalTok{ [xi\_hat\_left, xi\_hat\_right]}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Check upper and lower tail behavior of a given expectand output }
 \CommentTok{\# ensemble.}
 \CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
@@ -1311,6 +1311,7 @@ threshold.
             \StringTok{\textquotesingle{}not be sufficiently integrable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1329,7 +1330,6 @@ of the expectand values in a single sweep.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Compute empirical mean and variance of a given sequence with a single}
 \CommentTok{\# pass using Welford accumulators.}
 \CommentTok{\# @params A one{-}dimensional array of expectand values.}
@@ -1347,12 +1347,12 @@ of the expectand values in a single sweep.
     
 \NormalTok{  var }\OperatorTok{/=}\NormalTok{ (}\BuiltInTok{len}\NormalTok{(fs) }\OperatorTok{{-}} \DecValTok{1}\NormalTok{)}
   
+  \ControlFlowTok{return}\NormalTok{ [mean, var]}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Check expectand output ensemble for vanishing empirical variance.}
 \CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
 \CommentTok{\#                with the first dimension indexing the Markov chains and }
@@ -1381,6 +1381,7 @@ of the expectand values in a single sweep.
             \StringTok{\textquotesingle{}constant then the Markov transitions are misbehaving.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1411,7 +1412,6 @@ set.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Split a sequence of expectand values in half to create an initial and }
 \CommentTok{\# terminal Markov chains}
 \CommentTok{\# @params chain A sequence of expectand values derived from a single }
@@ -1421,12 +1421,12 @@ set.
   \CommentTok{"""Split a Markov chain into initial and terminal Markov chains"""}
 \NormalTok{  N }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(chain)}
 \NormalTok{  M }\OperatorTok{=}\NormalTok{ N }\OperatorTok{//} \DecValTok{2}
+  \ControlFlowTok{return}\NormalTok{ [ chain[}\DecValTok{0}\NormalTok{:M], chain[M:N] ]}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Compute split hat\{R\} for the expectand values across a Markov chain }
 \CommentTok{\# ensemble.}
 \CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
@@ -1462,12 +1462,12 @@ set.
   \ControlFlowTok{if} \BuiltInTok{abs}\NormalTok{(W) }\OperatorTok{\textgreater{}} \FloatTok{1e{-}10}\NormalTok{:}
 \NormalTok{    rhat }\OperatorTok{=}\NormalTok{ math.sqrt( (N }\OperatorTok{{-}} \DecValTok{1} \OperatorTok{+}\NormalTok{ B }\OperatorTok{/}\NormalTok{ W) }\OperatorTok{/}\NormalTok{ N )}
   
+  \ControlFlowTok{return}\NormalTok{ rhat}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Compute split hat\{R\} for all input expectands}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for }
 \CommentTok{\#                          each expectand.  The first dimension of each}
@@ -1487,12 +1487,12 @@ set.
 \NormalTok{    samples }\OperatorTok{=}\NormalTok{ expectand\_samples[name]}
 \NormalTok{    rhats.append(compute\_split\_rhat(samples))}
   
+  \ControlFlowTok{return}\NormalTok{ rhats}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Check split hat\{R\} across a given expectand output ensemble.}
 \CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
 \CommentTok{\#                with the first dimension indexing the Markov chains and }
@@ -1526,6 +1526,7 @@ set.
             \StringTok{\textquotesingle{}of the Markov chains has not reached an equilibrium.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1553,7 +1554,6 @@ error for the particular expectand of interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Compute empirical integrated autocorrelation time for a sequence}
 \CommentTok{\# of expectand values, known here as \textbackslash{}hat\{tau\}.}
 \CommentTok{\# @param fs A one{-}dimensional array of expectand values.}
@@ -1609,12 +1609,12 @@ error for the particular expectand of interest.
       \CommentTok{\# throw some kind of error when autocorrelation}
       \CommentTok{\# sequence doesn\textquotesingle{}t get terminated}
     
+\NormalTok{    old\_pair\_sum }\OperatorTok{=}\NormalTok{ current\_pair\_sum}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Compute the maximum empirical effective sample size across the }
 \CommentTok{\# Markov chains for the given expectands}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
@@ -1644,6 +1644,7 @@ error for the particular expectand of interest.
     
 \NormalTok{    min\_eesss.append(}\BuiltInTok{min}\NormalTok{(eesss))}
   
+  \ControlFlowTok{return}\NormalTok{ min\_eesss}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1668,7 +1669,6 @@ in the worst case and reduce estimator precision in the best case.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Check the empirical effective sample size (EESS) for all a given }
 \CommentTok{\# expectand output ensemble.}
 \CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
@@ -1710,6 +1710,7 @@ in the worst case and reduce estimator precision in the best case.
             \StringTok{\textquotesingle{}even when a central limit theorem holds.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1725,7 +1726,6 @@ once for each expectand of interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Check all expectand{-}specific diagnostics.}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for }
 \CommentTok{\#                          each expectand.  The first dimension of each}
@@ -1896,6 +1896,7 @@ once for each expectand of interest.
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
     
+  \ControlFlowTok{return}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1905,7 +1906,6 @@ we can summarize the output more compactly.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Summary all expectand{-}specific diagnostics.}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for }
 \CommentTok{\#                          each expectand.  The first dimension of each}
@@ -2008,7 +2008,7 @@ we can summarize the output more compactly.
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
     
-\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}  Large tail hat}\SpecialCharTok{\{k\}}\StringTok{s suggest that the expectand \textquotesingle{}}
+\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}  Large tail hat}\SpecialCharTok{\{xi\}}\StringTok{s suggest that the expectand \textquotesingle{}}
             \StringTok{\textquotesingle{}might not be sufficiently integrable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
@@ -2057,6 +2057,72 @@ we can summarize the output more compactly.
             \StringTok{\textquotesingle{}theorem holds.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
+\end{Highlighting}
+\end{Shaded}
+
+Alternatively we might filter the expectands, keeping only those of
+immediate interest.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Filter \textasciigrave{}expectand\_samples\textasciigrave{} by name.}
+\CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
+\CommentTok{\#                          each expectand to be plotted on the y axis.}
+\CommentTok{\#                          The first dimension of each element indexes }
+\CommentTok{\#                          the Markov chains and the second dimension }
+\CommentTok{\#                          indexes the sequential states within each }
+\CommentTok{\#                          Markov chain.}
+\CommentTok{\# @param requested\_names List of expectand names to keep.}
+\CommentTok{\# @param check\_arrays Binary variable indicating whether or not }
+\CommentTok{\#                     requested names should be expanded to array}
+\CommentTok{\#                     components.}
+\CommentTok{\# @param max\_width Maximum line width for printing}
+\CommentTok{\# @return A dictionary of two{-}dimensional arrays for each requested}
+\CommentTok{\#         expectand.}
+\KeywordTok{def}\NormalTok{ filter\_expectands(expectand\_samples, requested\_names,}
+\NormalTok{                      check\_arrays}\OperatorTok{=}\VariableTok{False}\NormalTok{, max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
+  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(expectand\_samples) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
+    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
+           \StringTok{\textquotesingle{}is not a standard dictionary!\textquotesingle{}}\NormalTok{))}
+    \ControlFlowTok{return}
+  
+  \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(requested\_names) }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}requested\_names\textasciigrave{} must be non{-}empty!\textquotesingle{}}\NormalTok{)}
+    \ControlFlowTok{return}
+  
+  \ControlFlowTok{if}\NormalTok{ check\_arrays }\KeywordTok{is} \VariableTok{True}\NormalTok{:}
+\NormalTok{    good\_names }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{    bad\_names }\OperatorTok{=}\NormalTok{ []}
+    \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ requested\_names:}
+      \CommentTok{\# Search for array suffix}
+\NormalTok{      array\_names }\OperatorTok{=}\NormalTok{ [ key }\ControlFlowTok{for}\NormalTok{ key }\KeywordTok{in}\NormalTok{ expectand\_samples.keys()}
+                      \ControlFlowTok{if}\NormalTok{ name }\OperatorTok{+} \StringTok{\textquotesingle{}[\textquotesingle{}} \KeywordTok{in}\NormalTok{ key ]}
+      \CommentTok{\# Append array names, if found}
+      \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(array\_names) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
+\NormalTok{        good\_names }\OperatorTok{+=}\NormalTok{ array\_names}
+      \ControlFlowTok{else}\NormalTok{:}
+        \ControlFlowTok{if}\NormalTok{ name }\KeywordTok{in}\NormalTok{ expectand\_samples.keys():}
+          \CommentTok{\# Append bare name, if found}
+\NormalTok{          good\_names.append(name)}
+        \ControlFlowTok{else}\NormalTok{:}
+          \CommentTok{\# Add to list of bad names}
+\NormalTok{          bad\_names.append(name)}
+  \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{    bad\_names }\OperatorTok{=} \OperatorTok{\textbackslash{}}
+      \BuiltInTok{set}\NormalTok{(requested\_names).difference(expectand\_samples.keys())}
+\NormalTok{    good\_names }\OperatorTok{=} \OperatorTok{\textbackslash{}}
+      \BuiltInTok{set}\NormalTok{(requested\_names).intersection(expectand\_samples.keys())}
+    
+  \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(bad\_names) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
+\NormalTok{    message }\OperatorTok{=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}The expectands }\SpecialCharTok{\{}\StringTok{", "}\SpecialCharTok{.}\NormalTok{join(bad\_names)}\SpecialCharTok{\}}\SpecialStringTok{ \textquotesingle{}}
+               \StringTok{\textquotesingle{}were not found in the \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
+               \StringTok{\textquotesingle{}object and will be ignored.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{    message }\OperatorTok{=}\NormalTok{ textwrap.wrap(message, max\_width)}
+\NormalTok{    message.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(message))}
+  
+  \ControlFlowTok{return}\NormalTok{ \{ name: expectand\_samples[name] }\ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ good\_names \}}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2071,7 +2137,6 @@ provides a useful visualization of these estimates.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Compute empirical autocorrelations for a given Markov chain sequence}
 \CommentTok{\# @parmas fs A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return A one{-}dimensional array of empirical autocorrelations at each }
@@ -2127,12 +2192,12 @@ provides a useful visualization of these estimates.
     
 \NormalTok{    old\_pair\_sum }\OperatorTok{=}\NormalTok{ current\_pair\_sum}
   
+  \ControlFlowTok{return}\NormalTok{ rhos}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Plot empirical correlograms for a given expectand across a Markov }
 \CommentTok{\# chain ensemble.}
 \CommentTok{\# @ax Matplotlib axis object}
@@ -2173,6 +2238,7 @@ provides a useful visualization of these estimates.
 \NormalTok{  ax.set\_ylabel(}\StringTok{"Empirical}\CharTok{\textbackslash{}n}\StringTok{Autocorrelation"}\NormalTok{)}
 \NormalTok{  ax.set\_ylim(rho\_lim[}\DecValTok{0}\NormalTok{], rho\_lim[}\DecValTok{1}\NormalTok{])}
 \NormalTok{  ax.spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
+\NormalTok{  ax.spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2188,7 +2254,6 @@ chaotic spray of colors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Visualize the projection of a Markov chain ensemble along two }
 \CommentTok{\# expectands as a pairs plot.  Point colors darken along each Markov }
 \CommentTok{\# chain to visualize the autocorrelation.}
@@ -2264,6 +2329,7 @@ chaotic spray of colors.
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{    axarr[idx1, idx2].spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
   
+\NormalTok{  plot.show()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2277,7 +2343,6 @@ value estimates and their standard errors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Evaluate an expectand at the states of a Markov chain ensemble.}
 \CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
 \CommentTok{\#                with the first dimension indexing the Markov chains and }
@@ -2291,12 +2356,12 @@ value estimates and their standard errors.
 \CommentTok{\#         each Markov chain.}
 \KeywordTok{def}\NormalTok{ pushforward\_chains(samples, expectand):}
   \CommentTok{"""Evaluate an expectand along a Markov chain"""}
+  \ControlFlowTok{return}\NormalTok{ numpy.vectorize(expectand)(samples)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Estimate expectand exectation value from a single Markov chain.}
 \CommentTok{\# @param fs A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return The Markov chain Monte Carlo estimate, its estimated standard }
@@ -2314,12 +2379,12 @@ value estimates and their standard errors.
   
 \NormalTok{  tau\_hat }\OperatorTok{=}\NormalTok{ compute\_tau\_hat(fs)}
 \NormalTok{  eess }\OperatorTok{=}\NormalTok{ S }\OperatorTok{/}\NormalTok{ tau\_hat}
+  \ControlFlowTok{return}\NormalTok{ [summary[}\DecValTok{0}\NormalTok{], math.sqrt(summary[}\DecValTok{1}\NormalTok{] }\OperatorTok{/}\NormalTok{ eess), eess]}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Estimate expectand exectation value from a Markov chain ensemble.}
 \CommentTok{\# @param samples A two{-}dimensional array of expectand values with the }
 \CommentTok{\#                first dimension indexing the Markov chains and the }
@@ -2361,6 +2426,7 @@ value estimates and their standard errors.
     \BuiltInTok{vars}\NormalTok{[c] }\OperatorTok{=}\NormalTok{ est[}\DecValTok{2}\NormalTok{] }\OperatorTok{*}\NormalTok{ (var\_update }\OperatorTok{+}\NormalTok{ chain\_var)}
 \NormalTok{  var }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{(}\BuiltInTok{vars}\NormalTok{) }\OperatorTok{/}\NormalTok{ total\_ess}
   
+  \ControlFlowTok{return}\NormalTok{ [mean, math.sqrt(var }\OperatorTok{/}\NormalTok{ total\_ess), total\_ess]}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2370,7 +2436,6 @@ by estimating the target probabilities in histogram bins.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \CommentTok{\# Visualize pushforward distribution of a given expectand as a }
 \CommentTok{\# histogram, using Markov chain Monte Carlo estimators to estimate the }
 \CommentTok{\# output bin probabilities.  Bin probability estimator error is shown }
@@ -2451,6 +2516,7 @@ by estimating the target probabilities in histogram bins.
 \NormalTok{  ax.get\_yaxis().set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{  ax.spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \NormalTok{  ax.spines[}\StringTok{"left"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
+\NormalTok{  ax.spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3132,7 +3198,7 @@ y_pred[974], y_pred[975], y_pred[976], y_pred[977], y_pred[979],
 y_pred[97], y_pred[981], y_pred[982], y_pred[986], y_pred[987],
 y_pred[991], y_pred[992], y_pred[994], y_pred[995], y_pred[996],
 y_pred[997], y_pred[99], y_pred[9] triggered tail hat{xi} warnings.
-  Large tail hat{k}s suggest that the expectand might not be
+  Large tail hat{xi}s suggest that the expectand might not be
 sufficiently integrable.
  
 The expectands alpha, beta[1], beta[2], beta[3], p[1000], p[100],
@@ -3375,8 +3441,7 @@ parameter expectands.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{base\_samples }\OperatorTok{=}\NormalTok{ \{ k: samples[k] }\ControlFlowTok{for}\NormalTok{ k }\KeywordTok{in} 
-\NormalTok{                 [}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{]\}}
+\NormalTok{base\_samples }\OperatorTok{=}\NormalTok{ util.filter\_expectands(samples, [}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta\textquotesingle{}}\NormalTok{], }\VariableTok{True}\NormalTok{)}
 \NormalTok{util.check\_all\_expectand\_diagnostics(base\_samples)}
 \end{Highlighting}
 \end{Shaded}
@@ -3587,7 +3652,7 @@ Environment}\label{original-computing-environment}}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2023-10-21T22:22:31.661620-04:00
+Last updated: 2024-01-29T21:55:26.570213-08:00
 
 Python implementation: CPython
 Python version       : 3.9.6
@@ -3595,7 +3660,7 @@ IPython version      : 8.3.0
 
 Compiler    : Clang 12.0.0 (clang-1200.0.32.29)
 OS          : Darwin
-Release     : 19.6.0
+Release     : 23.2.0
 Machine     : x86_64
 Processor   : i386
 CPU cores   : 16

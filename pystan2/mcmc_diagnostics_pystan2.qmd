@@ -1,7 +1,7 @@
 ---
 title: "Markov Chain Monte Carlo Diagnostics"
 author: "Michael Betancourt"
-date: "July 2023"
+date: "January 2023"
 toc: true
 number-sections: true
 highlight: pygments
@@ -383,6 +383,11 @@ risk we can summarize the output more compactly.
 
 {{< include _includes/summarize_expectand_diagnostics.qmd >}}
 
+Alternatively we might filter the expectands, keeping only those of 
+immediate interest.
+
+{{< include _includes/filter_expectands.qmd >}}
+
 ## Empirical Autocorrelation Visualization
 
 If we encounter large empirical integrated autocorrelation times, or small
@@ -616,8 +621,7 @@ That is a lot of diagnostic failures.  To avoid overwhelming ourselves with too
 many detailed diagnostic messages let's focus on the four parameter expectands.
 
 ```{python}
-base_samples = { k: samples[k] for k in 
-                 ['alpha', 'beta[1]', 'beta[2]', 'beta[3]']}
+base_samples = util.filter_expectands(samples, ['alpha', 'beta'], True)
 util.check_all_expectand_diagnostics(base_samples)
 ```
 
@@ -706,6 +710,30 @@ util.plot_expectand_pushforward(axarr[1, 0], samples['beta[2]'],
                                 25, display_name='beta[2]')
 util.plot_expectand_pushforward(axarr[1, 1], samples['beta[3]'], 
                                 25, display_name='beta[3]')
+
+plot.show()
+```
+
+If we look at the central estimates alone we might convince ourselves of all
+kinds of interesting structure.  For example potential multi-modality in `alpha`
+and `beta[2]` and platykurticity in `beta[1]` and `beta[3]`.  These structures,
+however, are all within the scope of the relatively large standard error bands
+which suggests that they are all consistent with estimator noise.
+
+Reducing the number of bins decreases the relative standard errors but at the
+same time many of the visual artifacts recede.
+
+```{python}
+f, axarr = plot.subplots(2, 2, layout="constrained")
+
+util.plot_expectand_pushforward(axarr[0, 0], samples['alpha'], 
+                                10, display_name='alpha')
+util.plot_expectand_pushforward(axarr[0, 1], samples['beta[1]'], 
+                                10, display_name='beta[1]')
+util.plot_expectand_pushforward(axarr[1, 0], samples['beta[2]'], 
+                                10, display_name='beta[2]')
+util.plot_expectand_pushforward(axarr[1, 1], samples['beta[3]'], 
+                                10, display_name='beta[3]')
 
 plot.show()
 ```

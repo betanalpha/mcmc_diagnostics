@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Michael Betancourt">
-<meta name="dcterms.date" content="2023-07-01">
+<meta name="dcterms.date" content="2023-01-01">
 
 <title>Markov Chain Monte Carlo Diagnostics</title>
 <style>
@@ -3105,7 +3105,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 1, 2023</p>
+      <p class="date">January 1, 2023</p>
     </div>
   </div>
   
@@ -4639,8 +4639,8 @@ m &lt; \frac{1}{\xi}.
 <span id="cb26-1648"><a href="#cb26-1648" aria-hidden="true" tabindex="-1"></a>    stop(<span class="st">&#39;Input variable `expectand_samples` is not a named list!&#39;</span>)</span>
 <span id="cb26-1649"><a href="#cb26-1649" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb26-1650"><a href="#cb26-1650" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb26-1651"><a href="#cb26-1651" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.vector(requested_names)) {</span>
-<span id="cb26-1652"><a href="#cb26-1652" aria-hidden="true" tabindex="-1"></a>    stop(<span class="st">&#39;Input variable `requested_names` is empty!&#39;</span>)</span>
+<span id="cb26-1651"><a href="#cb26-1651" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (length(requested_names) <span class="op">==</span> <span class="dv">0</span>) {</span>
+<span id="cb26-1652"><a href="#cb26-1652" aria-hidden="true" tabindex="-1"></a>    stop(<span class="st">&#39;Input variable `requested_names` must be non-empty!&#39;</span>)</span>
 <span id="cb26-1653"><a href="#cb26-1653" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb26-1654"><a href="#cb26-1654" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb26-1655"><a href="#cb26-1655" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (check_arrays <span class="op">==</span> TRUE) {</span>
@@ -4648,8 +4648,8 @@ m &lt; \frac{1}{\xi}.
 <span id="cb26-1657"><a href="#cb26-1657" aria-hidden="true" tabindex="-1"></a>    bad_names <span class="op">&lt;-</span> c()</span>
 <span id="cb26-1658"><a href="#cb26-1658" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (name <span class="kw">in</span> requested_names) {</span>
 <span id="cb26-1659"><a href="#cb26-1659" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Search for array suffix</span></span>
-<span id="cb26-1660"><a href="#cb26-1660" aria-hidden="true" tabindex="-1"></a>      array_names <span class="op">&lt;-</span> grep(paste0(name, <span class="st">&#39;</span><span class="ch">\\</span><span class="st">[&#39;</span>), </span>
-<span id="cb26-1661"><a href="#cb26-1661" aria-hidden="true" tabindex="-1"></a>                          names(expectand_samples), </span>
+<span id="cb26-1660"><a href="#cb26-1660" aria-hidden="true" tabindex="-1"></a>      array_names <span class="op">&lt;-</span> grep(paste0(name, <span class="st">&#39;</span><span class="ch">\\</span><span class="st">[&#39;</span>),</span>
+<span id="cb26-1661"><a href="#cb26-1661" aria-hidden="true" tabindex="-1"></a>                          names(expectand_samples),</span>
 <span id="cb26-1662"><a href="#cb26-1662" aria-hidden="true" tabindex="-1"></a>                          value<span class="op">=</span>TRUE)</span>
 <span id="cb26-1663"><a href="#cb26-1663" aria-hidden="true" tabindex="-1"></a>      </span>
 <span id="cb26-1664"><a href="#cb26-1664" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Append array names, if found</span></span>
@@ -4671,7 +4671,7 @@ m &lt; \frac{1}{\xi}.
 <span id="cb26-1680"><a href="#cb26-1680" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb26-1681"><a href="#cb26-1681" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb26-1682"><a href="#cb26-1682" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (length(bad_names) <span class="op">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb26-1683"><a href="#cb26-1683" aria-hidden="true" tabindex="-1"></a>    message <span class="op">&lt;-</span> paste0(sprintf(<span class="st">&#39;The expectands </span><span class="sc">%s</span><span class="st"> &#39;</span>, </span>
+<span id="cb26-1683"><a href="#cb26-1683" aria-hidden="true" tabindex="-1"></a>    message <span class="op">&lt;-</span> paste0(sprintf(<span class="st">&#39;The expectands </span><span class="sc">%s</span><span class="st"> &#39;</span>,</span>
 <span id="cb26-1684"><a href="#cb26-1684" aria-hidden="true" tabindex="-1"></a>                              paste(bad_names, collapse<span class="op">=</span><span class="st">&quot;, &quot;</span>)),</span>
 <span id="cb26-1685"><a href="#cb26-1685" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&#39;were not found in the `expectand_samples` &#39;</span>,</span>
 <span id="cb26-1686"><a href="#cb26-1686" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&#39;object and will be ignored.</span><span class="ch">\n\n</span><span class="st">&#39;</span>)</span>
@@ -4687,7 +4687,7 @@ m &lt; \frac{1}{\xi}.
 <p>If we encounter large empirical integrated autocorrelation times, or small estimated effective sample sizes, then we may want to follow up with the empirical autocorrelations themselves. An empirical correlogram provides a useful visualization of these estimates.</p>
 <div class="sourceCode" id="cb27" data-startfrom="1694"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1693;"><span id="cb27-1694"><a href="#cb27-1694" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute empirical autocorrelations for a given Markov chain sequence</span></span>
 <span id="cb27-1695"><a href="#cb27-1695" aria-hidden="true" tabindex="-1"></a><span class="co"># @parmas fs A one-dimensional array of sequential expectand values.</span></span>
-<span id="cb27-1696"><a href="#cb27-1696" aria-hidden="true" tabindex="-1"></a><span class="co"># @return A one-dimensional array of empirical autocorrelations at each </span></span>
+<span id="cb27-1696"><a href="#cb27-1696" aria-hidden="true" tabindex="-1"></a><span class="co"># @return A one-dimensional array of empirical autocorrelations at each</span></span>
 <span id="cb27-1697"><a href="#cb27-1697" aria-hidden="true" tabindex="-1"></a><span class="co">#         lag up to the length of the sequence.</span></span>
 <span id="cb27-1698"><a href="#cb27-1698" aria-hidden="true" tabindex="-1"></a>compute_rhos <span class="op">&lt;-</span> function(fs) {</span>
 <span id="cb27-1699"><a href="#cb27-1699" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Compute empirical autocorrelations</span></span>

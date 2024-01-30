@@ -190,11 +190,11 @@
 
 \title{Markov Chain Monte Carlo Diagnostics}
 \author{Michael Betancourt}
-\date{2023-07-01}
+\date{2023-01-01}
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[sharp corners, boxrule=0pt, breakable, enhanced, borderline west={3pt}{0pt}{shadecolor}, interior hidden, frame hidden]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, interior hidden, borderline west={3pt}{0pt}{shadecolor}, enhanced, sharp corners, frame hidden, boxrule=0pt]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -2089,8 +2089,8 @@ immediate interest.
 \NormalTok{    stop(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} is not a named list!\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
   
-  \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\KeywordTok{is}\NormalTok{.vector(requested\_names)) \{}
-\NormalTok{    stop(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}requested\_names\textasciigrave{} is empty!\textquotesingle{}}\NormalTok{)}
+  \ControlFlowTok{if}\NormalTok{ (length(requested\_names) }\OperatorTok{==} \DecValTok{0}\NormalTok{) \{}
+\NormalTok{    stop(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}requested\_names\textasciigrave{} must be non{-}empty!\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
   
   \ControlFlowTok{if}\NormalTok{ (check\_arrays }\OperatorTok{==}\NormalTok{ TRUE) \{}
@@ -2098,8 +2098,8 @@ immediate interest.
 \NormalTok{    bad\_names }\OperatorTok{\textless{}{-}}\NormalTok{ c()}
     \ControlFlowTok{for}\NormalTok{ (name }\KeywordTok{in}\NormalTok{ requested\_names) \{}
       \CommentTok{\# Search for array suffix}
-\NormalTok{      array\_names }\OperatorTok{\textless{}{-}}\NormalTok{ grep(paste0(name, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{[\textquotesingle{}}\NormalTok{), }
-\NormalTok{                          names(expectand\_samples), }
+\NormalTok{      array\_names }\OperatorTok{\textless{}{-}}\NormalTok{ grep(paste0(name, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{[\textquotesingle{}}\NormalTok{),}
+\NormalTok{                          names(expectand\_samples),}
 \NormalTok{                          value}\OperatorTok{=}\NormalTok{TRUE)}
       
       \CommentTok{\# Append array names, if found}
@@ -2121,7 +2121,7 @@ immediate interest.
 \NormalTok{  \}}
     
   \ControlFlowTok{if}\NormalTok{ (length(bad\_names) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{) \{}
-\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(sprintf(}\StringTok{\textquotesingle{}The expectands }\SpecialCharTok{\%s}\StringTok{ \textquotesingle{}}\NormalTok{, }
+\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(sprintf(}\StringTok{\textquotesingle{}The expectands }\SpecialCharTok{\%s}\StringTok{ \textquotesingle{}}\NormalTok{,}
 \NormalTok{                              paste(bad\_names, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{)),}
                       \StringTok{\textquotesingle{}were not found in the \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}\NormalTok{,}
                       \StringTok{\textquotesingle{}object and will be ignored.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
@@ -2147,7 +2147,7 @@ provides a useful visualization of these estimates.
 \begin{Highlighting}[]
 \CommentTok{\# Compute empirical autocorrelations for a given Markov chain sequence}
 \CommentTok{\# @parmas fs A one{-}dimensional array of sequential expectand values.}
-\CommentTok{\# @return A one{-}dimensional array of empirical autocorrelations at each }
+\CommentTok{\# @return A one{-}dimensional array of empirical autocorrelations at each}
 \CommentTok{\#         lag up to the length of the sequence.}
 \NormalTok{compute\_rhos }\OperatorTok{\textless{}{-}}\NormalTok{ function(fs) \{}
   \CommentTok{\# Compute empirical autocorrelations}

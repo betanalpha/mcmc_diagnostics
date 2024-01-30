@@ -1648,8 +1648,8 @@ filter_expectands <- function(expectand_samples, requested_names,
     stop('Input variable `expectand_samples` is not a named list!')
   }
   
-  if (!is.vector(requested_names)) {
-    stop('Input variable `requested_names` is empty!')
+  if (length(requested_names) == 0) {
+    stop('Input variable `requested_names` must be non-empty!')
   }
   
   if (check_arrays == TRUE) {
@@ -1657,8 +1657,8 @@ filter_expectands <- function(expectand_samples, requested_names,
     bad_names <- c()
     for (name in requested_names) {
       # Search for array suffix
-      array_names <- grep(paste0(name, '\\['), 
-                          names(expectand_samples), 
+      array_names <- grep(paste0(name, '\\['),
+                          names(expectand_samples),
                           value=TRUE)
       
       # Append array names, if found
@@ -1680,7 +1680,7 @@ filter_expectands <- function(expectand_samples, requested_names,
   }
     
   if (length(bad_names) > 0) {
-    message <- paste0(sprintf('The expectands %s ', 
+    message <- paste0(sprintf('The expectands %s ',
                               paste(bad_names, collapse=", ")),
                       'were not found in the `expectand_samples` ',
                       'object and will be ignored.\n\n')
@@ -1693,7 +1693,7 @@ filter_expectands <- function(expectand_samples, requested_names,
 
 # Compute empirical autocorrelations for a given Markov chain sequence
 # @parmas fs A one-dimensional array of sequential expectand values.
-# @return A one-dimensional array of empirical autocorrelations at each 
+# @return A one-dimensional array of empirical autocorrelations at each
 #         lag up to the length of the sequence.
 compute_rhos <- function(fs) {
   # Compute empirical autocorrelations

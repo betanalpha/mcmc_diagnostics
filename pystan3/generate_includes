@@ -14,7 +14,7 @@ function_names=('extract_expectands' 'extract_hmc_diagnostics'
                 'split_chain' 'compute_split_rhat' 'compute_split_rhats' 'check_rhat'
                 'compute_tau_hat' 'compute_min_eesss' 'check_eess'
                 'check_all_expectand_diagnostics' 'summarize_expectand_diagnostics'
-                'compute_rhos' 'plot_empirical_correlogram'
+                'filter_expectands' 'compute_rhos' 'plot_empirical_correlogram'
                 'plot_pairs_by_chain' 'pushforward_chains'
                 'mcmc_est' 'ensemble_mcmc_est' 'plot_expectand_pushforward')
  

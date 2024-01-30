@@ -190,11 +190,11 @@
 
 \title{Markov Chain Monte Carlo Diagnostics}
 \author{Michael Betancourt}
-\date{2023-07-01}
+\date{2023-01-01}
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, enhanced, frame hidden, borderline west={3pt}{0pt}{shadecolor}, interior hidden, sharp corners, boxrule=0pt]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[enhanced, boxrule=0pt, frame hidden, breakable, interior hidden, borderline west={3pt}{0pt}{shadecolor}, sharp corners]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -1520,6 +1520,71 @@ we can summarize the output more compactly.
 \end{Highlighting}
 \end{Shaded}
 
+Alternatively we might filter the expectands, keeping only those of
+immediate interest.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Filter \textasciigrave{}expectand\_samples\textasciigrave{} by name.}
+\CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
+\CommentTok{\#                          each expectand to be plotted on the y axis.}
+\CommentTok{\#                          The first dimension of each element indexes }
+\CommentTok{\#                          the Markov chains and the second dimension }
+\CommentTok{\#                          indexes the sequential states within each }
+\CommentTok{\#                          Markov chain.}
+\CommentTok{\# @param requested\_names List of expectand names to keep.}
+\CommentTok{\# @param check\_arrays Binary variable indicating whether or not }
+\CommentTok{\#                     requested names should be expanded to array}
+\CommentTok{\#                     components.}
+\CommentTok{\# @param max\_width Maximum line width for printing}
+\CommentTok{\# @return A dictionary of two{-}dimensional arrays for each requested}
+\CommentTok{\#         expectand.}
+\KeywordTok{def}\NormalTok{ filter\_expectands(expectand\_samples, requested\_names,}
+\NormalTok{                      check\_arrays}\OperatorTok{=}\VariableTok{False}\NormalTok{, max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
+  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(expectand\_samples) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
+    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
+           \StringTok{\textquotesingle{}is not a standard dictionary!\textquotesingle{}}\NormalTok{))}
+    \ControlFlowTok{return}
+  
+  \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(requested\_names) }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}requested\_names\textasciigrave{} must be non{-}empty!\textquotesingle{}}\NormalTok{)}
+    \ControlFlowTok{return}
+  
+  \ControlFlowTok{if}\NormalTok{ check\_arrays }\KeywordTok{is} \VariableTok{True}\NormalTok{:}
+\NormalTok{    good\_names }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{    bad\_names }\OperatorTok{=}\NormalTok{ []}
+    \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ requested\_names:}
+      \CommentTok{\# Search for array suffix}
+\NormalTok{      array\_names }\OperatorTok{=}\NormalTok{ [ key }\ControlFlowTok{for}\NormalTok{ key }\KeywordTok{in}\NormalTok{ expectand\_samples.keys()}
+                      \ControlFlowTok{if}\NormalTok{ name }\OperatorTok{+} \StringTok{\textquotesingle{}[\textquotesingle{}} \KeywordTok{in}\NormalTok{ key ]}
+      \CommentTok{\# Append array names, if found}
+      \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(array\_names) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
+\NormalTok{        good\_names }\OperatorTok{+=}\NormalTok{ array\_names}
+      \ControlFlowTok{else}\NormalTok{:}
+        \ControlFlowTok{if}\NormalTok{ name }\KeywordTok{in}\NormalTok{ expectand\_samples.keys():}
+          \CommentTok{\# Append bare name, if found}
+\NormalTok{          good\_names.append(name)}
+        \ControlFlowTok{else}\NormalTok{:}
+          \CommentTok{\# Add to list of bad names}
+\NormalTok{          bad\_names.append(name)}
+  \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{    bad\_names }\OperatorTok{=} \OperatorTok{\textbackslash{}}
+      \BuiltInTok{set}\NormalTok{(requested\_names).difference(expectand\_samples.keys())}
+\NormalTok{    good\_names }\OperatorTok{=} \OperatorTok{\textbackslash{}}
+      \BuiltInTok{set}\NormalTok{(requested\_names).intersection(expectand\_samples.keys())}
+    
+  \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(bad\_names) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
+\NormalTok{    message }\OperatorTok{=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}The expectands }\SpecialCharTok{\{}\StringTok{", "}\SpecialCharTok{.}\NormalTok{join(bad\_names)}\SpecialCharTok{\}}\SpecialStringTok{ \textquotesingle{}}
+               \StringTok{\textquotesingle{}were not found in the \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
+               \StringTok{\textquotesingle{}object and will be ignored.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{    message }\OperatorTok{=}\NormalTok{ textwrap.wrap(message, max\_width)}
+\NormalTok{    message.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
+    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(message))}
+  
+  \ControlFlowTok{return}\NormalTok{ \{ name: expectand\_samples[name] }\ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ good\_names \}}
+\end{Highlighting}
+\end{Shaded}
+
 \hypertarget{empirical-autocorrelation-visualization}{%
 \subsection{Empirical Autocorrelation
 Visualization}\label{empirical-autocorrelation-visualization}}
@@ -2563,7 +2628,7 @@ y_pred[97], y_pred[981], y_pred[982], y_pred[986], y_pred[987],
 y_pred[988], y_pred[991], y_pred[992], y_pred[994], y_pred[995],
 y_pred[996], y_pred[997], y_pred[99], y_pred[9] triggered tail hat{xi}
 warnings.
-  Large tail hat{k}s suggest that the expectand might not be
+  Large tail hat{xi}s suggest that the expectand might not be
 sufficiently integrable.
  
 The expectands alpha, beta[1], beta[2], beta[3], p[1000], p[100],
@@ -2808,8 +2873,7 @@ parameter expectands.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{base\_samples }\OperatorTok{=}\NormalTok{ \{ k: samples[k] }\ControlFlowTok{for}\NormalTok{ k }\KeywordTok{in} 
-\NormalTok{                 [}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{]\}}
+\NormalTok{base\_samples }\OperatorTok{=}\NormalTok{ util.filter\_expectands(samples, [}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}beta\textquotesingle{}}\NormalTok{], }\VariableTok{True}\NormalTok{)}
 \NormalTok{util.check\_all\_expectand\_diagnostics(base\_samples)}
 \end{Highlighting}
 \end{Shaded}
@@ -3020,7 +3084,7 @@ Environment}\label{original-computing-environment}}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2023-10-21T22:23:14.987691-04:00
+Last updated: 2024-01-29T21:44:05.475631-08:00
 
 Python implementation: CPython
 Python version       : 3.9.6
@@ -3028,7 +3092,7 @@ IPython version      : 8.16.1
 
 Compiler    : Clang 12.0.0 (clang-1200.0.32.29)
 OS          : Darwin
-Release     : 19.6.0
+Release     : 23.2.0
 Machine     : x86_64
 Processor   : i386
 CPU cores   : 16

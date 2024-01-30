@@ -1,7 +1,7 @@
 ---
 title: "Markov Chain Monte Carlo Diagnostics"
 author: "Michael Betancourt"
-date: "July 2023"
+date: "January 2023"
 toc: true
 number-sections: true
 highlight: pygments
@@ -357,6 +357,11 @@ risk we can summarize the output more compactly.
 
 {{< include _includes/summarize_expectand_diagnostics.qmd >}}
 
+Alternatively we might filter the expectands, keeping only those of 
+immediate interest.
+
+{{< include _includes/filter_expectands.qmd >}}
+
 ## Empirical Autocorrelation Visualization
 
 If we encounter large empirical integrated autocorrelation times, or small
@@ -584,8 +589,7 @@ That is a lot of diagnostic failures.  To avoid overwhelming ourselves with too
 many detailed diagnostic messages let's focus on the four parameter expectands.
 
 ```{python}
-base_samples = { k: samples[k] for k in 
-                 ['alpha', 'beta[1]', 'beta[2]', 'beta[3]']}
+base_samples = util.filter_expectands(samples, ['alpha', 'beta'], True)
 util.check_all_expectand_diagnostics(base_samples)
 ```
 

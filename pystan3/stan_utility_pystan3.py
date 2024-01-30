@@ -1529,12 +1529,12 @@ def summarize_expectand_diagnostics(expectand_samples,
 #                     checks.
 # @return warning_code An eight bit binary summary of the diagnostic 
 #                      output.
-def summarize_all_diagnostics(expectand_diagnostics,
-                              diagnostics,
-                              adapt_target=0.801,
-                              max_treedepth=10,
-                              min_eess_per_chain=100,
-                              exclude_zvar=False):
+def encode_all_diagnostics(expectand_diagnostics,
+                           diagnostics,
+                           adapt_target=0.801,
+                           max_treedepth=10,
+                           min_eess_per_chain=100,
+                           exclude_zvar=False):
   """Summarize Hamiltonian Monte Carlo and expectand diagnostics
      into a binary encoding"""
   
@@ -1640,7 +1640,7 @@ def summarize_all_diagnostics(expectand_diagnostics,
 # Translate binary diagnostic codes to human readable output.
 # @params warning_code An eight bit binary summary of the diagnostic 
 #                      output.
-def parse_warning_code(warning_code):
+def decode_warning_code(warning_code):
     """Parses warning code into individual failures"""
     if warning_code & (1 << 0):
         print("  divergence warning")
@@ -1658,6 +1658,64 @@ def parse_warning_code(warning_code):
         print("  Rhat warning")
     if warning_code & (1 << 7):
         print("  min empirical effective sample size warning")
+
+# Filter `expectand_samples` by name.
+# @param expectand_samples A dictionary of two-dimensional arrays for
+#                          each expectand to be plotted on the y axis.
+#                          The first dimension of each element indexes 
+#                          the Markov chains and the second dimension 
+#                          indexes the sequential states within each 
+#                          Markov chain.
+# @param requested_names List of expectand names to keep.
+# @param check_arrays Binary variable indicating whether or not 
+#                     requested names should be expanded to array
+#                     components.
+# @param max_width Maximum line width for printing
+# @return A dictionary of two-dimensional arrays for each requested
+#         expectand.
+def filter_expectands(expectand_samples, requested_names,
+                      check_arrays=False, max_width=72):
+  if type(expectand_samples) is not dict:
+    print(('Input variable `expectand_samples` '
+           'is not a standard dictionary!'))
+    return
+  
+  if len(requested_names) == 0:
+    print('Input variable `requested_names` must be non-empty!')
+    return
+  
+  if check_arrays is True:
+    good_names = []
+    bad_names = []
+    for name in requested_names:
+      # Search for array suffix
+      array_names = [ key for key in expectand_samples.keys()
+                      if name + '[' in key ]
+      # Append array names, if found
+      if len(array_names) > 0:
+        good_names += array_names
+      else:
+        if name in expectand_samples.keys():
+          # Append bare name, if found
+          good_names.append(name)
+        else:
+          # Add to list of bad names
+          bad_names.append(name)
+  else:
+    bad_names = \
+      set(requested_names).difference(expectand_samples.keys())
+    good_names = \
+      set(requested_names).intersection(expectand_samples.keys())
+    
+  if len(bad_names) > 0:
+    message = (f'The expectands {", ".join(bad_names)} '
+               'were not found in the `expectand_samples` '
+               'object and will be ignored.\n\n')
+    message = textwrap.wrap(message, max_width)
+    message.append(' ')
+    print('\n'.join(message))
+  
+  return { name: expectand_samples[name] for name in good_names }
 
 # Compute empirical autocorrelations for a given Markov chain sequence
 # @parmas fs A one-dimensional array of sequential expectand values.

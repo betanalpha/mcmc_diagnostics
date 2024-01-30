@@ -75,8 +75,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
                                       max_treedepth=10,
                                       max_width=72) {
   if (!is.vector(diagnostics)) {
-    cat('Input variable `diagnostics` is not a named list!')
-    return
+    stop('Input variable `diagnostics` is not a named list!')
   }
   
   no_warning <- TRUE
@@ -257,8 +256,7 @@ plot_inv_metric <- function(stan_fit, B=25) {
 #                    states within each Markov chain.
 display_stepsizes <- function(diagnostics) {
   if (!is.vector(diagnostics)) {
-    cat('Input variable `diagnostics` is not a named list!')
-    return
+    stop('Input variable `diagnostics` is not a named list!')
   }
   
   stepsizes <- diagnostics[['stepsize__']]
@@ -279,8 +277,7 @@ display_stepsizes <- function(diagnostics) {
 #                    states within each Markov chain.
 plot_num_leapfrogs <- function(diagnostics) {
   if (!is.vector(diagnostics)) {
-    cat('Input variable `diagnostics` is not a named list!')
-    return
+    stop('Input variable `diagnostics` is not a named list!')
   }
   
   lengths <- diagnostics[['n_leapfrog__']]
@@ -317,8 +314,7 @@ plot_num_leapfrogs <- function(diagnostics) {
 #                    states within each Markov chain.
 plot_num_leapfrogs_by_chain <- function(diagnostics) {
   if (!is.vector(diagnostics)) {
-    cat('Input variable `diagnostics` is not a named list!')
-    return
+    stop('Input variable `diagnostics` is not a named list!')
   }
   
   lengths <- diagnostics[['n_leapfrog__']]
@@ -359,8 +355,7 @@ plot_num_leapfrogs_by_chain <- function(diagnostics) {
 #                    states within each Markov chain.
 display_ave_accept_proxy <- function(diagnostics) {
   if (!is.vector(diagnostics)) {
-    cat('Input variable `diagnostics` is not a named list!')
-    return
+    stop('Input variable `diagnostics` is not a named list!')
   }
   
   proxy_stats <- diagnostics[['accept_stat__']]
@@ -398,20 +393,18 @@ apply_transform <- function(name, samples, transforms) {
     transformed_samples <- c(t(samples[[name]]), recursive=TRUE)
   } else if (t == 1) {
     if (min(samples[[name]]) <= 0) {
-      cat(paste0('Log transform requested for expectand ',
-                 sprintf('%s ', name),
-                 'but expectand values are not strictly positive.'))
-      return (NULL)
+      stop(paste0('Log transform requested for expectand ',
+                  sprintf('%s ', name),
+                  'but expectand values are not strictly positive.'))
     }
     transformed_name <- paste0('log(', name, ')')
     transformed_samples <- log(c(t(samples[[name]]), recursive=TRUE))
   } else if (t == 2) {
     if (min(samples[[name]]) <= 0 | max(samples[[name]] >= 1)) {
-      cat(paste0('Logit transform requested for expectand ',
-                 sprintf('%s ' , name),
-                 'but expectand values are not strictly confined ',
-                 'to the unit interval.'))
-      return (NULL)
+      stop(paste0('Logit transform requested for expectand ',
+                  sprintf('%s ' , name),
+                  'but expectand values are not strictly confined ',
+                  'to the unit interval.'))
     }
     transformed_name <- paste0('logit(', name, ')')
     transformed_samples <- sapply(c(t(samples[[name]]), recursive=TRUE), 
@@ -460,28 +453,23 @@ plot_div_pairs <- function(x_names, y_names,
                            transforms=list(), xlim=NULL, ylim=NULL,
                            plot_mode=0, max_width=72) {
   if (!is.vector(x_names)) {
-    cat('Input variable `x_names` is not a list!')
-    return
+    stop('Input variable `x_names` is not a list!')
   }
   
   if (!is.vector(y_names)) {
-    cat('Input variable `y_names` is not a list!')
-    return
+    stop('Input variable `y_names` is not a list!')
   }
   
   if (!is.vector(expectand_samples)) {
-    cat('Input variable `expectand_samples` is not a named list!')
-    return
+    stop('Input variable `expectand_samples` is not a named list!')
   }
   
   if (!is.vector(diagnostics)) {
-    cat('Input variable `diagnostics` is not a named list!')
-    return
+    stop('Input variable `diagnostics` is not a named list!')
   }
   
   if (!is.vector(transforms)) {
-    cat('Input variable `transforms` is not a named list!')
-    return
+    stop('Input variable `transforms` is not a named list!')
   }
   
   # Check transform flags
@@ -498,8 +486,7 @@ plot_div_pairs <- function(x_names, y_names,
   
   # Check plot mode
   if (plot_mode < 0 | plot_mode > 1) {
-    cat(sprintf('Invalid `plot_mode` value %s.', plot_mode))
-    return
+    stop(sprintf('Invalid `plot_mode` value %s.', plot_mode))
   }
   
   # Transform expectand samples
@@ -509,7 +496,7 @@ plot_div_pairs <- function(x_names, y_names,
   for (name in x_names) {
     r <- apply_transform(name, expectand_samples, transforms)
     if (is.null(r))
-      return (NULL)
+      stop()
     transformed_x_names <- c(transformed_x_names, r$t_name)
     if (! r$t_name %in% transformed_samples) {
       transformed_samples[[r$t_name]] <- r$t_samples
@@ -520,7 +507,7 @@ plot_div_pairs <- function(x_names, y_names,
   for (name in y_names) {
     r <- apply_transform(name, expectand_samples, transforms)
     if (is.null(r))
-      return (NULL)
+      stop()
     transformed_y_names <- c(transformed_y_names, r$t_name)
     if (! r$t_name %in% transformed_samples) {
       transformed_samples[[r$t_name]] <- r$t_samples
@@ -717,8 +704,7 @@ compute_tail_xi_hats <- function(fs) {
 # @param max_width Maximum line width for printing
 check_tail_xi_hats <- function(samples, max_width=72) {
   if (length(dim(samples)) != 2) {
-    cat('Input variable `samples` has the wrong dimension')
-    return
+    stop('Input variable `samples` has the wrong dimension')
   }
   C <- dim(samples)[1]
   
@@ -813,8 +799,7 @@ welford_summary <- function(fs) {
 # @param max_width Maximum line width for printing
 check_variances <- function(samples, max_width=72) {
   if (length(dim(samples)) != 2) {
-    cat('Input variable `samples` has the wrong dimension')
-    return
+    stop('Input variable `samples` has the wrong dimension')
   }
   C <- dim(samples)[1]
   
@@ -864,8 +849,7 @@ split_chain <- function(chain) {
 # @return Split Rhat estimate.
 compute_split_rhat <- function(samples) {
   if (length(dim(samples)) != 2) {
-    cat('Input variable `samples` has the wrong dimension')
-    return
+    stop('Input variable `samples` has the wrong dimension')
   }
   C <- dim(samples)[1]
   
@@ -905,8 +889,7 @@ compute_split_rhat <- function(samples) {
 #                          states within each Markov chain.
 compute_split_rhats <- function(expectand_samples) {
   if (!is.vector(expectand_samples)) {
-    cat('Input variable `expectand_samples` is not a named list!')
-    return
+    stop('Input variable `expectand_samples` is not a named list!')
   }
 
   rhats <- c()
@@ -925,8 +908,7 @@ compute_split_rhats <- function(expectand_samples) {
 # @param max_width Maximum line width for printing
 check_rhat <- function(samples, max_width=72) {
   if (length(dim(samples)) != 2) {
-    cat('Input variable `samples` has the wrong dimension')
-    return
+    stop('Input variable `samples` has the wrong dimension')
   }
 
   rhat <- compute_split_rhat(samples)
@@ -1024,8 +1006,7 @@ compute_tau_hat <- function(fs) {
 #                          states within each Markov chain.
 compute_min_eesss <- function(expectand_samples) {
   if (!is.vector(expectand_samples)) {
-    cat('Input variable `expectand_samples` is not a named list!')
-    return
+    stop('Input variable `expectand_samples` is not a named list!')
   }
 
   min_eesss <- c()
@@ -1057,8 +1038,7 @@ check_eess <- function(samples,
                        min_eess_per_chain=100,
                        max_width=72) {
   if (length(dim(samples)) != 2) {
-    cat('Input variable `samples` has the wrong dimension')
-    return
+    stop('Input variable `samples` has the wrong dimension')
   }
   
   C <- dim(samples)[1]
@@ -1115,8 +1095,7 @@ check_all_expectand_diagnostics <- function(expectand_samples,
                                             exclude_zvar=FALSE,
                                             max_width=72) {
   if (!is.vector(expectand_samples)) {
-    cat('Input variable `expectand_samples` is not a named list!')
-    return
+    stop('Input variable `expectand_samples` is not a named list!')
   }
   
   no_xi_hat_warning <- TRUE
@@ -1127,6 +1106,11 @@ check_all_expectand_diagnostics <- function(expectand_samples,
   message <- ""
 
   for (name in names(expectand_samples)) {
+    if (is.null(expectand_samples[[name]])) {
+      cat(sprintf('The samples for expectand `%s` are ill-formed.', name))
+      continue
+    }
+    
     samples <- expectand_samples[[name]]
     C <- dim(samples)[1]
     S <- dim(samples)[2]
@@ -1159,8 +1143,8 @@ check_all_expectand_diagnostics <- function(expectand_samples,
         local_message <-
           paste0(local_message,
                  sprintf('  Chain %s: Both left and right ', c),
-                 'hat{xi}s are NaN!\n')
-      } 
+                         'hat{xi}s are NaN!\n')
+      }
       else if ( is.nan(xi_hats[1]) ) {
         no_xi_hat_warning <- FALSE
         local_warning <- TRUE
@@ -1294,8 +1278,8 @@ check_all_expectand_diagnostics <- function(expectand_samples,
   cat(message)
 }
 
-# Summary all expectand-specific diagnostics.
-# @param expectand_samples A named list of two-dimensional arrays for 
+# Summarize all expectand-specific diagnostics.
+# @param expectand_samples A named list of two-dimensional arrays for
 #                          each expectand.  The first dimension of each
 #                          element indexes the Markov chains and the 
 #                          second dimension indexes the sequential 
@@ -1311,8 +1295,7 @@ summarize_expectand_diagnostics <- function(expectand_samples,
                                             exclude_zvar=FALSE,
                                             max_width=72) {
   if (!is.vector(expectand_samples)) {
-    cat('Input variable `expectand_samples` is not a named list!')
-    return
+    stop('Input variable `expectand_samples` is not a named list!')
   }
 
   failed_names <- c()
@@ -1322,6 +1305,11 @@ summarize_expectand_diagnostics <- function(expectand_samples,
   failed_eess_names <- c()
 
   for (name in names(expectand_samples)) {
+    if (is.null(expectand_samples[[name]])) {
+      cat(sprintf('The samples for expectand `%s` are ill-formed.', name))
+      continue
+    }
+    
     samples <- expectand_samples[[name]]
     C <- dim(samples)[1]
     S <- dim(samples)[2]
@@ -1537,6 +1525,11 @@ encode_all_diagnostics <- function(expectand_samples,
   eess_warning <- FALSE
   
   for (name in names(expectand_samples)) {
+    if (is.null(expectand_samples[[name]])) {
+      cat(sprintf('The samples for expectand `%s` are ill-formed.', name))
+      continue
+    }
+    
     samples <- expectand_samples[[name]]
     C <- dim(samples)[1]
     S <- dim(samples)[2]
@@ -1635,6 +1628,67 @@ decode_warning_code <- function(warning_code) {
     print("  Rhat warning")
   if (bitwAnd(warning_code, bitwShiftL(1, 7)))
     print("  min empirical effective sample size warning")
+}
+
+# Filter `expectand_samples` by name.
+# @param expectand_samples A named list of two-dimensional arrays for
+#                          each expectand.  The first dimension of each
+#                          element indexes the Markov chains and the
+#                          second dimension indexes the sequential
+#                          states within each Markov chain.
+# @param requested_names Expectand names to keep.
+# @param check_arrays Binary variable indicating whether or not requested
+#                     names should be expanded to array components.
+# @param max_width Maximum line width for printing
+# @return A named list of two-dimensional arrays for each requested
+#         expectand.
+filter_expectands <- function(expectand_samples, requested_names,
+                              check_arrays=FALSE, max_width=72) {
+  if (!is.vector(expectand_samples)) {
+    stop('Input variable `expectand_samples` is not a named list!')
+  }
+  
+  if (!is.vector(requested_names)) {
+    stop('Input variable `requested_names` is empty!')
+  }
+  
+  if (check_arrays == TRUE) {
+    good_names <- c()
+    bad_names <- c()
+    for (name in requested_names) {
+      # Search for array suffix
+      array_names <- grep(paste0(name, '\\['), 
+                          names(expectand_samples), 
+                          value=TRUE)
+      
+      # Append array names, if found
+      if (length(array_names) > 0) {
+        good_names <- c(good_names, array_names)
+      } else {
+        if (name %in% names(expectand_samples)) {
+          # Append bare name, if found
+          good_names <- c(good_names, name)
+        }  else {
+          # Add to list of bad names
+          bad_names <- c(bad_names, name)
+        }
+      }
+    }
+  } else {
+    bad_names <- setdiff(requested_names, names(expectand_samples))
+    good_names <- intersect(requested_names, names(expectand_samples))
+  }
+    
+  if (length(bad_names) > 0) {
+    message <- paste0(sprintf('The expectands %s ', 
+                              paste(bad_names, collapse=", ")),
+                      'were not found in the `expectand_samples` ',
+                      'object and will be ignored.\n\n')
+    message <- paste0(strwrap(message, max_width, 0), collapse='\n')
+    cat(message)
+  }
+  
+  expectand_samples[good_names]
 }
 
 # Compute empirical autocorrelations for a given Markov chain sequence
@@ -1743,15 +1797,13 @@ plot_empirical_correlogram <- function(fs,
 plot_pairs_by_chain <- function(f1s, display_name1,
                                 f2s, display_name2) {
   if (length(dim(f1s)) != 2) {
-    cat('Input variable `f1s` has the wrong dimensions!')
-    return
+    stop('Input variable `f1s` has the wrong dimensions!')
   }
   C1 <- dim(f1s)[1]
   S1 <- dim(f1s)[2]
 
   if (length(dim(f2s)) != 2) {
-    cat('Input variable `f1s` has the wrong dimensions!')
-    return
+    stop('Input variable `f1s` has the wrong dimensions!')
   }
   C2 <- dim(f2s)[1]
   S2 <- dim(f2s)[2]
@@ -1884,8 +1936,7 @@ ensemble_mcmc_est <- function(samples) {
 plot_expectand_pushforward <- function(samples, B, display_name="f", 
                                        flim=NULL, baseline=NULL) {
   if (length(dim(samples)) != 2) {
-    cat('Input variable `samples` has the wrong dimension')
-    return
+    stop('Input variable `samples` has the wrong dimension')
   }
   
   # Automatically adjust histogram range to range of expectand values

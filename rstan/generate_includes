@@ -14,7 +14,7 @@ function_names=('extract_expectands' 'extract_hmc_diagnostics'
                 'split_chain' 'compute_split_rhat' 'compute_split_rhats' 'check_rhat'
                 'compute_tau_hat' 'compute_min_eesss' 'check_eess'
                 'check_all_expectand_diagnostics' 'summarize_expectand_diagnostics'
-                'compute_rhos' 'plot_empirical_correlogram'
+                'filter_expectands' 'compute_rhos' 'plot_empirical_correlogram'
                 'plot_pairs_by_chain' 'pushforward_chains'
                 'mcmc_est' 'ensemble_mcmc_est' 'plot_expectand_pushforward')
  
@@ -25,17 +25,17 @@ for name in ${function_names[@]}; do
   function_start=$(grep -nh -m1 "$name <- function(" $utility_file | sed 's,\(^[0-9]*\):.*,\1,')
   
   # Find beginning of comments
-  comment_start=$(head -$function_start $utility_file | grep -n ^$ | tail -1 | sed 's,\(^[0-9]*\):.*,\1,')
+  comment_start=$(head -$function_start $utility_file | grep -nh ^$ | tail -1 | sed 's,\(^[0-9]*\):.*,\1,')
   let comment_start++
 
   # Find end of function
   let M=$N-$function_start
   let M++
   
-  delta=$(tail -$M $utility_file | grep -nh '}' | sed 's,\(^[0-9]*\):.*,\1,')
+  delta=$(tail -$M $utility_file | grep -nh '^}$' | sed 's,\(^[0-9]*\):.*,\1,')
   
   let function_end=$function_start+$delta
-  let function_end=$function_end-2
+  let function_end=$function_end-1
   
   touch _includes/${name}.qmd
   

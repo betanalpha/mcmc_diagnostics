@@ -5,7 +5,7 @@ data {
   vector[M] x0;   // Covariate baselines
   matrix[N, M] X; // Covariate design matrix
   
-  int<lower=0, upper=1> y[N]; // Variates
+  array[N] int<lower=0, upper=1> y; // Variates
 }
 
 transformed data {
@@ -32,5 +32,5 @@ model {
 // Simulate a full observation from the current value of the parameters
 generated quantities {
   vector[N] p = alpha + deltaX * beta;
-  int y_pred[N] = bernoulli_rng(p);
+  array[N] int y_pred = bernoulli_rng(p);
 }

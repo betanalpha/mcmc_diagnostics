@@ -13,6 +13,14 @@ import matplotlib
 import matplotlib.pyplot as plot
 from matplotlib.colors import LinearSegmentedColormap
 
+import numpy
+import math
+import textwrap
+
+import pystan
+import pickle
+import re
+
 light = "#DCBCBC"
 light_highlight = "#C79999"
 mid = "#B97C7C"
@@ -24,13 +32,6 @@ light_teal = "#6B8E8E"
 mid_teal = "#487575"
 dark_teal = "#1D4F4F"
 
-import numpy
-import math
-import textwrap
-
-import pystan
-import pickle
-import re
 
 def compile_model(filename, model_name=None, **kwargs):
   """This will automatically cache models.
@@ -104,9 +105,8 @@ def check_all_hmc_diagnostics(diagnostics,
   """Check all Hamiltonian Monte Carlo Diagnostics for an 
      ensemble of Markov chains"""
      
-  if type(diagnostics) is not dict:
-    print('Input variable `diagnostics` is not a standard dictionary!')
-    return
+  if not isinstance(diagnostics, dict):
+    raise TypeError('Input variable `diagnostics` is not a standard dictionary!')
   
   no_warning = True
   no_divergence_warning = True
@@ -283,16 +283,15 @@ def plot_inv_metric(stan_fit, B=25):
   plot.show()
 
 # Display adapted symplectic integrator step sizes
-# @param diagnostics A dictionary of two-dimensional arrays for 
+# @param diagnostics A dictionary of two-dimensional arrays for
 #                    each expectand.  The first dimension of each
-#                    element indexes the Markov chains and the 
-#                    second dimension indexes the sequential 
+#                    element indexes the Markov chains and the
+#                    second dimension indexes the sequential
 #                    states within each Markov chain.
 def display_stepsizes(diagnostics):
   """Display adapted symplectic integrator step sizes"""
-  if type(diagnostics) is not dict:
-    print('Input variable `diagnostics` is not a standard dictionary!')
-    return
+  if not isinstance(diagnostics, dict):
+    raise TypeError('Input variable `diagnostics` is not a standard dictionary!')
   
   stepsizes = diagnostics['stepsize__']
   C = stepsizes.shape[0]
@@ -303,23 +302,21 @@ def display_stepsizes(diagnostics):
 
 # Display symplectic integrator trajectory lengths
 # @ax Matplotlib axis object
-# @param diagnostics A dictionary of two-dimensional arrays for 
+# @param diagnostics A dictionary of two-dimensional arrays for
 #                    each expectand.  The first dimension of each
-#                    element indexes the Markov chains and the 
-#                    second dimension indexes the sequential 
+#                    element indexes the Markov chains and the
+#                    second dimension indexes the sequential
 #                    states within each Markov chain.
 # @param nlim Optional histogram range
 def plot_num_leapfrogs(ax, diagnostics, nlim=None):
   """Display symplectic integrator trajectory lenghts"""
-  if type(diagnostics) is not dict:
-    print('Input variable `diagnostics` is not a standard dictionary!')
-    return
+  if not isinstance(diagnostics, dict):
+    raise TypeError('Input variable `diagnostics` is not a standard dictionary!')
   
   lengths = diagnostics['n_leapfrog__']
   
   C = lengths.shape[0]
   colors = [dark_highlight, dark, mid_highlight, mid, light_highlight]
-  cmap = LinearSegmentedColormap.from_list("reds", colors, N=C)
   
   vals_counts = [ numpy.unique(lengths[c], return_counts=True) 
                   for c in range(C) ] 
@@ -348,16 +345,15 @@ def plot_num_leapfrogs(ax, diagnostics, nlim=None):
   ax.spines["right"].set_visible(False)
 
 # Display symplectic integrator trajectory lengths by Markov chain
-# @param diagnostics A dictionary of two-dimensional arrays for 
+# @param diagnostics A dictionary of two-dimensional arrays for
 #                    each expectand.  The first dimension of each
-#                    element indexes the Markov chains and the 
-#                    second dimension indexes the sequential 
+#                    element indexes the Markov chains and the
+#                    second dimension indexes the sequential
 #                    states within each Markov chain.
 def plot_num_leapfrogs_by_chain(diagnostics):
   """Display symplectic integrator trajectory lengths"""
-  if type(diagnostics) is not dict:
-    print('Input variable `diagnostics` is not a standard dictionary!')
-    return
+  if not isinstance(diagnostics, dict):
+    raise TypeError('Input variable `diagnostics` is not a standard dictionary!')
   
   lengths = diagnostics['n_leapfrog__']
   C = lengths.shape[0]
@@ -401,18 +397,17 @@ def plot_num_leapfrogs_by_chain(diagnostics):
 
 # Display symplectic integrator trajectory times
 # @ax Matplotlib axis object
-# @param diagnostics A dictionary of two-dimensional arrays for 
+# @param diagnostics A dictionary of two-dimensional arrays for
 #                    each expectand.  The first dimension of each
-#                    element indexes the Markov chains and the 
-#                    second dimension indexes the sequential 
+#                    element indexes the Markov chains and the
+#                    second dimension indexes the sequential
 #                    states within each Markov chain.
 # @param B The number of histogram bins
 # @param nlim Optional histogram range
 def plot_int_times(ax, diagnostics, B, tlim=None):
   """Display symplectic integrator trajectory times"""
-  if type(diagnostics) is not dict:
-    print('Input variable `diagnostics` is not a standard dictionary!')
-    return
+  if not isinstance(diagnostics, dict):
+    raise TypeError('Input variable `diagnostics` is not a standard dictionary!')
   
   lengths = diagnostics['n_leapfrog__']
   C = lengths.shape[0]
@@ -437,7 +432,6 @@ def plot_int_times(ax, diagnostics, B, tlim=None):
     bins = numpy.arange(tlim[0], tlim[1] + delta, delta)
   
   colors = [dark_highlight, dark, mid_highlight, mid, light_highlight]
-  cmap = LinearSegmentedColormap.from_list("reds", colors, N=C)
   
   idxs = [ idx for idx in range(B) for r in range(2) ]
   xs = [ bins[b + o] for b in range(B) for o in range(2) ]
@@ -459,20 +453,19 @@ def plot_int_times(ax, diagnostics, B, tlim=None):
   ax.spines["top"].set_visible(False)
   ax.spines["right"].set_visible(False)
 
-# Display empirical average of the proxy acceptance statistic across 
+# Display empirical average of the proxy acceptance statistic across
 # each Markov chain
-# @param diagnostics A dictionary of two-dimensional arrays for 
+# @param diagnostics A dictionary of two-dimensional arrays for
 #                    each expectand.  The first dimension of each
-#                    element indexes the Markov chains and the 
-#                    second dimension indexes the sequential 
+#                    element indexes the Markov chains and the
+#                    second dimension indexes the sequential
 #                    states within each Markov chain.
 def display_ave_accept_proxy(diagnostics):
   """Display empirical average of the proxy acceptance statistic
      across each Markov chain"""
      
-  if type(diagnostics) is not dict:
-    print('Input variable `diagnostics` is not a standard dictionary!')
-    return
+  if not isinstance(diagnostics, dict):
+    raise TypeError('Input variable `diagnostics` is not a standard dictionary!')
   
   proxy_stats = diagnostics['accept_stat__']
   C = proxy_stats.shape[0]
@@ -483,13 +476,13 @@ def display_ave_accept_proxy(diagnostics):
           + f'statistic = {proxy_stat:.3f}')
 
 # Apply transformation identity, log, or logit transformation to
-# named samples and flatten the output.  Transformation defaults to 
-# identity if name is not included in `transforms` dictionary.  A 
+# named samples and flatten the output.  Transformation defaults to
+# identity if name is not included in `transforms` dictionary.  A
 # ValueError is thrown if samples are not properly constrained.
 # @param name Expectand name.
 # @param samples A dictionary of two-dimensional arrays for
-#                each expectand.  The first dimension of each element 
-#                indexes the Markov chains and the second dimension 
+#                each expectand.  The first dimension of each element
+#                indexes the Markov chains and the second dimension
 #                indexes the sequential states within each Markov chain.
 # @param transforms A dictionary with expectand names for keys and
 #                   transformation flags for values.
@@ -521,41 +514,41 @@ def apply_transform(name, samples, transforms):
                             samples[name].flatten() ]
   return transformed_name, transformed_samples
 
-# Plot pairwise scatter plots with non-divergent and divergent 
+# Plot pairwise scatter plots with non-divergent and divergent
 # transitions separated by color
 # @param x_names A list of expectand names to be plotted on the x axis.
 # @param y_names A list of expectand names to be plotted on the y axis.
 # @param expectand_samples A dictionary of two-dimensional arrays for
 #                          each expectand to be plotted on the y axis.
-#                          The first dimension of each element indexes 
-#                          the Markov chains and the second dimension 
-#                          indexes the sequential states within each 
+#                          The first dimension of each element indexes
+#                          the Markov chains and the second dimension
+#                          indexes the sequential states within each
 #                          Markov chain.
 # @param diagnostics A dictionary of two-dimensional arrays for
 #                    each expectand.  The first dimension of each
-#                    element indexes the Markov chains and the 
-#                    second dimension indexes the sequential 
+#                    element indexes the Markov chains and the
+#                    second dimension indexes the sequential
 #                    states within each Markov chain.
 # @param xlim       Optional global x-axis bounds for all pair plots.
 #                   Defaults to dynamic bounds for each pair plot.
 # @param ylim       Optional global y-axis bounds for all pair plots.
 #                   Defaults to dynamic bounds for each pair plot.
-# @param transforms An optional dictionary with expectand names for keys 
-#                   and transformation flags for values.  Valid flags 
+# @param transforms An optional dictionary with expectand names for keys
+#                   and transformation flags for values.  Valid flags
 #                   are
 #                     0: identity
 #                     1: log
 #                     2: logit
 #                   Defaults to empty dictionary.
-# @params plot_mode Optional plotting style configuration: 
-#                     0: Non-divergent transitions are plotted in 
+# @params plot_mode Optional plotting style configuration:
+#                     0: Non-divergent transitions are plotted in
 #                        transparent red while divergent transitions are
 #                        plotted in transparent green.
-#                     1: Non-divergent transitions are plotted in gray 
-#                        while divergent transitions are plotted in 
-#                        different shades of teal depending on the 
+#                     1: Non-divergent transitions are plotted in gray
+#                        while divergent transitions are plotted in
+#                        different shades of teal depending on the
 #                        trajectory length.  Transitions from shorter
-#                        trajectories should cluster somewhat closer to 
+#                        trajectories should cluster somewhat closer to
 #                        the neighborhoods with problematic geometries.
 #                   Defaults to 0.
 # @param max_width Maximum line width for printing
@@ -565,26 +558,21 @@ def plot_div_pairs(x_names, y_names, expectand_samples,
                    plot_mode=0, max_width=72):
   """Plot pairwise scatter plots with non-divergent and divergent 
      transitions separated by color"""
-  if type(x_names) is not list:
-    print(('Input variable `x_names` is not a list!'))
-    return
-  
-  if type(y_names) is not list:
-    print(('Input variable `y_names` is not a list!'))
-    return
+  if not isinstance(x_names, list):
+    raise TypeError(('Input variable `x_names` is not a list!'))
+
+  if not isinstance(y_names, list):
+    raise TypeError(('Input variable `y_names` is not a list!'))
     
-  if type(expectand_samples) is not dict:
-    print(('Input variable `expectand_samples` '
+  if not isinstance(expectand_samples, dict):
+    raise TypeError(('Input variable `expectand_samples` '
            'is not a standard dictionary!'))
-    return
   
-  if type(diagnostics) is not dict:
-    print('Input variable `diagnostics` is not a standard dictionary!')
-    return
+  if not isinstance(diagnostics, dict):
+    raise TypeError('Input variable `diagnostics` is not a standard dictionary!')
   
-  if type(transforms) is not dict:
-    print('Input variable `transforms` is not a standard dictionary!')
-    return
+  if not isinstance(transforms, dict):
+    raise TypeError('Input variable `transforms` is not a standard dictionary!')
   
   # Check transform flags
   for t_name, t_value in transforms.items():
@@ -594,7 +582,7 @@ def plot_div_pairs(x_names, y_names, expectand_samples,
               'Plot will default to no tranformation.')
       desc = textwrap.wrap(desc, max_width)
       print('\n'.join(desc))
-  
+
   # Check plot mode
   if plot_mode < 0 or plot_mode > 1:
     print(f'Invalid `plot mode` value {plot_mode}.')
@@ -615,7 +603,7 @@ def plot_div_pairs(x_names, y_names, expectand_samples,
       return
     
     transformed_x_names.append(t_name)
-    if not t_name in transformed_samples:
+    if t_name not in transformed_samples:
       transformed_samples[t_name] = t_samples
       
   transformed_y_names = []
@@ -629,7 +617,7 @@ def plot_div_pairs(x_names, y_names, expectand_samples,
       print('\n'.join(desc))
     
     transformed_y_names.append(t_name)
-    if not t_name in transformed_samples:
+    if t_name not in transformed_samples:
       transformed_samples[t_name] = t_samples
       
   # Create pairs of transformed expectands, dropping duplicates
@@ -663,15 +651,11 @@ def plot_div_pairs(x_names, y_names, expectand_samples,
   if N_pairs == 1:
     N_cols = 1
     N_rows = 1
-    N_plots = 1
   else:
     N_cols = 3
     N_rows = math.ceil(N_pairs / N_cols)
     
-  if N_rows <= 3:
-    N_plots = 1
-  else:
-    N_plots = math.ceil(N_rows / 3)
+  if N_rows > 3:
     N_rows = 3
     
   # Plot!
@@ -748,14 +732,14 @@ def plot_div_pairs(x_names, y_names, expectand_samples,
       axarr[idx1, idx2].axis('off')
     plot.show()
 
-# Compute hat{xi}, an estimate for the shape of a generalized Pareto 
-# distribution from a sample of positive values using the method 
-# introduced in "A New and Efficient Estimation Method for the 
-# Generalized Pareto Distribution" by Zhang and Stephens 
+# Compute hat{xi}, an estimate for the shape of a generalized Pareto
+# distribution from a sample of positive values using the method
+# introduced in "A New and Efficient Estimation Method for the
+# Generalized Pareto Distribution" by Zhang and Stephens
 # https://doi.org/10.1198/tech.2009.08017.
-# 
-# Within the generalized Pareto distribution family all moments up to 
-# the mth order are finite if and only if 
+#
+# Within the generalized Pareto distribution family all moments up to
+# the mth order are finite if and only if
 #  xi < 1 / m.
 #
 # @params fs A one-dimensional array of positive values.
@@ -770,7 +754,7 @@ def compute_xi_hat(fs):
   
   if (sorted_fs[0] < 0):
     print("Sequence values must be positive!")
-    return NaN
+    return math.nan
   
   # Estimate 25% quantile
   q = sorted_fs[math.floor(0.25 * N + 0.5)]
@@ -793,21 +777,21 @@ def compute_xi_hat(fs):
                            - xi_hat - 1)
     else:
       log_w_vec[m] = 0
-  
+
   # Remove terms that don't contribute to improve numerical stability 
   # of average
   log_w_vec = [ lw for lw in log_w_vec if lw != 0 ]
   b_hat_vec = [ b for b in b_hat_vec if b != 0 ]
-  
+
   max_log_w = max(log_w_vec)
   b_hat = sum( [ b * math.exp(lw - max_log_w) 
                for b, lw in zip(b_hat_vec, log_w_vec) ] ) /\
           sum( [ math.exp(lw - max_log_w) for lw in log_w_vec ] )
-  
+
   return numpy.mean( [ math.log(1 - b_hat * f) for f in sorted_fs ] )
 
 # Compute empirical generalized Pareto shape for upper and lower tails
-# for an arbitrary sample of expectand values, ignoring any 
+# for an arbitrary sample of expectand values, ignoring any
 # autocorrelation between the values.
 # @param fs A one-dimensional array of expectand values.
 # @return Left and right shape estimators.
@@ -839,11 +823,11 @@ def compute_tail_xi_hats(fs):
     
   return [xi_hat_left, xi_hat_right]
 
-# Check upper and lower tail behavior of a given expectand output 
+# Check upper and lower tail behavior of a given expectand output
 # ensemble.
-# @param samples A two-dimensional array of scalar Markov chain states 
-#                with the first dimension indexing the Markov chains and 
-#                the second dimension indexing the sequential states 
+# @param samples A two-dimensional array of scalar Markov chain states
+#                with the first dimension indexing the Markov chains and
+#                the second dimension indexing the sequential states
 #                within each Markov chain.
 # @param max_width Maximum line width for printing
 def check_tail_xi_hats(samples, max_width=72):
@@ -920,9 +904,9 @@ def welford_summary(fs):
   return [mean, var]
 
 # Check expectand output ensemble for vanishing empirical variance.
-# @param samples A two-dimensional array of scalar Markov chain states 
-#                with the first dimension indexing the Markov chains and 
-#                the second dimension indexing the sequential states 
+# @param samples A two-dimensional array of scalar Markov chain states
+#                with the first dimension indexing the Markov chains and
+#                the second dimension indexing the sequential states
 #                within each Markov chain.
 # @param max_width Maximum line width for printing
 def check_variances(samples, max_width=72):
@@ -939,7 +923,7 @@ def check_variances(samples, max_width=72):
     if var < 1e-10:
       no_warning = True
       print(f'  Chain {c + 1}: Expectand is constant!\n')
-  
+
   if no_warning:
     print('Expectand is varying in all Markov chains.\n')
   else:
@@ -949,9 +933,9 @@ def check_variances(samples, max_width=72):
     desc.append(' ')
     print('\n'.join(desc))
 
-# Split a sequence of expectand values in half to create an initial and 
+# Split a sequence of expectand values in half to create an initial and
 # terminal Markov chains
-# @params chain A sequence of expectand values derived from a single 
+# @params chain A sequence of expectand values derived from a single
 #               Markov chain.
 # @return Two subsequences of expectand values.
 def split_chain(chain):
@@ -960,11 +944,11 @@ def split_chain(chain):
   M = N // 2
   return [ chain[0:M], chain[M:N] ]
 
-# Compute split hat{R} for the expectand values across a Markov chain 
+# Compute split hat{R} for the expectand values across a Markov chain
 # ensemble.
-# @param samples A two-dimensional array of scalar Markov chain states 
-#                with the first dimension indexing the Markov chains and 
-#                the second dimension indexing the sequential states 
+# @param samples A two-dimensional array of scalar Markov chain states
+#                with the first dimension indexing the Markov chains and
+#                the second dimension indexing the sequential states
 #                within each Markov chain.
 # @return Split Rhat estimate.
 def compute_split_rhat(samples):
@@ -998,18 +982,17 @@ def compute_split_rhat(samples):
   return rhat
 
 # Compute split hat{R} for all input expectands
-# @param expectand_samples A dictionary of two-dimensional arrays for 
+# @param expectand_samples A dictionary of two-dimensional arrays for
 #                          each expectand.  The first dimension of each
-#                          element indexes the Markov chains and the 
-#                          second dimension indexes the sequential 
+#                          element indexes the Markov chains and the
+#                          second dimension indexes the sequential
 #                          states within each Markov chain.
 def compute_split_rhats(expectand_samples):
   """Compute split hat{R} for all expectand output ensembles across
      a collection of Markov chains"""
-  if type(expectand_samples) is not dict:
-    print(('Input variable `expectand_samples` '
+  if not isinstance(expectand_samples, dict):
+    raise TypeError(('Input variable `expectand_samples` '
            'is not a standard dictionary!'))
-    return
     
   rhats = []
   for name in expectand_samples:
@@ -1019,9 +1002,9 @@ def compute_split_rhats(expectand_samples):
   return rhats
 
 # Check split hat{R} across a given expectand output ensemble.
-# @param samples A two-dimensional array of scalar Markov chain states 
-#                with the first dimension indexing the Markov chains and 
-#                the second dimension indexing the sequential states 
+# @param samples A two-dimensional array of scalar Markov chain states
+#                with the first dimension indexing the Markov chains and
+#                the second dimension indexing the sequential states
 #                within each Markov chain.
 # @param max_width Maximum line width for printing
 def check_rhat(samples, max_width=72):
@@ -1032,7 +1015,7 @@ def check_rhat(samples, max_width=72):
     return
     
   rhat = compute_split_rhat(samples)
-  
+
   no_warning = True
   
   if math.isnan(rhat):
@@ -1073,7 +1056,7 @@ def compute_tau_hat(fs):
   Fs = numpy.fft.fft(zs_buff)
   Ss = numpy.abs(Fs)**2
   Rs = numpy.fft.ifft(Ss)
-  
+
   acov_buff = numpy.real(Rs)
   rhos = acov_buff[0:N] / acov_buff[0]
   
@@ -1103,28 +1086,27 @@ def compute_tau_hat(fs):
       current_pair_sum = old_pair_sum
       rhos[2 * p]     = 0.5 * old_pair_sum
       rhos[2 * p + 1] = 0.5 * old_pair_sum
-    
+
     # if p == P:
       # throw some kind of error when autocorrelation
       # sequence doesn't get terminated
     
     old_pair_sum = current_pair_sum
 
-# Compute the maximum empirical effective sample size across the 
+# Compute the maximum empirical effective sample size across the
 # Markov chains for the given expectands
 # @param expectand_samples A dictionary of two-dimensional arrays for
 #                          each expectand.  The first dimension of each
-#                          element indexes the Markov chains and the 
-#                          second dimension indexes the sequential 
+#                          element indexes the Markov chains and the
+#                          second dimension indexes the sequential
 #                          states within each Markov chain.
 def compute_min_eesss(expectand_samples):
   """Compute the minimimum empirical integrated autocorrelation time
      across a collection of Markov chains for all expectand output
      ensembles"""
-  if type(expectand_samples) is not dict:
-    print(('Input variable `expectand_samples` '
+  if not isinstance(expectand_samples, dict):
+    raise TypeError(('Input variable `expectand_samples` '
            'is not a standard dictionary!'))
-    return
       
   min_eesss = []
   for name in expectand_samples:
@@ -1141,11 +1123,11 @@ def compute_min_eesss(expectand_samples):
   
   return min_eesss
 
-# Check the empirical effective sample size (EESS) for all a given 
+# Check the empirical effective sample size (EESS) for all a given
 # expectand output ensemble.
-# @param samples A two-dimensional array of scalar Markov chain states 
-#                with the first dimension indexing the Markov chains and 
-#                the second dimension indexing the sequential states 
+# @param samples A two-dimensional array of scalar Markov chain states
+#                with the first dimension indexing the Markov chains and
+#                the second dimension indexing the sequential states
 #                within each Markov chain.
 # @param min_eess_per_chain The minimum empirical effective sample size
 #                           before a warning message is passed.
@@ -1185,10 +1167,10 @@ def check_eess(samples, min_eess_per_chain=100, max_width=72):
     print('\n'.join(desc))
 
 # Check all expectand-specific diagnostics.
-# @param expectand_samples A dictionary of two-dimensional arrays for 
+# @param expectand_samples A dictionary of two-dimensional arrays for
 #                          each expectand.  The first dimension of each
-#                          element indexes the Markov chains and the 
-#                          second dimension indexes the sequential 
+#                          element indexes the Markov chains and the
+#                          second dimension indexes the sequential
 #                          states within each Markov chain.
 # @param min_eess_per_chain The minimum empirical effective sample size
 #                           before a warning message is passed.
@@ -1201,10 +1183,9 @@ def check_all_expectand_diagnostics(expectand_samples,
                                     exclude_zvar=False,
                                     max_width=72):
   """Check all expectand diagnostics"""
-  if type(expectand_samples) is not dict:
-    print(('Input variable `expectand_samples` '
+  if not isinstance(expectand_samples, dict):
+    raise TypeError(('Input variable `expectand_samples` '
            'is not a standard dictionary!'))
-    return
   
   no_xi_hat_warning = True 
   no_zvar_warning = True
@@ -1286,14 +1267,14 @@ def check_all_expectand_diagnostics(expectand_samples,
     
     # Check split Rhat across Markov chains
     rhat = compute_split_rhat(samples)
-    
+
     if math.isnan(rhat):
       local_message += '  Split hat{R} is ill-defined!\n'
     elif rhat > 1.1:
       no_rhat_warning = False
       local_warning = True
       local_message += f'  Split hat{{R}} ({rhat:.3f}) exceeds 1.1!\n'
-    
+
     for c in range(C):
       # Check empirical effective sample size
       fs = samples[c,:]
@@ -1373,17 +1354,16 @@ def summarize_expectand_diagnostics(expectand_samples,
                                     exclude_zvar=False,
                                     max_width=72):
   """Summarize expectand diagnostics"""
-  if type(expectand_samples) is not dict:
-    print(('Input variable `expectand_samples` '
+  if not isinstance(expectand_samples, dict):
+    raise TypeError(('Input variable `expectand_samples` '
            'is not a standard dictionary!'))
-    return
   
   failed_names = []
   failed_xi_hat_names = []
   failed_zvar_names = []
   failed_rhat_names = []
   failed_eess_names = []
-  
+
   for name in expectand_samples:
     samples = expectand_samples[name]
     C = samples.shape[0]
@@ -1531,7 +1511,7 @@ def summarize_expectand_diagnostics(expectand_samples,
 #                     checks.
 # @return warning_code An eight bit binary summary of the diagnostic 
 #                      output.
-def encode_all_diagnostics(expectand_diagnostics,
+def encode_all_diagnostics(expectand_samples,
                            diagnostics,
                            adapt_target=0.801,
                            max_treedepth=10,
@@ -1544,7 +1524,6 @@ def encode_all_diagnostics(expectand_diagnostics,
   
   # Check divergences
   if sum(diagnostics['divergent__'].flatten()) > 0: 
-    no_warning = False
     warning_code = warning_code | (1 << 0)
   
   # Check transitions that ended prematurely due to maximum tree depth limit
@@ -1569,7 +1548,7 @@ def encode_all_diagnostics(expectand_diagnostics,
     ave_accept_proxy = numpy.mean(diagnostics['accept_stat__'][c,:])
     if ave_accept_proxy < 0.9 * adapt_target:
       no_accept_warning = False
-  
+
   if not no_efmi_warning:
     warning_code = warning_code | (1 << 2)
   
@@ -1625,7 +1604,7 @@ def encode_all_diagnostics(expectand_diagnostics,
        # Check empirical effective sample size
       tau_hat = compute_tau_hat(samples[c,:])
       eess = S / tau_hat
-      if neff < min_eess_per_chain:
+      if eess < min_eess_per_chain:
         eess_warning = True
   
   if xi_hat_warning:
@@ -1639,8 +1618,9 @@ def encode_all_diagnostics(expectand_diagnostics,
   
   return warning_code
 
+
 # Translate binary diagnostic codes to human readable output.
-# @params warning_code An eight bit binary summary of the diagnostic 
+# @params warning_code An eight bit binary summary of the diagnostic
 #                      output.
 def decode_warning_code(warning_code):
     """Parses warning code into individual failures"""
@@ -1664,12 +1644,12 @@ def decode_warning_code(warning_code):
 # Filter `expectand_samples` by name.
 # @param expectand_samples A dictionary of two-dimensional arrays for
 #                          each expectand to be plotted on the y axis.
-#                          The first dimension of each element indexes 
-#                          the Markov chains and the second dimension 
-#                          indexes the sequential states within each 
+#                          The first dimension of each element indexes
+#                          the Markov chains and the second dimension
+#                          indexes the sequential states within each
 #                          Markov chain.
 # @param requested_names List of expectand names to keep.
-# @param check_arrays Binary variable indicating whether or not 
+# @param check_arrays Binary variable indicating whether or not
 #                     requested names should be expanded to array
 #                     components.
 # @param max_width Maximum line width for printing
@@ -1677,14 +1657,12 @@ def decode_warning_code(warning_code):
 #         expectand.
 def filter_expectands(expectand_samples, requested_names,
                       check_arrays=False, max_width=72):
-  if type(expectand_samples) is not dict:
-    print(('Input variable `expectand_samples` '
+  if not isinstance(expectand_samples, dict):
+    raise TypeError(('Input variable `expectand_samples` '
            'is not a standard dictionary!'))
-    return
   
   if len(requested_names) == 0:
-    print('Input variable `requested_names` must be non-empty!')
-    return
+    raise ValueError('Input variable `requested_names` must be non-empty!')
   
   if check_arrays is True:
     good_names = []
@@ -1721,7 +1699,7 @@ def filter_expectands(expectand_samples, requested_names,
 
 # Compute empirical autocorrelations for a given Markov chain sequence
 # @parmas fs A one-dimensional array of sequential expectand values.
-# @return A one-dimensional array of empirical autocorrelations at each 
+# @return A one-dimensional array of empirical autocorrelations at each
 #         lag up to the length of the sequence.
 def compute_rhos(fs):
   """Visualize empirical autocorrelations for a given sequence"""
@@ -1776,12 +1754,12 @@ def compute_rhos(fs):
   
   return rhos
 
-# Plot empirical correlograms for a given expectand across a Markov 
+# Plot empirical correlograms for a given expectand across a Markov
 # chain ensemble.
 # @ax Matplotlib axis object
-# @param fs A two-dimensional array of scalar Markov chain states 
-#           with the first dimension indexing the Markov chains and 
-#           the second dimension indexing the sequential states 
+# @param fs A two-dimensional array of scalar Markov chain states
+#           with the first dimension indexing the Markov chains and
+#           the second dimension indexing the sequential states
 #           within each Markov chain.
 # @param max_L Maximum autocorrelation lag
 # @param rho_lim Plotting range of autocorrelation values
@@ -1818,17 +1796,17 @@ def plot_empirical_correlogram(ax,
   ax.spines["top"].set_visible(False)
   ax.spines["right"].set_visible(False)
 
-# Visualize the projection of a Markov chain ensemble along two 
-# expectands as a pairs plot.  Point colors darken along each Markov 
+# Visualize the projection of a Markov chain ensemble along two
+# expectands as a pairs plot.  Point colors darken along each Markov
 # chain to visualize the autocorrelation.
-# @param f1s A two-dimensional array of expectand values with the first 
-#            dimension indexing the Markov chains and the second 
-#            dimension indexing the sequential states  within each 
+# @param f1s A two-dimensional array of expectand values with the first
+#            dimension indexing the Markov chains and the second
+#            dimension indexing the sequential states  within each
 #            Markov chain.
 # @params display_name1 Name of first expectand
-# @param f2s A two-dimensional array of expectand values with the first 
-#            dimension indexing the Markov chains and the second 
-#            dimension indexing the sequential states  within each 
+# @param f2s A two-dimensional array of expectand values with the first
+#            dimension indexing the Markov chains and the second
+#            dimension indexing the sequential states  within each
 #            Markov chain.
 # @params display_name2 Name of second expectand
 def plot_pairs_by_chain(f1s, display_name1,
@@ -1862,7 +1840,7 @@ def plot_pairs_by_chain(f1s, display_name1,
   colors = ["#DCBCBC", "#C79999", "#B97C7C",
             "#A25050", "#8F2727", "#7C0000"]
   cmap = LinearSegmentedColormap.from_list("reds", colors, N=S1)
-  
+
   min_x = min(f1s.flatten())
   max_x = max(f1s.flatten())
   
@@ -1896,15 +1874,15 @@ def plot_pairs_by_chain(f1s, display_name1,
   plot.show()
 
 # Evaluate an expectand at the states of a Markov chain ensemble.
-# @param samples A two-dimensional array of scalar Markov chain states 
-#                with the first dimension indexing the Markov chains and 
-#                the second dimension indexing the sequential states 
+# @param samples A two-dimensional array of scalar Markov chain states
+#                with the first dimension indexing the Markov chains and
+#                the second dimension indexing the sequential states
 #                within each Markov chain.
-# @param expectand Scalar function to be applied to the Markov chain 
+# @param expectand Scalar function to be applied to the Markov chain
 #                  states.
-# @return A two-dimensional array of expectand values with the 
-#         first dimension indexing the Markov chains and the 
-#         second dimension indexing the sequential states within 
+# @return A two-dimensional array of expectand values with the
+#         first dimension indexing the Markov chains and the
+#         second dimension indexing the sequential states within
 #         each Markov chain.
 def pushforward_chains(samples, expectand):
   """Evaluate an expectand along a Markov chain"""
@@ -1912,7 +1890,7 @@ def pushforward_chains(samples, expectand):
 
 # Estimate expectand exectation value from a single Markov chain.
 # @param fs A one-dimensional array of sequential expectand values.
-# @return The Markov chain Monte Carlo estimate, its estimated standard 
+# @return The Markov chain Monte Carlo estimate, its estimated standard
 #         error, and empirical effective sample size.
 def mcmc_est(fs):
   """Estimate expectand expectation value from a Markov chain"""
@@ -1930,9 +1908,9 @@ def mcmc_est(fs):
   return [summary[0], math.sqrt(summary[1] / eess), eess]
 
 # Estimate expectand exectation value from a Markov chain ensemble.
-# @param samples A two-dimensional array of expectand values with the 
-#                first dimension indexing the Markov chains and the 
-#                second dimension indexing the sequential states within 
+# @param samples A two-dimensional array of expectand values with the
+#                first dimension indexing the Markov chains and the
+#                second dimension indexing the sequential states within
 #                each Markov chain.
 # @return The ensemble Markov chain Monte Carlo estimate, its estimated
 #         standard error, and empirical effective sample size.
@@ -1956,7 +1934,7 @@ def ensemble_mcmc_est(samples):
   
   # Ensemble average weighted by effective sample size
   mean = sum([ est[0] * est[2] for est in chain_ests ]) / total_ess
-  
+
   # Ensemble variance weighed by effective sample size
   # including correction for the fact that individual Markov chain
   # variances are defined relative to the individual mean estimators
@@ -1969,17 +1947,17 @@ def ensemble_mcmc_est(samples):
     var_update = (est[0] - mean)**2
     vars[c] = est[2] * (var_update + chain_var)
   var = sum(vars) / total_ess
-  
+
   return [mean, math.sqrt(var / total_ess), total_ess]
 
-# Visualize pushforward distribution of a given expectand as a 
-# histogram, using Markov chain Monte Carlo estimators to estimate the 
-# output bin probabilities.  Bin probability estimator error is shown 
+# Visualize pushforward distribution of a given expectand as a
+# histogram, using Markov chain Monte Carlo estimators to estimate the
+# output bin probabilities.  Bin probability estimator error is shown
 # in gray.
 # @ax Matplotlib axis object
-# @param samples A two-dimensional array of expectand values with the 
-#                first dimension indexing the Markov chains and the 
-#                second dimension indexing the sequential states within 
+# @param samples A two-dimensional array of expectand values with the
+#                first dimension indexing the Markov chains and the
+#                second dimension indexing the sequential states within
 #                each Markov chain.
 # @param B The number of histogram bins
 # @param display_name Exectand name
@@ -2044,7 +2022,7 @@ def plot_expectand_pushforward(ax, samples, B, display_name="f",
   if baseline is not None:
     ax.axvline(x=baseline, linewidth=4, color="white")
     ax.axvline(x=baseline, linewidth=2, color="black")
-  
+
   ax.set_xlim(flim)
   ax.set_xlabel(display_name)
   ax.set_ylim([min_y, max_y])
@@ -2053,4 +2031,3 @@ def plot_expectand_pushforward(ax, samples, B, display_name="f",
   ax.spines["top"].set_visible(False)
   ax.spines["left"].set_visible(False)
   ax.spines["right"].set_visible(False)
-

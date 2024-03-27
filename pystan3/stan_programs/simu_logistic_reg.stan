@@ -13,7 +13,7 @@ transformed data {
 
 generated quantities {
   matrix[N, M] X; // Covariate design matrix
-  real y[N];      // Variates
+  array[N] real y;      // Variates
 
   for (n in 1:N) {
     real x2 = -5;

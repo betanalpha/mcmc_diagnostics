@@ -120,10 +120,6 @@
 
 \KOMAoption{captions}{tableheading}
 \makeatletter
-\makeatother
-\makeatletter
-\makeatother
-\makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \AtBeginDocument{%
 \ifdefined\contentsname
@@ -155,27 +151,22 @@
 \@ifpackageloaded{float}{}{\usepackage{float}}
 \floatstyle{ruled}
 \@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
-\floatname{codelisting}{Stan Program}
+\floatname{codelisting}{Stan
+
+Program}
 \newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
 \makeatother
 \makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
 \makeatother
-\makeatletter
-\@ifpackageloaded{tcolorbox}{}{\usepackage[skins,breakable]{tcolorbox}}
-\makeatother
-\makeatletter
-\@ifundefined{shadecolor}{\definecolor{shadecolor}{rgb}{.97, .97, .97}}
-\makeatother
-\makeatletter
-\makeatother
-\makeatletter
-\makeatother
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\usepackage{bookmark}
+
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same} % disable monospaced font for URLs
 \hypersetup{
@@ -194,7 +185,6 @@
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, interior hidden, borderline west={3pt}{0pt}{shadecolor}, enhanced, sharp corners, frame hidden, boxrule=0pt]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -234,8 +224,7 @@ Before any of that, however, we need to set up our graphics.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{extraction}{%
-\section{Extraction}\label{extraction}}
+\section{Extraction}\label{extraction}
 
 The \texttt{extract} function in \texttt{RStan} parses the Markov chain
 output within a \texttt{StanFit} object into a usable format. Due to
@@ -315,9 +304,8 @@ except for the \texttt{plot\_inv\_metric} function which does require a
 separate \texttt{RStan}-specific function for extracting adaptation
 information.
 
-\hypertarget{hamiltonian-monte-carlo-diagnostics}{%
 \section{Hamiltonian Monte Carlo
-Diagnostics}\label{hamiltonian-monte-carlo-diagnostics}}
+Diagnostics}\label{hamiltonian-monte-carlo-diagnostics}
 
 Hamiltonian Monte Carlo introduces a suite of powerful diagnostics that
 can identify obstructions to Markov chain Monte Carlo central limit
@@ -325,9 +313,8 @@ theorems. These diagnostics are not only extremely sensitive but also
 probe the behavior of the entire Markov chain state instead of the
 projections of that state through single expectands.
 
-\hypertarget{check-hamiltonian-monte-carlo-diagnostics}{%
 \subsection{Check Hamiltonian Monte Carlo
-Diagnostics}\label{check-hamiltonian-monte-carlo-diagnostics}}
+Diagnostics}\label{check-hamiltonian-monte-carlo-diagnostics}
 
 All of our diagnostics are assembled in this single
 \texttt{check\_all\_hmc\_diagnostics} function.
@@ -535,9 +522,8 @@ inaccurate gradient evaluations.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{integrator-inverse-metric-elements}{%
 \subsection{Integrator Inverse Metric
-Elements}\label{integrator-inverse-metric-elements}}
+Elements}\label{integrator-inverse-metric-elements}
 
 Diagnostic failures indicate the presence of problems but only hint at
 the nature of those problems. In order to resolve the underlying
@@ -604,8 +590,7 @@ Note that the adaptation information may be accessed differently in
 other Stan interfaces, in which case this function would have to be
 modified accordingly.
 
-\hypertarget{integrator-step-sizes}{%
-\subsection{Integrator Step Sizes}\label{integrator-step-sizes}}
+\subsection{Integrator Step Sizes}\label{integrator-step-sizes}
 
 The other product of Stan's adaptation is the step size of the numerical
 integrator used to build the numerical Hamiltonian trajectories. As with
@@ -638,9 +623,8 @@ substantially different behavior during warmup.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{numerical-trajectory-lengths}{%
 \subsection{Numerical Trajectory
-Lengths}\label{numerical-trajectory-lengths}}
+Lengths}\label{numerical-trajectory-lengths}
 
 We can see the consequence of the adapted step sizes by looking at the
 numerical trajectories generated for each Hamiltonian Markov transition.
@@ -732,9 +716,8 @@ distribution, and the more expensive it is to explore.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{average-proxy-acceptance-statistic}{%
 \subsection{Average Proxy Acceptance
-Statistic}\label{average-proxy-acceptance-statistic}}
+Statistic}\label{average-proxy-acceptance-statistic}
 
 When the different adaptation outcomes are due to problematic behaviors
 encountered during warmup then it the average proxy acceptance
@@ -766,9 +749,8 @@ statistics should also vary across the Markov chains.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{divergence-labeled-pairs-plot}{%
 \subsection{Divergence-Labeled Pairs
-Plot}\label{divergence-labeled-pairs-plot}}
+Plot}\label{divergence-labeled-pairs-plot}
 
 One of the most powerful features of divergent transitions is that they
 not only indicate problematic geometry but also provide some spatial
@@ -824,7 +806,7 @@ states themselves can be visualized with pairs plots.
 \NormalTok{    \}}
 \NormalTok{    transformed\_name }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}logit(\textquotesingle{}}\NormalTok{, name, }\StringTok{\textquotesingle{})\textquotesingle{}}\NormalTok{)}
 \NormalTok{    transformed\_samples }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(c(t(samples[[name]]), recursive}\OperatorTok{=}\NormalTok{TRUE), }
-\NormalTok{                                  function(x) log(x }\OperatorTok{/} \DecValTok{1} \OperatorTok{{-}}\NormalTok{ x))}
+\NormalTok{                                  function(x) log(x }\OperatorTok{/}\NormalTok{ (}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ x)))}
 \NormalTok{  \}}
   \ControlFlowTok{return}\NormalTok{ (}\BuiltInTok{list}\NormalTok{(}\StringTok{\textquotesingle{}t\_name\textquotesingle{}} \OperatorTok{=}\NormalTok{ transformed\_name, }
                \StringTok{\textquotesingle{}t\_samples\textquotesingle{}} \OperatorTok{=}\NormalTok{ transformed\_samples))}
@@ -1021,9 +1003,8 @@ states themselves can be visualized with pairs plots.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{expectand-diagnostic-functions}{%
 \section{Expectand Diagnostic
-Functions}\label{expectand-diagnostic-functions}}
+Functions}\label{expectand-diagnostic-functions}
 
 The Hamiltonian Monte Carlo diagnostics exploited the particular
 structure of the Hamiltonian Markov transition. For a general Markov
@@ -1032,8 +1013,7 @@ limited diagnostic options. In this general setting we have to
 investigate the behavior of not the entire state but instead particular
 expectands of interest.
 
-\hypertarget{xihat}{%
-\subsection{xihat}\label{xihat}}
+\subsection{xihat}\label{xihat}
 
 A Markov chain Monte Carlo central limit theorem cannot exist for the
 expectand \(f : X \rightarrow \mathbb{R}\) unless both
@@ -1257,8 +1237,7 @@ threshold.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{frozen-chains}{%
-\subsection{Frozen Chains}\label{frozen-chains}}
+\subsection{Frozen Chains}\label{frozen-chains}
 
 Another sign of problems is when all evaluations of an expectand are
 constant. This could be due to the Markov chain being stuck at a single
@@ -1336,8 +1315,7 @@ of the expectand values in a single sweep.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{split-rhat}{%
-\subsection{Split Rhat}\label{split-rhat}}
+\subsection{Split Rhat}\label{split-rhat}
 
 One of the key features of Markov chain equilibrium is that the
 distribution of Markov chain realizations is independent of the
@@ -1486,9 +1464,8 @@ set.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{integrated-autocorrelation-time}{%
 \subsection{Integrated Autocorrelation
-Time}\label{integrated-autocorrelation-time}}
+Time}\label{integrated-autocorrelation-time}
 
 The information about the target distribution encoded within a Markov
 chain, and hence the potential precision of Markov chain Monte Carlo
@@ -1683,8 +1660,7 @@ For example empirical effective sample sizes can provide a useful way to
 distinguish if some diagnostic failures are due to Markov chains that
 are just too short or more persistent problems.
 
-\hypertarget{all-expectand-diagnostics}{%
-\subsection{All Expectand Diagnostics}\label{all-expectand-diagnostics}}
+\subsection{All Expectand Diagnostics}\label{all-expectand-diagnostics}
 
 In practice we have no reason not to check all of these diagnostics at
 once for each expectand of interest.
@@ -2134,9 +2110,8 @@ immediate interest.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{empirical-autocorrelation-visualization}{%
 \subsection{Empirical Autocorrelation
-Visualization}\label{empirical-autocorrelation-visualization}}
+Visualization}\label{empirical-autocorrelation-visualization}
 
 If we encounter large empirical integrated autocorrelation times, or
 small estimated effective sample sizes, then we may want to follow up
@@ -2241,9 +2216,8 @@ provides a useful visualization of these estimates.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{chain-separated-pairs-plot}{%
 \subsection{Chain-Separated Pairs
-Plot}\label{chain-separated-pairs-plot}}
+Plot}\label{chain-separated-pairs-plot}
 
 We can also visualize strong autocorrelations by coloring the states of
 each Markov chain in a continuous gradient. When neighboring states are
@@ -2313,9 +2287,8 @@ chaotic spray of colors.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{markov-chain-monte-carlo-estimation}{%
 \section{Markov Chain Monte Carlo
-Estimation}\label{markov-chain-monte-carlo-estimation}}
+Estimation}\label{markov-chain-monte-carlo-estimation}
 
 If none of the diagnostics indicate an obstruction to a Markov chain
 Monte Carlo central limit theorem then we can construct expectation
@@ -2434,7 +2407,7 @@ by estimating the target probabilities in histogram bins.
 \CommentTok{\# @param flim Optional histogram range}
 \CommentTok{\# @param baseline Optional baseline value for visual comparison}
 \NormalTok{plot\_expectand\_pushforward }\OperatorTok{\textless{}{-}}\NormalTok{ function(samples, B, display\_name}\OperatorTok{=}\StringTok{"f"}\NormalTok{, }
-\NormalTok{                                       flim}\OperatorTok{=}\NormalTok{NULL, baseline}\OperatorTok{=}\NormalTok{NULL) \{}
+\NormalTok{                                       flim}\OperatorTok{=}\NormalTok{NULL, main}\OperatorTok{=}\StringTok{""}\NormalTok{, baseline}\OperatorTok{=}\NormalTok{NULL) \{}
   \ControlFlowTok{if}\NormalTok{ (length(dim(samples)) }\OperatorTok{!=} \DecValTok{2}\NormalTok{) \{}
 \NormalTok{    stop(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}samples\textasciigrave{} has the wrong dimension\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
@@ -2444,18 +2417,35 @@ by estimating the target probabilities in histogram bins.
   \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(flim)) \{}
 \NormalTok{    min\_f }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(samples)}
 \NormalTok{    max\_f }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(samples)}
+\NormalTok{    delta }\OperatorTok{\textless{}{-}}\NormalTok{ (max\_f }\OperatorTok{{-}}\NormalTok{ min\_f) }\OperatorTok{/}\NormalTok{ B}
     
     \CommentTok{\# Add bounding bins}
-\NormalTok{    delta }\OperatorTok{\textless{}{-}}\NormalTok{ (max\_f }\OperatorTok{{-}}\NormalTok{ min\_f) }\OperatorTok{/}\NormalTok{ B}
+\NormalTok{    B }\OperatorTok{\textless{}{-}}\NormalTok{ B }\OperatorTok{+} \DecValTok{2}
 \NormalTok{    min\_f }\OperatorTok{\textless{}{-}}\NormalTok{ min\_f }\OperatorTok{{-}}\NormalTok{ delta}
 \NormalTok{    max\_f }\OperatorTok{\textless{}{-}}\NormalTok{ max\_f }\OperatorTok{+}\NormalTok{ delta}
 \NormalTok{    flim }\OperatorTok{\textless{}{-}}\NormalTok{ c(min\_f, max\_f)}
     
 \NormalTok{    bins }\OperatorTok{\textless{}{-}}\NormalTok{ seq(min\_f, max\_f, delta)}
-\NormalTok{    B }\OperatorTok{\textless{}{-}}\NormalTok{ B }\OperatorTok{+} \DecValTok{2}
 \NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
-\NormalTok{    delta }\OperatorTok{\textless{}{-}}\NormalTok{ (flim[}\DecValTok{2}\NormalTok{] }\OperatorTok{{-}}\NormalTok{ flim[}\DecValTok{1}\NormalTok{]) }\OperatorTok{/}\NormalTok{ B}
-\NormalTok{    bins }\OperatorTok{\textless{}{-}}\NormalTok{ seq(flim[}\DecValTok{1}\NormalTok{], flim[}\DecValTok{2}\NormalTok{], delta)}
+\NormalTok{    min\_f }\OperatorTok{\textless{}{-}}\NormalTok{ flim[}\DecValTok{1}\NormalTok{]}
+\NormalTok{    max\_f }\OperatorTok{\textless{}{-}}\NormalTok{ flim[}\DecValTok{2}\NormalTok{]}
+    
+\NormalTok{    delta }\OperatorTok{\textless{}{-}}\NormalTok{ (max\_f }\OperatorTok{{-}}\NormalTok{ min\_f) }\OperatorTok{/}\NormalTok{ B}
+\NormalTok{    bins }\OperatorTok{\textless{}{-}}\NormalTok{ seq(min\_f, max\_f, delta)}
+\NormalTok{  \}}
+  
+  \CommentTok{\# Check sample containment}
+\NormalTok{  S }\OperatorTok{\textless{}{-}}\NormalTok{ dim(samples)[}\DecValTok{1}\NormalTok{] }\OperatorTok{*}\NormalTok{ dim(samples)[}\DecValTok{2}\NormalTok{]}
+  
+\NormalTok{  S\_low }\OperatorTok{\textless{}{-}} \BuiltInTok{sum}\NormalTok{(c(samples, recursive}\OperatorTok{=}\NormalTok{TRUE) }\OperatorTok{\textless{}}\NormalTok{ min\_f)}
+  \ControlFlowTok{if}\NormalTok{ (S\_low }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{)}
+\NormalTok{    warning(sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%s}\StringTok{ posterior samples (}\SpecialCharTok{\%.1f\%\%}\StringTok{) fell below the histogram binning.\textquotesingle{}}\NormalTok{,}
+\NormalTok{                    S\_low, }\DecValTok{100} \OperatorTok{*}\NormalTok{ S\_low }\OperatorTok{/}\NormalTok{ S))}
+  
+\NormalTok{  S\_high }\OperatorTok{\textless{}{-}} \BuiltInTok{sum}\NormalTok{(max\_f }\OperatorTok{\textless{}}\NormalTok{ c(samples, recursive}\OperatorTok{=}\NormalTok{TRUE))}
+  \ControlFlowTok{if}\NormalTok{ (S\_high }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{) \{}
+\NormalTok{    warning(sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%s}\StringTok{ posterior samples (}\SpecialCharTok{\%.1f\%\%}\StringTok{) fell above the histogram binning.\textquotesingle{}}\NormalTok{,}
+\NormalTok{                    S\_high, }\DecValTok{100} \OperatorTok{*}\NormalTok{ S\_high }\OperatorTok{/}\NormalTok{ S))}
 \NormalTok{  \}}
   
   \CommentTok{\# Compute bin heights}
@@ -2489,7 +2479,7 @@ by estimating the target probabilities in histogram bins.
 \NormalTok{  min\_y }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(lower\_inter)}
 \NormalTok{  max\_y }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(}\FloatTok{1.05} \OperatorTok{*}\NormalTok{ upper\_inter)}
   
-\NormalTok{  plot(}\DecValTok{1}\NormalTok{, }\BuiltInTok{type}\OperatorTok{=}\StringTok{"n"}\NormalTok{, main}\OperatorTok{=}\StringTok{""}\NormalTok{,}
+\NormalTok{  plot(}\DecValTok{1}\NormalTok{, }\BuiltInTok{type}\OperatorTok{=}\StringTok{"n"}\NormalTok{, main}\OperatorTok{=}\NormalTok{main,}
 \NormalTok{       xlim}\OperatorTok{=}\NormalTok{flim, xlab}\OperatorTok{=}\NormalTok{display\_name,}
 \NormalTok{       ylim}\OperatorTok{=}\NormalTok{c(min\_y, max\_y), ylab}\OperatorTok{=}\StringTok{""}\NormalTok{, yaxt}\OperatorTok{=}\StringTok{"n"}\NormalTok{)}
 \NormalTok{  title(ylab}\OperatorTok{=}\StringTok{"Estimated Bin}\CharTok{\textbackslash{}n}\StringTok{Probabilities / Bin Width"}\NormalTok{, mgp}\OperatorTok{=}\NormalTok{c(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
@@ -2507,8 +2497,7 @@ by estimating the target probabilities in histogram bins.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{demonstration}{%
-\section{Demonstration}\label{demonstration}}
+\section{Demonstration}\label{demonstration}
 
 Now let's put all of these analysis tools to use with an \texttt{rstan}
 fit object.
@@ -2538,7 +2527,7 @@ Then we can simulate some binary data from a logistic regression model.
 
 \begin{codelisting}
 
-\caption{\texttt{simu\_logistic\_reg.stan}}
+\caption{\texttt{simu\textbackslash\_logistic\textbackslash\_reg.stan}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2617,7 +2606,7 @@ infinite outputs.
 
 \begin{codelisting}
 
-\caption{\texttt{bernoulli\_linear.stan}}
+\caption{\texttt{bernoulli\textbackslash\_linear.stan}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2735,13 +2724,7 @@ configuration of the Hamiltonian Markov transition.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-8-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-8-1.pdf}
 
 The problematic Markov chain also exhibits the most variation in its
 inverse metric elements, which in this case is probably an artifact of
@@ -2791,13 +2774,7 @@ to explore as far as those in the other chains.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-11-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-11-1.pdf}
 
 Finally because nearly every transition is divergent we can't extract
 much information from the divergent-labeled pairs plots.
@@ -2812,13 +2789,7 @@ much information from the divergent-labeled pairs plots.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-12-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-12-1.pdf}
 
 We can also color the divergent transitions by their numerical
 trajectory lengths. On average transitions from shorter numerical
@@ -2837,13 +2808,7 @@ boundary. For example plot of \texttt{beta{[}2{]}} against
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-13-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-13-1.pdf}
 
 Having examined the Hamiltonian Monte Carlo diagnostics let's now look
 through the expectand specific diagnostics. By default we'll look at the
@@ -3558,13 +3523,7 @@ empirical correlograms for each parameter expectand.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-18-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-18-1.pdf}
 
 Regardless of whether or not these Markov chains are stationary they are
 extremely autocorrelated. Assuming stationarity we don't start to forget
@@ -3585,13 +3544,7 @@ characteristic of a random walk.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-19-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-19-1.pdf}
 
 To more quantitatively blame the large split \(\hat{R}\)s on these
 strong autocorrelations we can plot the split \(\hat{R}\) from each
@@ -3612,13 +3565,7 @@ smallest empirical effective sample size amongst the four Markov chains.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-20-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-20-1.pdf}
 
 Every expectand with a large split \(\hat{R}\)s also exhibits a
 particularly small minimum empirical effective sample size, confirming
@@ -3650,13 +3597,7 @@ probability estimates in dark red.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-21-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-21-1.pdf}
 
 If we look at the central estimates alone we might convince ourselves of
 all kinds of interesting structure. For example potential multi-modality
@@ -3682,13 +3623,7 @@ at the same time many of the visual artifacts recede.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-22-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-22-1.pdf}
 
 When the bin indicator functions enjoy Markov chain Monte Carlo central
 limit theorems these standard error bands allow us to discriminate
@@ -3697,8 +3632,7 @@ histogram binning. Even if central limit theorems don't hold the error
 bands provide one more way that we can potentially diagnose
 untrustworthy computation.
 
-\hypertarget{license}{%
-\section*{License}\label{license}}
+\section*{License}\label{license}
 \addcontentsline{toc}{section}{License}
 
 The code in this case study is copyrighted by Michael Betancourt and
@@ -3711,9 +3645,8 @@ Betancourt and licensed under the CC BY-NC 4.0 license:
 
 https://creativecommons.org/licenses/by-nc/4.0/
 
-\hypertarget{original-computing-environment}{%
 \section*{Original Computing
-Environment}\label{original-computing-environment}}
+Environment}\label{original-computing-environment}
 \addcontentsline{toc}{section}{Original Computing Environment}
 
 \begin{Shaded}
@@ -3741,7 +3674,7 @@ CXX14=clang++ -arch x86_64 -ftemplate-depth-256
 \begin{verbatim}
 R version 4.3.2 (2023-10-31)
 Platform: x86_64-apple-darwin20 (64-bit)
-Running under: macOS Sonoma 14.2
+Running under: macOS Sonoma 14.4.1
 
 Matrix products: default
 BLAS:   /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRblas.0.dylib 
@@ -3750,7 +3683,7 @@ LAPACK: /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRla
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
-time zone: America/Vancouver
+time zone: America/New_York
 tzcode source: internal
 
 attached base packages:

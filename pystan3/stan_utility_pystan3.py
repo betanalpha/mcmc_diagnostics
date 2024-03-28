@@ -1960,8 +1960,9 @@ def ensemble_mcmc_est(samples):
 # @param display_name Exectand name
 # @param flim Optional histogram range
 # @param baseline Optional baseline value for visual comparison
+# @param title Optional plot title
 def plot_expectand_pushforward(ax, samples, B, display_name="f", 
-                               flim=None, baseline=None):
+                               flim=None, baseline=None, title=None):
   """Plot pushforward histogram of a given expectand using Markov chain
      Monte Carlo estimators to estimate the output bin probabilities"""
   if len(samples.shape) != 2:
@@ -1972,19 +1973,36 @@ def plot_expectand_pushforward(ax, samples, B, display_name="f",
     # Automatically adjust histogram binning to range of outputs
     min_f = min(samples.flatten())
     max_f = max(samples.flatten())
-    
-    # Add bounding bins
     delta = (max_f - min_f) / B
+
+    # Add bounding bins
+    B = B + 2
     min_f = min_f - delta
     max_f = max_f + delta
     flim = [min_f, max_f]
     
     bins = numpy.arange(min_f, max_f + delta, delta)
-    B = B + 2
   else:
-    delta = (flim[1] - flim[0]) / B
-    bins = numpy.arange(flim[0], flim[1] + delta, delta)
+    min_f = flim[0]
+    max_f = flim[1]
+    delta = (max_f - min_f) / B
+
+    bins = numpy.arange(min_f, max_f + delta, delta)
   
+  # Check sample containment
+  S = samples.size
+
+  S_low = sum(samples.flatten() < min_f)
+  if S_low > 0:
+    print(f'{S_low} posterior samples ({S_low / S:.2%})'
+           ' fell below the histogram binning.')
+
+  S_high = sum(max_f < samples.flatten())
+  if S_high > 0:
+    print(f'{S_high} posterior samples ({S_high / S:.2%})'
+           ' fell above the histogram binning.')
+
+  # Compute bin heights
   mean_p = [0] * B
   delta_p = [0] * B
   
@@ -2020,6 +2038,8 @@ def plot_expectand_pushforward(ax, samples, B, display_name="f",
     ax.axvline(x=baseline, linewidth=4, color="white")
     ax.axvline(x=baseline, linewidth=2, color="black")
 
+  if title is not None:
+    ax.set_title(title)
   ax.set_xlim(flim)
   ax.set_xlabel(display_name)
   ax.set_ylim([min_y, max_y])

@@ -408,7 +408,7 @@ apply_transform <- function(name, samples, transforms) {
     }
     transformed_name <- paste0('logit(', name, ')')
     transformed_samples <- sapply(c(t(samples[[name]]), recursive=TRUE), 
-                                  function(x) log(x / 1 - x))
+                                  function(x) log(x / (1 - x)))
   }
   return (list('t_name' = transformed_name, 
                't_samples' = transformed_samples))
@@ -1934,7 +1934,7 @@ ensemble_mcmc_est <- function(samples) {
 # @param flim Optional histogram range
 # @param baseline Optional baseline value for visual comparison
 plot_expectand_pushforward <- function(samples, B, display_name="f", 
-                                       flim=NULL, baseline=NULL) {
+                                       flim=NULL, main="", baseline=NULL) {
   if (length(dim(samples)) != 2) {
     stop('Input variable `samples` has the wrong dimension')
   }
@@ -1944,18 +1944,35 @@ plot_expectand_pushforward <- function(samples, B, display_name="f",
   if (is.null(flim)) {
     min_f <- min(samples)
     max_f <- max(samples)
+    delta <- (max_f - min_f) / B
     
     # Add bounding bins
-    delta <- (max_f - min_f) / B
+    B <- B + 2
     min_f <- min_f - delta
     max_f <- max_f + delta
     flim <- c(min_f, max_f)
     
     bins <- seq(min_f, max_f, delta)
-    B <- B + 2
   } else {
-    delta <- (flim[2] - flim[1]) / B
-    bins <- seq(flim[1], flim[2], delta)
+    min_f <- flim[1]
+    max_f <- flim[2]
+    
+    delta <- (max_f - min_f) / B
+    bins <- seq(min_f, max_f, delta)
+  }
+  
+  # Check sample containment
+  S <- dim(samples)[1] * dim(samples)[2]
+  
+  S_low <- sum(c(samples, recursive=TRUE) < min_f)
+  if (S_low > 0)
+    warning(sprintf('%s posterior samples (%.1f%%) fell below the histogram binning.',
+                    S_low, 100 * S_low / S))
+  
+  S_high <- sum(max_f < c(samples, recursive=TRUE))
+  if (S_high > 0) {
+    warning(sprintf('%s posterior samples (%.1f%%) fell above the histogram binning.',
+                    S_high, 100 * S_high / S))
   }
   
   # Compute bin heights
@@ -1989,7 +2006,7 @@ plot_expectand_pushforward <- function(samples, B, display_name="f",
   min_y <- min(lower_inter)
   max_y <- max(1.05 * upper_inter)
   
-  plot(1, type="n", main="",
+  plot(1, type="n", main=main,
        xlim=flim, xlab=display_name,
        ylim=c(min_y, max_y), ylab="", yaxt="n")
   title(ylab="Estimated Bin\nProbabilities / Bin Width", mgp=c(1, 1, 0))

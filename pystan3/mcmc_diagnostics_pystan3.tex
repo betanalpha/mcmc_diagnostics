@@ -120,10 +120,6 @@
 
 \KOMAoption{captions}{tableheading}
 \makeatletter
-\makeatother
-\makeatletter
-\makeatother
-\makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \AtBeginDocument{%
 \ifdefined\contentsname
@@ -155,27 +151,22 @@
 \@ifpackageloaded{float}{}{\usepackage{float}}
 \floatstyle{ruled}
 \@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
-\floatname{codelisting}{Stan Program}
+\floatname{codelisting}{Stan
+
+Program}
 \newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
 \makeatother
 \makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
 \makeatother
-\makeatletter
-\@ifpackageloaded{tcolorbox}{}{\usepackage[skins,breakable]{tcolorbox}}
-\makeatother
-\makeatletter
-\@ifundefined{shadecolor}{\definecolor{shadecolor}{rgb}{.97, .97, .97}}
-\makeatother
-\makeatletter
-\makeatother
-\makeatletter
-\makeatother
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\usepackage{bookmark}
+
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same} % disable monospaced font for URLs
 \hypersetup{
@@ -194,7 +185,6 @@
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[frame hidden, sharp corners, borderline west={3pt}{0pt}{shadecolor}, enhanced, breakable, interior hidden, boxrule=0pt]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Table of contents}
 {
@@ -214,8 +204,7 @@ interest one at a time. Finally we'll look at a way to visualize
 one-dimensional pushforward distributions using Markov chain Monte Carlo
 to estimate bin probabilities.
 
-\hypertarget{extraction}{%
-\section{Extraction}\label{extraction}}
+\section{Extraction}\label{extraction}
 
 Starting in version 3 \texttt{PyStan} stores all outputs, including the
 Markov chain Monte Carlo samples and diagnostics, together in a single
@@ -234,13 +223,13 @@ denoting the iterations within an individual Markov chain.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Extract unpermuted expectand values from a StanFit object and format }
+\CommentTok{\# Extract unpermuted expectand values from a StanFit object and format}
 \CommentTok{\# them for convenient access}
 \CommentTok{\# @param stan\_fit A StanFit object}
-\CommentTok{\# @return A dictionary of two{-}dimensional arrays for each expectand in }
-\CommentTok{\#         the StanFit object.  The first dimension of each element }
-\CommentTok{\#         indexes the Markov chains and the second dimension indexes the }
-\CommentTok{\#         sequential states within each Markov chain. }
+\CommentTok{\# @return A dictionary of two{-}dimensional arrays for each expectand in}
+\CommentTok{\#         the StanFit object.  The first dimension of each element}
+\CommentTok{\#         indexes the Markov chains and the second dimension indexes the}
+\CommentTok{\#         sequential states within each Markov chain.}
 \KeywordTok{def}\NormalTok{ extract\_expectands(stan\_fit):}
 \NormalTok{  nom\_params }\OperatorTok{=}\NormalTok{ stan\_fit.\_draws}
 \NormalTok{  offset }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(stan\_fit.sample\_and\_sampler\_param\_names)}
@@ -265,10 +254,10 @@ denoting the iterations within an individual Markov chain.
 \CommentTok{\# Extract Hamiltonian Monte Carlo diagnostics values from a StanFit}
 \CommentTok{\# object and format them for convenient access}
 \CommentTok{\# @param stan\_fit A StanFit object}
-\CommentTok{\# @return A dictionary of two{-}dimensional arrays for each expectand in }
-\CommentTok{\#         the StanFit object.  The first dimension of each element }
-\CommentTok{\#         indexes the Markov chains and the second dimension indexes the }
-\CommentTok{\#         sequential states within each Markov chain. }
+\CommentTok{\# @return A dictionary of two{-}dimensional arrays for each expectand in}
+\CommentTok{\#         the StanFit object.  The first dimension of each element}
+\CommentTok{\#         indexes the Markov chains and the second dimension indexes the}
+\CommentTok{\#         sequential states within each Markov chain.}
 \KeywordTok{def}\NormalTok{ extract\_hmc\_diagnostics(stan\_fit):}
 \NormalTok{  d\_names }\OperatorTok{=}\NormalTok{ [}\StringTok{\textquotesingle{}divergent\_\_\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}treedepth\_\_\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}n\_leapfrog\_\_\textquotesingle{}}\NormalTok{,}
              \StringTok{\textquotesingle{}stepsize\_\_\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}energy\_\_\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}accept\_stat\_\_\textquotesingle{}}\NormalTok{ ]}
@@ -285,9 +274,8 @@ the following functions will be immediately available. That is all
 except for the \texttt{plot\_inv\_metric} function which does require a
 separate function for extracting adaptation information.
 
-\hypertarget{hamiltonian-monte-carlo-diagnostics}{%
 \section{Hamiltonian Monte Carlo
-Diagnostics}\label{hamiltonian-monte-carlo-diagnostics}}
+Diagnostics}\label{hamiltonian-monte-carlo-diagnostics}
 
 Hamiltonian Monte Carlo introduces a suite of powerful diagnostics that
 can identify obstructions to Markov chain Monte Carlo central limit
@@ -295,9 +283,8 @@ theorems. These diagnostics are not only extremely sensitive but also
 probe the behavior of the entire Markov chain state instead of the
 projections of that state through single expectands.
 
-\hypertarget{check-hamiltonian-monte-carlo-diagnostics}{%
 \subsection{Check Hamiltonian Monte Carlo
-Diagnostics}\label{check-hamiltonian-monte-carlo-diagnostics}}
+Diagnostics}\label{check-hamiltonian-monte-carlo-diagnostics}
 
 All of our diagnostics are assembled in this single
 \texttt{check\_all\_hmc\_diagnostics} function.
@@ -360,14 +347,14 @@ inaccurate gradient evaluations.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Check all Hamiltonian Monte Carlo Diagnostics }
+\CommentTok{\# Check all Hamiltonian Monte Carlo Diagnostics}
 \CommentTok{\# for an ensemble of Markov chains}
-\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
+\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                    each expectand.  The first dimension of each}
-\CommentTok{\#                    element indexes the Markov chains and the }
-\CommentTok{\#                    second dimension indexes the sequential }
+\CommentTok{\#                    element indexes the Markov chains and the}
+\CommentTok{\#                    second dimension indexes the sequential}
 \CommentTok{\#                    states within each Markov chain.}
-\CommentTok{\# @param adapt\_target Target acceptance proxy statistic for step size }
+\CommentTok{\# @param adapt\_target Target acceptance proxy statistic for step size}
 \CommentTok{\#                     adaptation.}
 \CommentTok{\# @param max\_treedepth The maximum numerical trajectory treedepth}
 \CommentTok{\# @param max\_width Maximum line width for printing}
@@ -378,9 +365,8 @@ inaccurate gradient evaluations.
   \CommentTok{"""Check all Hamiltonian Monte Carlo Diagnostics for an }
 \CommentTok{     ensemble of Markov chains"""}
      
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(diagnostics) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
-    \ControlFlowTok{return}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(diagnostics, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
   
 \NormalTok{  no\_warning }\OperatorTok{=} \VariableTok{True}
 \NormalTok{  no\_divergence\_warning }\OperatorTok{=} \VariableTok{True}
@@ -495,9 +481,8 @@ inaccurate gradient evaluations.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{integrator-inverse-metric-elements}{%
 \subsection{Integrator Inverse Metric
-Elements}\label{integrator-inverse-metric-elements}}
+Elements}\label{integrator-inverse-metric-elements}
 
 Diagnostic failures indicate the presence of problems but only hint at
 the nature of those problems. In order to resolve the underlying
@@ -536,8 +521,7 @@ Note that the adaptation information may be accessed differently in
 other Stan interfaces, in which case this function would have to be
 modified accordingly.
 
-\hypertarget{integrator-step-sizes}{%
-\subsection{Integrator Step Sizes}\label{integrator-step-sizes}}
+\subsection{Integrator Step Sizes}\label{integrator-step-sizes}
 
 The other product of Stan's adaptation is the step size of the numerical
 integrator used to build the numerical Hamiltonian trajectories. As with
@@ -548,16 +532,15 @@ substantially different behavior during warmup.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Display adapted symplectic integrator step sizes}
-\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
+\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                    each expectand.  The first dimension of each}
-\CommentTok{\#                    element indexes the Markov chains and the }
-\CommentTok{\#                    second dimension indexes the sequential }
+\CommentTok{\#                    element indexes the Markov chains and the}
+\CommentTok{\#                    second dimension indexes the sequential}
 \CommentTok{\#                    states within each Markov chain.}
 \KeywordTok{def}\NormalTok{ display\_stepsizes(diagnostics):}
   \CommentTok{"""Display adapted symplectic integrator step sizes"""}
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(diagnostics) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
-    \ControlFlowTok{return}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(diagnostics, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
   
 \NormalTok{  stepsizes }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}stepsize\_\_\textquotesingle{}}\NormalTok{]}
 \NormalTok{  C }\OperatorTok{=}\NormalTok{ stepsizes.shape[}\DecValTok{0}\NormalTok{]}
@@ -568,9 +551,8 @@ substantially different behavior during warmup.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{numerical-trajectory-lengths}{%
 \subsection{Numerical Trajectory
-Lengths}\label{numerical-trajectory-lengths}}
+Lengths}\label{numerical-trajectory-lengths}
 
 We can see the consequence of the adapted step sizes by looking at the
 numerical trajectories generated for each Hamiltonian Markov transition.
@@ -581,23 +563,21 @@ distribution, and the more expensive it is to explore.
 \begin{Highlighting}[]
 \CommentTok{\# Display symplectic integrator trajectory lengths}
 \CommentTok{\# @ax Matplotlib axis object}
-\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
+\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                    each expectand.  The first dimension of each}
-\CommentTok{\#                    element indexes the Markov chains and the }
-\CommentTok{\#                    second dimension indexes the sequential }
+\CommentTok{\#                    element indexes the Markov chains and the}
+\CommentTok{\#                    second dimension indexes the sequential}
 \CommentTok{\#                    states within each Markov chain.}
 \CommentTok{\# @param nlim Optional histogram range}
 \KeywordTok{def}\NormalTok{ plot\_num\_leapfrogs(ax, diagnostics, nlim}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
   \CommentTok{"""Display symplectic integrator trajectory lenghts"""}
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(diagnostics) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
-    \ControlFlowTok{return}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(diagnostics, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
   
 \NormalTok{  lengths }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}n\_leapfrog\_\_\textquotesingle{}}\NormalTok{]}
   
 \NormalTok{  C }\OperatorTok{=}\NormalTok{ lengths.shape[}\DecValTok{0}\NormalTok{]}
 \NormalTok{  colors }\OperatorTok{=}\NormalTok{ [dark\_highlight, dark, mid\_highlight, mid, light\_highlight]}
-\NormalTok{  cmap }\OperatorTok{=}\NormalTok{ LinearSegmentedColormap.from\_list(}\StringTok{"reds"}\NormalTok{, colors, N}\OperatorTok{=}\NormalTok{C)}
   
 \NormalTok{  vals\_counts }\OperatorTok{=}\NormalTok{ [ numpy.unique(lengths[c], return\_counts}\OperatorTok{=}\VariableTok{True}\NormalTok{) }
                   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C) ] }
@@ -630,16 +610,15 @@ distribution, and the more expensive it is to explore.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Display symplectic integrator trajectory lengths by Markov chain}
-\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
+\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                    each expectand.  The first dimension of each}
-\CommentTok{\#                    element indexes the Markov chains and the }
-\CommentTok{\#                    second dimension indexes the sequential }
+\CommentTok{\#                    element indexes the Markov chains and the}
+\CommentTok{\#                    second dimension indexes the sequential}
 \CommentTok{\#                    states within each Markov chain.}
 \KeywordTok{def}\NormalTok{ plot\_num\_leapfrogs\_by\_chain(diagnostics):}
   \CommentTok{"""Display symplectic integrator trajectory lengths"""}
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(diagnostics) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
-    \ControlFlowTok{return}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(diagnostics, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
   
 \NormalTok{  lengths }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}n\_leapfrog\_\_\textquotesingle{}}\NormalTok{]}
 \NormalTok{  C }\OperatorTok{=}\NormalTok{ lengths.shape[}\DecValTok{0}\NormalTok{]}
@@ -683,9 +662,8 @@ distribution, and the more expensive it is to explore.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{average-proxy-acceptance-statistic}{%
 \subsection{Average Proxy Acceptance
-Statistic}\label{average-proxy-acceptance-statistic}}
+Statistic}\label{average-proxy-acceptance-statistic}
 
 When the different adaptation outcomes are due to problematic behaviors
 encountered during warmup then it the average proxy acceptance
@@ -693,20 +671,19 @@ statistics should also vary across the Markov chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Display empirical average of the proxy acceptance statistic across }
+\CommentTok{\# Display empirical average of the proxy acceptance statistic across}
 \CommentTok{\# each Markov chain}
-\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for }
+\CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                    each expectand.  The first dimension of each}
-\CommentTok{\#                    element indexes the Markov chains and the }
-\CommentTok{\#                    second dimension indexes the sequential }
+\CommentTok{\#                    element indexes the Markov chains and the}
+\CommentTok{\#                    second dimension indexes the sequential}
 \CommentTok{\#                    states within each Markov chain.}
 \KeywordTok{def}\NormalTok{ display\_ave\_accept\_proxy(diagnostics):}
   \CommentTok{"""Display empirical average of the proxy acceptance statistic}
 \CommentTok{     across each Markov chain"""}
      
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(diagnostics) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
-    \ControlFlowTok{return}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(diagnostics, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}diagnostics\textasciigrave{} is not a standard dictionary!\textquotesingle{}}\NormalTok{)}
   
 \NormalTok{  proxy\_stats }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}accept\_stat\_\_\textquotesingle{}}\NormalTok{]}
 \NormalTok{  C }\OperatorTok{=}\NormalTok{ proxy\_stats.shape[}\DecValTok{0}\NormalTok{]}
@@ -718,9 +695,8 @@ statistics should also vary across the Markov chains.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{divergence-labeled-pairs-plot}{%
 \subsection{Divergence-Labeled Pairs
-Plot}\label{divergence-labeled-pairs-plot}}
+Plot}\label{divergence-labeled-pairs-plot}
 
 One of the most powerful features of divergent transitions is that they
 not only indicate problematic geometry but also provide some spatial
@@ -737,13 +713,13 @@ states themselves can be visualized with pairs plots.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Apply transformation identity, log, or logit transformation to}
-\CommentTok{\# named samples and flatten the output.  Transformation defaults to }
-\CommentTok{\# identity if name is not included in \textasciigrave{}transforms\textasciigrave{} dictionary.  A }
+\CommentTok{\# named samples and flatten the output.  Transformation defaults to}
+\CommentTok{\# identity if name is not included in \textasciigrave{}transforms\textasciigrave{} dictionary.  A}
 \CommentTok{\# ValueError is thrown if samples are not properly constrained.}
 \CommentTok{\# @param name Expectand name.}
 \CommentTok{\# @param samples A dictionary of two{-}dimensional arrays for}
-\CommentTok{\#                each expectand.  The first dimension of each element }
-\CommentTok{\#                indexes the Markov chains and the second dimension }
+\CommentTok{\#                each expectand.  The first dimension of each element}
+\CommentTok{\#                indexes the Markov chains and the second dimension}
 \CommentTok{\#                indexes the sequential states within each Markov chain.}
 \CommentTok{\# @param transforms A dictionary with expectand names for keys and}
 \CommentTok{\#                   transformation flags for values.}
@@ -779,41 +755,41 @@ states themselves can be visualized with pairs plots.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Plot pairwise scatter plots with non{-}divergent and divergent }
+\CommentTok{\# Plot pairwise scatter plots with non{-}divergent and divergent}
 \CommentTok{\# transitions separated by color}
 \CommentTok{\# @param x\_names A list of expectand names to be plotted on the x axis.}
 \CommentTok{\# @param y\_names A list of expectand names to be plotted on the y axis.}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                          each expectand to be plotted on the y axis.}
-\CommentTok{\#                          The first dimension of each element indexes }
-\CommentTok{\#                          the Markov chains and the second dimension }
-\CommentTok{\#                          indexes the sequential states within each }
+\CommentTok{\#                          The first dimension of each element indexes}
+\CommentTok{\#                          the Markov chains and the second dimension}
+\CommentTok{\#                          indexes the sequential states within each}
 \CommentTok{\#                          Markov chain.}
 \CommentTok{\# @param diagnostics A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                    each expectand.  The first dimension of each}
-\CommentTok{\#                    element indexes the Markov chains and the }
-\CommentTok{\#                    second dimension indexes the sequential }
+\CommentTok{\#                    element indexes the Markov chains and the}
+\CommentTok{\#                    second dimension indexes the sequential}
 \CommentTok{\#                    states within each Markov chain.}
 \CommentTok{\# @param xlim       Optional global x{-}axis bounds for all pair plots.}
 \CommentTok{\#                   Defaults to dynamic bounds for each pair plot.}
 \CommentTok{\# @param ylim       Optional global y{-}axis bounds for all pair plots.}
 \CommentTok{\#                   Defaults to dynamic bounds for each pair plot.}
-\CommentTok{\# @param transforms An optional dictionary with expectand names for keys }
-\CommentTok{\#                   and transformation flags for values.  Valid flags }
+\CommentTok{\# @param transforms An optional dictionary with expectand names for keys}
+\CommentTok{\#                   and transformation flags for values.  Valid flags}
 \CommentTok{\#                   are}
 \CommentTok{\#                     0: identity}
 \CommentTok{\#                     1: log}
 \CommentTok{\#                     2: logit}
 \CommentTok{\#                   Defaults to empty dictionary.}
-\CommentTok{\# @params plot\_mode Optional plotting style configuration: }
-\CommentTok{\#                     0: Non{-}divergent transitions are plotted in }
+\CommentTok{\# @params plot\_mode Optional plotting style configuration:}
+\CommentTok{\#                     0: Non{-}divergent transitions are plotted in}
 \CommentTok{\#                        transparent red while divergent transitions are}
 \CommentTok{\#                        plotted in transparent green.}
-\CommentTok{\#                     1: Non{-}divergent transitions are plotted in gray }
-\CommentTok{\#                        while divergent transitions are plotted in }
-\CommentTok{\#                        different shades of teal depending on the }
+\CommentTok{\#                     1: Non{-}divergent transitions are plotted in gray}
+\CommentTok{\#                        while divergent transitions are plotted in}
+\CommentTok{\#                        different shades of teal depending on the}
 \CommentTok{\#                        trajectory length.  Transitions from shorter}
-\CommentTok{\#                        trajectories should cluster somewhat closer to }
+\CommentTok{\#                        trajectories should cluster somewhat closer to}
 \CommentTok{\#                        the neighborhoods with problematic geometries.}
 \CommentTok{\#                   Defaults to 0.}
 \CommentTok{\# @param max\_width Maximum line width for printing}
@@ -823,15 +799,13 @@ states themselves can be visualized with pairs plots.
 \NormalTok{                   plot\_mode}\OperatorTok{=}\DecValTok{0}\NormalTok{, max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
   \CommentTok{"""Plot pairwise scatter plots with non{-}divergent and divergent }
 \CommentTok{     transitions separated by color"""}
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(x\_names) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{list}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}x\_names\textasciigrave{} is not a list!\textquotesingle{}}\NormalTok{))}
-    \ControlFlowTok{return}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(x\_names, }\BuiltInTok{list}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}x\_names\textasciigrave{} is not a list!\textquotesingle{}}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{expectand-diagnostic-functions}{%
 \section{Expectand Diagnostic
-Functions}\label{expectand-diagnostic-functions}}
+Functions}\label{expectand-diagnostic-functions}
 
 The Hamiltonian Monte Carlo diagnostics exploited the particular
 structure of the Hamiltonian Markov transition. For a general Markov
@@ -840,8 +814,7 @@ limited diagnostic options. In this general setting we have to
 investigate the behavior of not the entire state but instead particular
 expectands of interest.
 
-\hypertarget{xihat}{%
-\subsection{xihat}\label{xihat}}
+\subsection{xihat}\label{xihat}
 
 A Markov chain Monte Carlo central limit theorem cannot exist for the
 expectand \(f : X \rightarrow \mathbb{R}\) unless both
@@ -883,14 +856,14 @@ threshold.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Compute hat\{xi\}, an estimate for the shape of a generalized Pareto }
-\CommentTok{\# distribution from a sample of positive values using the method }
-\CommentTok{\# introduced in "A New and Efficient Estimation Method for the }
-\CommentTok{\# Generalized Pareto Distribution" by Zhang and Stephens }
+\CommentTok{\# Compute hat\{xi\}, an estimate for the shape of a generalized Pareto}
+\CommentTok{\# distribution from a sample of positive values using the method}
+\CommentTok{\# introduced in "A New and Efficient Estimation Method for the}
+\CommentTok{\# Generalized Pareto Distribution" by Zhang and Stephens}
 \CommentTok{\# https://doi.org/10.1198/tech.2009.08017.}
-\CommentTok{\# }
-\CommentTok{\# Within the generalized Pareto distribution family all moments up to }
-\CommentTok{\# the mth order are finite if and only if }
+\CommentTok{\#}
+\CommentTok{\# Within the generalized Pareto distribution family all moments up to}
+\CommentTok{\# the mth order are finite if and only if}
 \CommentTok{\#  xi \textless{} 1 / m.}
 \CommentTok{\#}
 \CommentTok{\# @params fs A one{-}dimensional array of positive values.}
@@ -905,7 +878,7 @@ threshold.
   
   \ControlFlowTok{if}\NormalTok{ (sorted\_fs[}\DecValTok{0}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{0}\NormalTok{):}
     \BuiltInTok{print}\NormalTok{(}\StringTok{"Sequence values must be positive!"}\NormalTok{)}
-    \ControlFlowTok{return}\NormalTok{ NaN}
+    \ControlFlowTok{return}\NormalTok{ math.nan}
   
   \CommentTok{\# Estimate 25\% quantile}
 \NormalTok{  q }\OperatorTok{=}\NormalTok{ sorted\_fs[math.floor(}\FloatTok{0.25} \OperatorTok{*}\NormalTok{ N }\OperatorTok{+} \FloatTok{0.5}\NormalTok{)]}
@@ -934,7 +907,7 @@ threshold.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Compute empirical generalized Pareto shape for upper and lower tails}
-\CommentTok{\# for an arbitrary sample of expectand values, ignoring any }
+\CommentTok{\# for an arbitrary sample of expectand values, ignoring any}
 \CommentTok{\# autocorrelation between the values.}
 \CommentTok{\# @param fs A one{-}dimensional array of expectand values.}
 \CommentTok{\# @return Left and right shape estimators.}
@@ -970,11 +943,11 @@ threshold.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Check upper and lower tail behavior of a given expectand output }
+\CommentTok{\# Check upper and lower tail behavior of a given expectand output}
 \CommentTok{\# ensemble.}
-\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
-\CommentTok{\#                with the first dimension indexing the Markov chains and }
-\CommentTok{\#                the second dimension indexing the sequential states }
+\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states}
+\CommentTok{\#                with the first dimension indexing the Markov chains and}
+\CommentTok{\#                the second dimension indexing the sequential states}
 \CommentTok{\#                within each Markov chain.}
 \CommentTok{\# @param max\_width Maximum line width for printing}
 \KeywordTok{def}\NormalTok{ check\_tail\_xi\_hats(samples, max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
@@ -1033,8 +1006,7 @@ threshold.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{frozen-chains}{%
-\subsection{Frozen Chains}\label{frozen-chains}}
+\subsection{Frozen Chains}\label{frozen-chains}
 
 Another sign of problems is when all evaluations of an expectand are
 constant. This could be due to the Markov chain being stuck at a single
@@ -1072,9 +1044,9 @@ of the expectand values in a single sweep.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Check expectand output ensemble for vanishing empirical variance.}
-\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
-\CommentTok{\#                with the first dimension indexing the Markov chains and }
-\CommentTok{\#                the second dimension indexing the sequential states }
+\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states}
+\CommentTok{\#                with the first dimension indexing the Markov chains and}
+\CommentTok{\#                the second dimension indexing the sequential states}
 \CommentTok{\#                within each Markov chain.}
 \CommentTok{\# @param max\_width Maximum line width for printing}
 \KeywordTok{def}\NormalTok{ check\_variances(samples, max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
@@ -1094,8 +1066,7 @@ of the expectand values in a single sweep.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{split-rhat}{%
-\subsection{Split Rhat}\label{split-rhat}}
+\subsection{Split Rhat}\label{split-rhat}
 
 One of the key features of Markov chain equilibrium is that the
 distribution of Markov chain realizations is independent of the
@@ -1121,9 +1092,9 @@ set.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Split a sequence of expectand values in half to create an initial and }
+\CommentTok{\# Split a sequence of expectand values in half to create an initial and}
 \CommentTok{\# terminal Markov chains}
-\CommentTok{\# @params chain A sequence of expectand values derived from a single }
+\CommentTok{\# @params chain A sequence of expectand values derived from a single}
 \CommentTok{\#               Markov chain.}
 \CommentTok{\# @return Two subsequences of expectand values.}
 \KeywordTok{def}\NormalTok{ split\_chain(chain):}
@@ -1136,11 +1107,11 @@ set.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Compute split hat\{R\} for the expectand values across a Markov chain }
+\CommentTok{\# Compute split hat\{R\} for the expectand values across a Markov chain}
 \CommentTok{\# ensemble.}
-\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
-\CommentTok{\#                with the first dimension indexing the Markov chains and }
-\CommentTok{\#                the second dimension indexing the sequential states }
+\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states}
+\CommentTok{\#                with the first dimension indexing the Markov chains and}
+\CommentTok{\#                the second dimension indexing the sequential states}
 \CommentTok{\#                within each Markov chain.}
 \CommentTok{\# @return Split Rhat estimate.}
 \KeywordTok{def}\NormalTok{ compute\_split\_rhat(samples):}
@@ -1178,18 +1149,17 @@ set.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Compute split hat\{R\} for all input expectands}
-\CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for }
+\CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                          each expectand.  The first dimension of each}
-\CommentTok{\#                          element indexes the Markov chains and the }
-\CommentTok{\#                          second dimension indexes the sequential }
+\CommentTok{\#                          element indexes the Markov chains and the}
+\CommentTok{\#                          second dimension indexes the sequential}
 \CommentTok{\#                          states within each Markov chain.}
 \KeywordTok{def}\NormalTok{ compute\_split\_rhats(expectand\_samples):}
   \CommentTok{"""Compute split hat\{R\} for all expectand output ensembles across}
 \CommentTok{     a collection of Markov chains"""}
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(expectand\_samples) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(expectand\_samples, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
            \StringTok{\textquotesingle{}is not a standard dictionary!\textquotesingle{}}\NormalTok{))}
-    \ControlFlowTok{return}
     
 \NormalTok{  rhats }\OperatorTok{=}\NormalTok{ []}
   \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ expectand\_samples:}
@@ -1203,9 +1173,9 @@ set.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Check split hat\{R\} across a given expectand output ensemble.}
-\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
-\CommentTok{\#                with the first dimension indexing the Markov chains and }
-\CommentTok{\#                the second dimension indexing the sequential states }
+\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states}
+\CommentTok{\#                with the first dimension indexing the Markov chains and}
+\CommentTok{\#                the second dimension indexing the sequential states}
 \CommentTok{\#                within each Markov chain.}
 \CommentTok{\# @param max\_width Maximum line width for printing}
 \KeywordTok{def}\NormalTok{ check\_rhat(samples, max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
@@ -1219,9 +1189,8 @@ set.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{integrated-autocorrelation-time}{%
 \subsection{Integrated Autocorrelation
-Time}\label{integrated-autocorrelation-time}}
+Time}\label{integrated-autocorrelation-time}
 
 The information about the target distribution encoded within a Markov
 chain, and hence the potential precision of Markov chain Monte Carlo
@@ -1268,21 +1237,20 @@ error for the particular expectand of interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Compute the maximum empirical effective sample size across the }
+\CommentTok{\# Compute the maximum empirical effective sample size across the}
 \CommentTok{\# Markov chains for the given expectands}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                          each expectand.  The first dimension of each}
-\CommentTok{\#                          element indexes the Markov chains and the }
-\CommentTok{\#                          second dimension indexes the sequential }
+\CommentTok{\#                          element indexes the Markov chains and the}
+\CommentTok{\#                          second dimension indexes the sequential}
 \CommentTok{\#                          states within each Markov chain.}
 \KeywordTok{def}\NormalTok{ compute\_min\_eesss(expectand\_samples):}
   \CommentTok{"""Compute the minimimum empirical integrated autocorrelation time}
 \CommentTok{     across a collection of Markov chains for all expectand output}
 \CommentTok{     ensembles"""}
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(expectand\_samples) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(expectand\_samples, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
            \StringTok{\textquotesingle{}is not a standard dictionary!\textquotesingle{}}\NormalTok{))}
-    \ControlFlowTok{return}
       
 \NormalTok{  min\_eesss }\OperatorTok{=}\NormalTok{ []}
   \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ expectand\_samples:}
@@ -1322,11 +1290,11 @@ in the worst case and reduce estimator precision in the best case.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Check the empirical effective sample size (EESS) for all a given }
+\CommentTok{\# Check the empirical effective sample size (EESS) for all a given}
 \CommentTok{\# expectand output ensemble.}
-\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
-\CommentTok{\#                with the first dimension indexing the Markov chains and }
-\CommentTok{\#                the second dimension indexing the sequential states }
+\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states}
+\CommentTok{\#                with the first dimension indexing the Markov chains and}
+\CommentTok{\#                the second dimension indexing the sequential states}
 \CommentTok{\#                within each Markov chain.}
 \CommentTok{\# @param min\_eess\_per\_chain The minimum empirical effective sample size}
 \CommentTok{\#                           before a warning message is passed.}
@@ -1371,8 +1339,7 @@ For example empirical effective sample sizes can provide a useful way to
 distinguish if some diagnostic failures are due to Markov chains that
 are just too short or more persistent problems.
 
-\hypertarget{all-expectand-diagnostics}{%
-\subsection{All Expectand Diagnostics}\label{all-expectand-diagnostics}}
+\subsection{All Expectand Diagnostics}\label{all-expectand-diagnostics}
 
 In practice we have no reason not to check all of these diagnostics at
 once for each expectand of interest.
@@ -1380,10 +1347,10 @@ once for each expectand of interest.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Check all expectand{-}specific diagnostics.}
-\CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for }
+\CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                          each expectand.  The first dimension of each}
-\CommentTok{\#                          element indexes the Markov chains and the }
-\CommentTok{\#                          second dimension indexes the sequential }
+\CommentTok{\#                          element indexes the Markov chains and the}
+\CommentTok{\#                          second dimension indexes the sequential}
 \CommentTok{\#                          states within each Markov chain.}
 \CommentTok{\# @param min\_eess\_per\_chain The minimum empirical effective sample size}
 \CommentTok{\#                           before a warning message is passed.}
@@ -1396,10 +1363,9 @@ once for each expectand of interest.
 \NormalTok{                                    exclude\_zvar}\OperatorTok{=}\VariableTok{False}\NormalTok{,}
 \NormalTok{                                    max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
   \CommentTok{"""Check all expectand diagnostics"""}
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(expectand\_samples) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(expectand\_samples, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
            \StringTok{\textquotesingle{}is not a standard dictionary!\textquotesingle{}}\NormalTok{))}
-    \ControlFlowTok{return}
   
 \NormalTok{  no\_xi\_hat\_warning }\OperatorTok{=} \VariableTok{True} 
 \NormalTok{  no\_zvar\_warning }\OperatorTok{=} \VariableTok{True}
@@ -1507,10 +1473,9 @@ we can summarize the output more compactly.
 \NormalTok{                                    exclude\_zvar}\OperatorTok{=}\VariableTok{False}\NormalTok{,}
 \NormalTok{                                    max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
   \CommentTok{"""Summarize expectand diagnostics"""}
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(expectand\_samples) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(expectand\_samples, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
            \StringTok{\textquotesingle{}is not a standard dictionary!\textquotesingle{}}\NormalTok{))}
-    \ControlFlowTok{return}
   
 \NormalTok{  failed\_names }\OperatorTok{=}\NormalTok{ []}
 \NormalTok{  failed\_xi\_hat\_names }\OperatorTok{=}\NormalTok{ []}
@@ -1528,12 +1493,12 @@ immediate interest.
 \CommentTok{\# Filter \textasciigrave{}expectand\_samples\textasciigrave{} by name.}
 \CommentTok{\# @param expectand\_samples A dictionary of two{-}dimensional arrays for}
 \CommentTok{\#                          each expectand to be plotted on the y axis.}
-\CommentTok{\#                          The first dimension of each element indexes }
-\CommentTok{\#                          the Markov chains and the second dimension }
-\CommentTok{\#                          indexes the sequential states within each }
+\CommentTok{\#                          The first dimension of each element indexes}
+\CommentTok{\#                          the Markov chains and the second dimension}
+\CommentTok{\#                          indexes the sequential states within each}
 \CommentTok{\#                          Markov chain.}
 \CommentTok{\# @param requested\_names List of expectand names to keep.}
-\CommentTok{\# @param check\_arrays Binary variable indicating whether or not }
+\CommentTok{\# @param check\_arrays Binary variable indicating whether or not}
 \CommentTok{\#                     requested names should be expanded to array}
 \CommentTok{\#                     components.}
 \CommentTok{\# @param max\_width Maximum line width for printing}
@@ -1541,14 +1506,12 @@ immediate interest.
 \CommentTok{\#         expectand.}
 \KeywordTok{def}\NormalTok{ filter\_expectands(expectand\_samples, requested\_names,}
 \NormalTok{                      check\_arrays}\OperatorTok{=}\VariableTok{False}\NormalTok{, max\_width}\OperatorTok{=}\DecValTok{72}\NormalTok{):}
-  \ControlFlowTok{if} \BuiltInTok{type}\NormalTok{(expectand\_samples) }\KeywordTok{is} \KeywordTok{not} \BuiltInTok{dict}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(expectand\_samples, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_samples\textasciigrave{} \textquotesingle{}}
            \StringTok{\textquotesingle{}is not a standard dictionary!\textquotesingle{}}\NormalTok{))}
-    \ControlFlowTok{return}
   
   \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(requested\_names) }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
-    \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}requested\_names\textasciigrave{} must be non{-}empty!\textquotesingle{}}\NormalTok{)}
-    \ControlFlowTok{return}
+    \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}requested\_names\textasciigrave{} must be non{-}empty!\textquotesingle{}}\NormalTok{)}
   
   \ControlFlowTok{if}\NormalTok{ check\_arrays }\KeywordTok{is} \VariableTok{True}\NormalTok{:}
 \NormalTok{    good\_names }\OperatorTok{=}\NormalTok{ []}
@@ -1585,9 +1548,8 @@ immediate interest.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{empirical-autocorrelation-visualization}{%
 \subsection{Empirical Autocorrelation
-Visualization}\label{empirical-autocorrelation-visualization}}
+Visualization}\label{empirical-autocorrelation-visualization}
 
 If we encounter large empirical integrated autocorrelation times, or
 small estimated effective sample sizes, then we may want to follow up
@@ -1598,7 +1560,7 @@ provides a useful visualization of these estimates.
 \begin{Highlighting}[]
 \CommentTok{\# Compute empirical autocorrelations for a given Markov chain sequence}
 \CommentTok{\# @parmas fs A one{-}dimensional array of sequential expectand values.}
-\CommentTok{\# @return A one{-}dimensional array of empirical autocorrelations at each }
+\CommentTok{\# @return A one{-}dimensional array of empirical autocorrelations at each}
 \CommentTok{\#         lag up to the length of the sequence.}
 \KeywordTok{def}\NormalTok{ compute\_rhos(fs):}
   \CommentTok{"""Visualize empirical autocorrelations for a given sequence"""}
@@ -1657,12 +1619,12 @@ provides a useful visualization of these estimates.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Plot empirical correlograms for a given expectand across a Markov }
+\CommentTok{\# Plot empirical correlograms for a given expectand across a Markov}
 \CommentTok{\# chain ensemble.}
 \CommentTok{\# @ax Matplotlib axis object}
-\CommentTok{\# @param fs A two{-}dimensional array of scalar Markov chain states }
-\CommentTok{\#           with the first dimension indexing the Markov chains and }
-\CommentTok{\#           the second dimension indexing the sequential states }
+\CommentTok{\# @param fs A two{-}dimensional array of scalar Markov chain states}
+\CommentTok{\#           with the first dimension indexing the Markov chains and}
+\CommentTok{\#           the second dimension indexing the sequential states}
 \CommentTok{\#           within each Markov chain.}
 \CommentTok{\# @param max\_L Maximum autocorrelation lag}
 \CommentTok{\# @param rho\_lim Plotting range of autocorrelation values}
@@ -1701,9 +1663,8 @@ provides a useful visualization of these estimates.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{chain-separated-pairs-plot}{%
 \subsection{Chain-Separated Pairs
-Plot}\label{chain-separated-pairs-plot}}
+Plot}\label{chain-separated-pairs-plot}
 
 We can also visualize strong autocorrelations by coloring the states of
 each Markov chain in a continuous gradient. When neighboring states are
@@ -1713,17 +1674,17 @@ chaotic spray of colors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Visualize the projection of a Markov chain ensemble along two }
-\CommentTok{\# expectands as a pairs plot.  Point colors darken along each Markov }
+\CommentTok{\# Visualize the projection of a Markov chain ensemble along two}
+\CommentTok{\# expectands as a pairs plot.  Point colors darken along each Markov}
 \CommentTok{\# chain to visualize the autocorrelation.}
-\CommentTok{\# @param f1s A two{-}dimensional array of expectand values with the first }
-\CommentTok{\#            dimension indexing the Markov chains and the second }
-\CommentTok{\#            dimension indexing the sequential states  within each }
+\CommentTok{\# @param f1s A two{-}dimensional array of expectand values with the first}
+\CommentTok{\#            dimension indexing the Markov chains and the second}
+\CommentTok{\#            dimension indexing the sequential states  within each}
 \CommentTok{\#            Markov chain.}
 \CommentTok{\# @params display\_name1 Name of first expectand}
-\CommentTok{\# @param f2s A two{-}dimensional array of expectand values with the first }
-\CommentTok{\#            dimension indexing the Markov chains and the second }
-\CommentTok{\#            dimension indexing the sequential states  within each }
+\CommentTok{\# @param f2s A two{-}dimensional array of expectand values with the first}
+\CommentTok{\#            dimension indexing the Markov chains and the second}
+\CommentTok{\#            dimension indexing the sequential states  within each}
 \CommentTok{\#            Markov chain.}
 \CommentTok{\# @params display\_name2 Name of second expectand}
 \KeywordTok{def}\NormalTok{ plot\_pairs\_by\_chain(f1s, display\_name1,}
@@ -1760,9 +1721,8 @@ chaotic spray of colors.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{markov-chain-monte-carlo-estimation}{%
 \section{Markov Chain Monte Carlo
-Estimation}\label{markov-chain-monte-carlo-estimation}}
+Estimation}\label{markov-chain-monte-carlo-estimation}
 
 If none of the diagnostics indicate an obstruction to a Markov chain
 Monte Carlo central limit theorem then we can construct expectation
@@ -1771,15 +1731,15 @@ value estimates and their standard errors.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Evaluate an expectand at the states of a Markov chain ensemble.}
-\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
-\CommentTok{\#                with the first dimension indexing the Markov chains and }
-\CommentTok{\#                the second dimension indexing the sequential states }
+\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states}
+\CommentTok{\#                with the first dimension indexing the Markov chains and}
+\CommentTok{\#                the second dimension indexing the sequential states}
 \CommentTok{\#                within each Markov chain.}
-\CommentTok{\# @param expectand Scalar function to be applied to the Markov chain }
+\CommentTok{\# @param expectand Scalar function to be applied to the Markov chain}
 \CommentTok{\#                  states.}
-\CommentTok{\# @return A two{-}dimensional array of expectand values with the }
-\CommentTok{\#         first dimension indexing the Markov chains and the }
-\CommentTok{\#         second dimension indexing the sequential states within }
+\CommentTok{\# @return A two{-}dimensional array of expectand values with the}
+\CommentTok{\#         first dimension indexing the Markov chains and the}
+\CommentTok{\#         second dimension indexing the sequential states within}
 \CommentTok{\#         each Markov chain.}
 \KeywordTok{def}\NormalTok{ pushforward\_chains(samples, expectand):}
   \CommentTok{"""Evaluate an expectand along a Markov chain"""}
@@ -1791,7 +1751,7 @@ value estimates and their standard errors.
 \begin{Highlighting}[]
 \CommentTok{\# Estimate expectand exectation value from a single Markov chain.}
 \CommentTok{\# @param fs A one{-}dimensional array of sequential expectand values.}
-\CommentTok{\# @return The Markov chain Monte Carlo estimate, its estimated standard }
+\CommentTok{\# @return The Markov chain Monte Carlo estimate, its estimated standard}
 \CommentTok{\#         error, and empirical effective sample size.}
 \KeywordTok{def}\NormalTok{ mcmc\_est(fs):}
   \CommentTok{"""Estimate expectand expectation value from a Markov chain"""}
@@ -1813,9 +1773,9 @@ value estimates and their standard errors.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Estimate expectand exectation value from a Markov chain ensemble.}
-\CommentTok{\# @param samples A two{-}dimensional array of expectand values with the }
-\CommentTok{\#                first dimension indexing the Markov chains and the }
-\CommentTok{\#                second dimension indexing the sequential states within }
+\CommentTok{\# @param samples A two{-}dimensional array of expectand values with the}
+\CommentTok{\#                first dimension indexing the Markov chains and the}
+\CommentTok{\#                second dimension indexing the sequential states within}
 \CommentTok{\#                each Markov chain.}
 \CommentTok{\# @return The ensemble Markov chain Monte Carlo estimate, its estimated}
 \CommentTok{\#         standard error, and empirical effective sample size.}
@@ -1848,21 +1808,22 @@ by estimating the target probabilities in histogram bins.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Visualize pushforward distribution of a given expectand as a }
-\CommentTok{\# histogram, using Markov chain Monte Carlo estimators to estimate the }
-\CommentTok{\# output bin probabilities.  Bin probability estimator error is shown }
+\CommentTok{\# Visualize pushforward distribution of a given expectand as a}
+\CommentTok{\# histogram, using Markov chain Monte Carlo estimators to estimate the}
+\CommentTok{\# output bin probabilities.  Bin probability estimator error is shown}
 \CommentTok{\# in gray.}
 \CommentTok{\# @ax Matplotlib axis object}
-\CommentTok{\# @param samples A two{-}dimensional array of expectand values with the }
-\CommentTok{\#                first dimension indexing the Markov chains and the }
-\CommentTok{\#                second dimension indexing the sequential states within }
+\CommentTok{\# @param samples A two{-}dimensional array of expectand values with the}
+\CommentTok{\#                first dimension indexing the Markov chains and the}
+\CommentTok{\#                second dimension indexing the sequential states within}
 \CommentTok{\#                each Markov chain.}
 \CommentTok{\# @param B The number of histogram bins}
 \CommentTok{\# @param display\_name Exectand name}
 \CommentTok{\# @param flim Optional histogram range}
 \CommentTok{\# @param baseline Optional baseline value for visual comparison}
+\CommentTok{\# @param title Optional plot title}
 \KeywordTok{def}\NormalTok{ plot\_expectand\_pushforward(ax, samples, B, display\_name}\OperatorTok{=}\StringTok{"f"}\NormalTok{, }
-\NormalTok{                               flim}\OperatorTok{=}\VariableTok{None}\NormalTok{, baseline}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+\NormalTok{                               flim}\OperatorTok{=}\VariableTok{None}\NormalTok{, baseline}\OperatorTok{=}\VariableTok{None}\NormalTok{, title}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
   \CommentTok{"""Plot pushforward histogram of a given expectand using Markov chain}
 \CommentTok{     Monte Carlo estimators to estimate the output bin probabilities"""}
   \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(samples.shape) }\OperatorTok{!=} \DecValTok{2}\NormalTok{:}
@@ -1873,58 +1834,11 @@ by estimating the target probabilities in histogram bins.
     \CommentTok{\# Automatically adjust histogram binning to range of outputs}
 \NormalTok{    min\_f }\OperatorTok{=} \BuiltInTok{min}\NormalTok{(samples.flatten())}
 \NormalTok{    max\_f }\OperatorTok{=} \BuiltInTok{max}\NormalTok{(samples.flatten())}
-    
-    \CommentTok{\# Add bounding bins}
 \NormalTok{    delta }\OperatorTok{=}\NormalTok{ (max\_f }\OperatorTok{{-}}\NormalTok{ min\_f) }\OperatorTok{/}\NormalTok{ B}
-\NormalTok{    min\_f }\OperatorTok{=}\NormalTok{ min\_f }\OperatorTok{{-}}\NormalTok{ delta}
-\NormalTok{    max\_f }\OperatorTok{=}\NormalTok{ max\_f }\OperatorTok{+}\NormalTok{ delta}
-\NormalTok{    flim }\OperatorTok{=}\NormalTok{ [min\_f, max\_f]}
-    
-\NormalTok{    bins }\OperatorTok{=}\NormalTok{ numpy.arange(min\_f, max\_f }\OperatorTok{+}\NormalTok{ delta, delta)}
-\NormalTok{    B }\OperatorTok{=}\NormalTok{ B }\OperatorTok{+} \DecValTok{2}
-  \ControlFlowTok{else}\NormalTok{:}
-\NormalTok{    delta }\OperatorTok{=}\NormalTok{ (flim[}\DecValTok{1}\NormalTok{] }\OperatorTok{{-}}\NormalTok{ flim[}\DecValTok{0}\NormalTok{]) }\OperatorTok{/}\NormalTok{ B}
-\NormalTok{    bins }\OperatorTok{=}\NormalTok{ numpy.arange(flim[}\DecValTok{0}\NormalTok{], flim[}\DecValTok{1}\NormalTok{] }\OperatorTok{+}\NormalTok{ delta, delta)}
-  
-\NormalTok{  mean\_p }\OperatorTok{=}\NormalTok{ [}\DecValTok{0}\NormalTok{] }\OperatorTok{*}\NormalTok{ B}
-\NormalTok{  delta\_p }\OperatorTok{=}\NormalTok{ [}\DecValTok{0}\NormalTok{] }\OperatorTok{*}\NormalTok{ B}
-  
-  \ControlFlowTok{for}\NormalTok{ b }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(B):}
-    \KeywordTok{def}\NormalTok{ bin\_indicator(x):}
-      \ControlFlowTok{return} \FloatTok{1.0} \ControlFlowTok{if}\NormalTok{ bins[b] }\OperatorTok{\textless{}=}\NormalTok{ x }\KeywordTok{and}\NormalTok{ x }\OperatorTok{\textless{}}\NormalTok{ bins[b }\OperatorTok{+} \DecValTok{1}\NormalTok{] }\ControlFlowTok{else} \FloatTok{0.0}
-    
-\NormalTok{    indicator\_samples }\OperatorTok{=}\NormalTok{ pushforward\_chains(samples, bin\_indicator)}
-\NormalTok{    est }\OperatorTok{=}\NormalTok{ ensemble\_mcmc\_est(indicator\_samples)}
-    
-    \CommentTok{\# Normalize bin probabilities by bin width to allow}
-    \CommentTok{\# for direct comparison to probability density functions}
-\NormalTok{    width }\OperatorTok{=}\NormalTok{ bins[b }\OperatorTok{+} \DecValTok{1}\NormalTok{] }\OperatorTok{{-}}\NormalTok{ bins[b]}
-\NormalTok{    mean\_p[b] }\OperatorTok{=}\NormalTok{ est[}\DecValTok{0}\NormalTok{] }\OperatorTok{/}\NormalTok{ width}
-\NormalTok{    delta\_p[b] }\OperatorTok{=}\NormalTok{ est[}\DecValTok{1}\NormalTok{] }\OperatorTok{/}\NormalTok{ width}
-  
-\NormalTok{  idxs }\OperatorTok{=}\NormalTok{ [ idx }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(B) }\ControlFlowTok{for}\NormalTok{ r }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{2}\NormalTok{) ]}
-\NormalTok{  xs }\OperatorTok{=}\NormalTok{ [ bins[b }\OperatorTok{+}\NormalTok{ o] }\ControlFlowTok{for}\NormalTok{ b }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(B) }\ControlFlowTok{for}\NormalTok{ o }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{2}\NormalTok{) ]}
-  
-\NormalTok{  lower\_inter }\OperatorTok{=}\NormalTok{ [ }\BuiltInTok{max}\NormalTok{(mean\_p[idx] }\OperatorTok{{-}} \DecValTok{2} \OperatorTok{*}\NormalTok{ delta\_p[idx], }\DecValTok{0}\NormalTok{)}
-                  \ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ idxs ]}
-\NormalTok{  upper\_inter }\OperatorTok{=}\NormalTok{ [ }\BuiltInTok{min}\NormalTok{(mean\_p[idx] }\OperatorTok{+} \DecValTok{2} \OperatorTok{*}\NormalTok{ delta\_p[idx], }\DecValTok{1} \OperatorTok{/}\NormalTok{ width) }
-                  \ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ idxs ]}
-  
-\NormalTok{  min\_y }\OperatorTok{=}        \BuiltInTok{min}\NormalTok{(lower\_inter)}
-\NormalTok{  max\_y }\OperatorTok{=} \FloatTok{1.05} \OperatorTok{*} \BuiltInTok{max}\NormalTok{(upper\_inter)}
-  
-\NormalTok{  ax.fill\_between(xs, lower\_inter, upper\_inter,}
-\NormalTok{                  facecolor}\OperatorTok{=}\NormalTok{light, color}\OperatorTok{=}\StringTok{"\#DDDDDD"}\NormalTok{)}
-\NormalTok{  ax.plot(xs, [ mean\_p[idx] }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ idxs ], color}\OperatorTok{=}\NormalTok{dark, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
-  
-  \ControlFlowTok{if}\NormalTok{ baseline }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
-\NormalTok{    ax.axvline(x}\OperatorTok{=}\NormalTok{baseline, linewidth}\OperatorTok{=}\DecValTok{4}\NormalTok{, color}\OperatorTok{=}\StringTok{"white"}\NormalTok{)}
-\NormalTok{    ax.axvline(x}\OperatorTok{=}\NormalTok{baseline, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{, color}\OperatorTok{=}\StringTok{"black"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{demonstration}{%
-\section{Demonstration}\label{demonstration}}
+\section{Demonstration}\label{demonstration}
 
 Now let's put all of these analysis tools to use with an \texttt{PyStan}
 fit object.
@@ -1970,7 +1884,7 @@ Then we can simulate some binary data from a logistic regression model.
 
 \begin{codelisting}
 
-\caption{\texttt{simu\_logistic\_reg.stan}}
+\caption{\texttt{simu\textbackslash\_logistic\textbackslash\_reg.stan}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1989,7 +1903,7 @@ Then we can simulate some binary data from a logistic regression model.
 
 \KeywordTok{generated quantities}\NormalTok{ \{}
   \DataTypeTok{matrix}\NormalTok{[N, M] X; }\CommentTok{// Covariate design matrix}
-  \DataTypeTok{real}\NormalTok{ y[N];      }\CommentTok{// Variates}
+  \DataTypeTok{array}\NormalTok{[N] }\DataTypeTok{real}\NormalTok{ y;      }\CommentTok{// Variates}
 
   \ControlFlowTok{for}\NormalTok{ (n }\ControlFlowTok{in} \DecValTok{1}\NormalTok{:N) \{}
     \DataTypeTok{real}\NormalTok{ x2 = {-}}\DecValTok{5}\NormalTok{;}
@@ -2047,7 +1961,7 @@ infinite outputs.
 
 \begin{codelisting}
 
-\caption{\texttt{bernoulli\_linear.stan}}
+\caption{\texttt{bernoulli\textbackslash\_linear.stan}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2058,7 +1972,7 @@ infinite outputs.
   \DataTypeTok{vector}\NormalTok{[M] x0;   }\CommentTok{// Covariate baselines}
   \DataTypeTok{matrix}\NormalTok{[N, M] X; }\CommentTok{// Covariate design matrix}
   
-  \DataTypeTok{int}\NormalTok{\textless{}}\KeywordTok{lower}\NormalTok{=}\DecValTok{0}\NormalTok{, }\KeywordTok{upper}\NormalTok{=}\DecValTok{1}\NormalTok{\textgreater{} y[N]; }\CommentTok{// Variates}
+  \DataTypeTok{array}\NormalTok{[N] }\DataTypeTok{int}\NormalTok{\textless{}}\KeywordTok{lower}\NormalTok{=}\DecValTok{0}\NormalTok{, }\KeywordTok{upper}\NormalTok{=}\DecValTok{1}\NormalTok{\textgreater{} y; }\CommentTok{// Variates}
 \NormalTok{\}}
 
 \KeywordTok{transformed data}\NormalTok{ \{}
@@ -2085,7 +1999,7 @@ infinite outputs.
 \CommentTok{// Simulate a full observation from the current value of the parameters}
 \KeywordTok{generated quantities}\NormalTok{ \{}
   \DataTypeTok{vector}\NormalTok{[N] p = alpha + deltaX * beta;}
-  \DataTypeTok{int}\NormalTok{ y\_pred[N] = bernoulli\_rng(p);}
+  \DataTypeTok{array}\NormalTok{[N] }\DataTypeTok{int}\NormalTok{ y\_pred = bernoulli\_rng(p);}
 \NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
@@ -2136,15 +2050,15 @@ Let's start with the Hamiltonian Monte Carlo diagnostics.
 \end{Shaded}
 
 \begin{verbatim}
-  Chain 1: 1014 of 1024 transitions (99.02%) diverged.
- 
-  Chain 2: 1012 of 1024 transitions (98.83%) diverged.
-  Chain 2: Average proxy acceptance statistic (0.653) is smaller than
+  Chain 1: 1016 of 1024 transitions (99.22%) diverged.
+  Chain 1: Average proxy acceptance statistic (0.566) is smaller than
 90% of the target (0.801).
  
-  Chain 3: 1016 of 1024 transitions (99.22%) diverged.
+  Chain 2: 1015 of 1024 transitions (99.12%) diverged.
  
-  Chain 4: 1010 of 1024 transitions (98.63%) diverged.
+  Chain 3: 1022 of 1024 transitions (99.80%) diverged.
+ 
+  Chain 4: 1016 of 1024 transitions (99.22%) diverged.
  
 Divergent Hamiltonian transitions result from unstable numerical
 trajectories.  These instabilities are often due to degenerate target
@@ -2173,13 +2087,7 @@ configuration of the Hamiltonian Markov transition.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-8-output-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-8-output-1.pdf}
 
 The problematic third Markov chain also exhibits the least variation in
 its inverse metric elements, which in this case is probably an artifact
@@ -2201,10 +2109,10 @@ acceptance statistic.
 \end{Shaded}
 
 \begin{verbatim}
-Chain 1: Integrator Step Size = 3.69e-03
-Chain 2: Integrator Step Size = 5.47e-02
-Chain 3: Integrator Step Size = 1.41e-02
-Chain 4: Integrator Step Size = 3.40e-02
+Chain 1: Integrator Step Size = 7.59e-02
+Chain 2: Integrator Step Size = 1.13e-02
+Chain 3: Integrator Step Size = 4.31e-02
+Chain 4: Integrator Step Size = 5.33e-03
 \end{verbatim}
 
 \begin{Shaded}
@@ -2214,10 +2122,10 @@ Chain 4: Integrator Step Size = 3.40e-02
 \end{Shaded}
 
 \begin{verbatim}
-Chain 1: Average proxy acceptance statistic = 0.935
-Chain 2: Average proxy acceptance statistic = 0.653
-Chain 3: Average proxy acceptance statistic = 0.792
-Chain 4: Average proxy acceptance statistic = 0.800
+Chain 1: Average proxy acceptance statistic = 0.566
+Chain 2: Average proxy acceptance statistic = 0.856
+Chain 3: Average proxy acceptance statistic = 0.738
+Chain 4: Average proxy acceptance statistic = 0.957
 \end{verbatim}
 
 The different inverse metric results in different Hamiltonian dynamics.
@@ -2230,13 +2138,7 @@ explore as far as those in the other chains.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-11-output-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-11-output-1.pdf}
 
 Finally because nearly every transition is divergent we can't extract
 much information from the divergent-labeled pairs plots.
@@ -2251,13 +2153,7 @@ much information from the divergent-labeled pairs plots.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-12-output-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-12-output-1.pdf}
 
 We can also color the divergent transitions by their numerical
 trajectory lengths. On average transitions from shorter numerical
@@ -2277,13 +2173,7 @@ not inconsistent with a boundary defined by \[
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-13-output-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-13-output-1.pdf}
 
 Having examined the Hamiltonian Monte Carlo diagnostics let's now look
 through the expectand specific diagnostics. By default we'll look at the
@@ -2417,151 +2307,41 @@ y_pred[100], y_pred[101], y_pred[106], y_pred[108], y_pred[10],
 y_pred[114], y_pred[116], y_pred[121], y_pred[122], y_pred[123],
 y_pred[124], y_pred[126], y_pred[127], y_pred[130], y_pred[131],
 y_pred[132], y_pred[133], y_pred[134], y_pred[137], y_pred[138],
-y_pred[13], y_pred[144], y_pred[145], y_pred[149], y_pred[150],
-y_pred[151], y_pred[153], y_pred[154], y_pred[155], y_pred[156],
-y_pred[157], y_pred[158], y_pred[15], y_pred[160], y_pred[161],
-y_pred[163], y_pred[164], y_pred[165], y_pred[166], y_pred[167],
-y_pred[171], y_pred[173], y_pred[176], y_pred[177], y_pred[179],
-y_pred[17], y_pred[181], y_pred[182], y_pred[183], y_pred[184],
-y_pred[186], y_pred[187], y_pred[189], y_pred[18], y_pred[191],
-y_pred[194], y_pred[195], y_pred[197], y_pred[1], y_pred[200],
-y_pred[201], y_pred[202], y_pred[204], y_pred[205], y_pred[206],
-y_pred[207], y_pred[210], y_pred[211], y_pred[214], y_pred[216],
-y_pred[217], y_pred[219], y_pred[225], y_pred[227], y_pred[228],
-y_pred[233], y_pred[236], y_pred[239], y_pred[240], y_pred[241],
-y_pred[243], y_pred[244], y_pred[246], y_pred[249], y_pred[24],
-y_pred[250], y_pred[251], y_pred[252], y_pred[253], y_pred[255],
-y_pred[256], y_pred[257], y_pred[258], y_pred[260], y_pred[261],
-y_pred[265], y_pred[266], y_pred[267], y_pred[268], y_pred[26],
-y_pred[270], y_pred[272], y_pred[27], y_pred[281], y_pred[282],
-y_pred[283], y_pred[284], y_pred[286], y_pred[287], y_pred[289],
-y_pred[290], y_pred[291], y_pred[293], y_pred[294], y_pred[296],
-y_pred[297], y_pred[298], y_pred[29], y_pred[2], y_pred[300],
-y_pred[301], y_pred[303], y_pred[304], y_pred[308], y_pred[30],
-y_pred[310], y_pred[315], y_pred[316], y_pred[318], y_pred[319],
-y_pred[31], y_pred[324], y_pred[325], y_pred[326], y_pred[328],
-y_pred[32], y_pred[330], y_pred[332], y_pred[335], y_pred[336],
+y_pred[13], y_pred[144], y_pred[149], y_pred[151], y_pred[153],
+y_pred[154], y_pred[155], y_pred[156], y_pred[157], y_pred[15],
+y_pred[160], y_pred[161], y_pred[163], y_pred[164], y_pred[165],
+y_pred[166], y_pred[167], y_pred[16], y_pred[171], y_pred[173],
+y_pred[176], y_pred[177], y_pred[179], y_pred[17], y_pred[181],
+y_pred[182], y_pred[183], y_pred[184], y_pred[186], y_pred[187],
+y_pred[189], y_pred[18], y_pred[191], y_pred[194], y_pred[195],
+y_pred[197], y_pred[1], y_pred[200], y_pred[201], y_pred[202],
+y_pred[204], y_pred[205], y_pred[206], y_pred[207], y_pred[210],
+y_pred[211], y_pred[214], y_pred[216], y_pred[217], y_pred[219],
+y_pred[225], y_pred[226], y_pred[227], y_pred[228], y_pred[233],
+y_pred[236], y_pred[239], y_pred[240], y_pred[241], y_pred[243],
+y_pred[244], y_pred[246], y_pred[249], y_pred[24], y_pred[250],
+y_pred[251], y_pred[252], y_pred[253], y_pred[255], y_pred[256],
+y_pred[257], y_pred[258], y_pred[260], y_pred[261], y_pred[265],
+y_pred[266], y_pred[267], y_pred[268], y_pred[26], y_pred[270],
+y_pred[272], y_pred[27], y_pred[281], y_pred[282], y_pred[283],
+y_pred[284], y_pred[286], y_pred[287], y_pred[289], y_pred[290],
+y_pred[291], y_pred[294], y_pred[296], y_pred[297], y_pred[298],
+y_pred[29], y_pred[2], y_pred[300], y_pred[301], y_pred[303],
+y_pred[304], y_pred[308], y_pred[309], y_pred[30], y_pred[310],
+y_pred[315], y_pred[316], y_pred[318], y_pred[319], y_pred[31],
+y_pred[324], y_pred[325], y_pred[326], y_pred[328], y_pred[32],
+y_pred[330], y_pred[332], y_pred[333], y_pred[335], y_pred[336],
 y_pred[338], y_pred[339], y_pred[33], y_pred[341], y_pred[342],
 y_pred[344], y_pred[345], y_pred[347], y_pred[348], y_pred[349],
 y_pred[352], y_pred[353], y_pred[356], y_pred[359], y_pred[35],
-y_pred[363], y_pred[364], y_pred[365], y_pred[366], y_pred[367],
-y_pred[371], y_pred[372], y_pred[373], y_pred[376], y_pred[378],
-y_pred[379], y_pred[381], y_pred[382], y_pred[384], y_pred[386],
-y_pred[387], y_pred[388], y_pred[391], y_pred[392], y_pred[393],
-y_pred[395], y_pred[397], y_pred[398], y_pred[399], y_pred[3],
-y_pred[400], y_pred[401], y_pred[403], y_pred[404], y_pred[405],
-y_pred[40], y_pred[410], y_pred[413], y_pred[414], y_pred[415],
-y_pred[417], y_pred[418], y_pred[41], y_pred[422], y_pred[423],
-y_pred[427], y_pred[42], y_pred[430], y_pred[435], y_pred[436],
-y_pred[437], y_pred[439], y_pred[43], y_pred[440], y_pred[441],
-y_pred[445], y_pred[447], y_pred[449], y_pred[451], y_pred[452],
-y_pred[454], y_pred[456], y_pred[457], y_pred[459], y_pred[45],
-y_pred[460], y_pred[462], y_pred[463], y_pred[464], y_pred[465],
-y_pred[468], y_pred[469], y_pred[473], y_pred[474], y_pred[475],
-y_pred[476], y_pred[477], y_pred[479], y_pred[47], y_pred[480],
-y_pred[481], y_pred[482], y_pred[484], y_pred[485], y_pred[487],
-y_pred[488], y_pred[489], y_pred[490], y_pred[491], y_pred[494],
-y_pred[495], y_pred[496], y_pred[498], y_pred[500], y_pred[503],
-y_pred[504], y_pred[506], y_pred[508], y_pred[509], y_pred[50],
-y_pred[510], y_pred[511], y_pred[513], y_pred[517], y_pred[518],
-y_pred[51], y_pred[521], y_pred[522], y_pred[523], y_pred[524],
-y_pred[52], y_pred[530], y_pred[531], y_pred[532], y_pred[536],
-y_pred[537], y_pred[539], y_pred[53], y_pred[540], y_pred[543],
-y_pred[544], y_pred[545], y_pred[547], y_pred[549], y_pred[551],
-y_pred[553], y_pred[554], y_pred[555], y_pred[559], y_pred[55],
-y_pred[562], y_pred[564], y_pred[565], y_pred[56], y_pred[570],
-y_pred[571], y_pred[573], y_pred[575], y_pred[576], y_pred[577],
-y_pred[578], y_pred[579], y_pred[57], y_pred[584], y_pred[586],
-y_pred[590], y_pred[592], y_pred[593], y_pred[595], y_pred[597],
-y_pred[598], y_pred[599], y_pred[59], y_pred[601], y_pred[604],
-y_pred[606], y_pred[608], y_pred[609], y_pred[60], y_pred[611],
-y_pred[612], y_pred[613], y_pred[614], y_pred[617], y_pred[622],
-y_pred[624], y_pred[629], y_pred[62], y_pred[630], y_pred[632],
-y_pred[634], y_pred[635], y_pred[636], y_pred[637], y_pred[640],
-y_pred[646], y_pred[647], y_pred[648], y_pred[64], y_pred[651],
-y_pred[657], y_pred[65], y_pred[661], y_pred[668], y_pred[66],
-y_pred[670], y_pred[671], y_pred[672], y_pred[675], y_pred[678],
-y_pred[679], y_pred[67], y_pred[680], y_pred[684], y_pred[686],
-y_pred[689], y_pred[68], y_pred[690], y_pred[691], y_pred[692],
-y_pred[694], y_pred[696], y_pred[698], y_pred[699], y_pred[69],
-y_pred[700], y_pred[701], y_pred[703], y_pred[704], y_pred[710],
-y_pred[713], y_pred[714], y_pred[715], y_pred[716], y_pred[71],
-y_pred[722], y_pred[726], y_pred[728], y_pred[729], y_pred[730],
-y_pred[733], y_pred[735], y_pred[736], y_pred[737], y_pred[73],
-y_pred[742], y_pred[743], y_pred[744], y_pred[745], y_pred[747],
-y_pred[74], y_pred[754], y_pred[755], y_pred[757], y_pred[758],
-y_pred[760], y_pred[763], y_pred[764], y_pred[767], y_pred[770],
-y_pred[771], y_pred[772], y_pred[775], y_pred[776], y_pred[778],
-y_pred[779], y_pred[780], y_pred[781], y_pred[784], y_pred[785],
-y_pred[792], y_pred[794], y_pred[798], y_pred[799], y_pred[79],
-y_pred[7], y_pred[801], y_pred[805], y_pred[806], y_pred[808],
-y_pred[80], y_pred[812], y_pred[814], y_pred[815], y_pred[816],
-y_pred[817], y_pred[818], y_pred[81], y_pred[821], y_pred[822],
-y_pred[823], y_pred[824], y_pred[825], y_pred[826], y_pred[827],
-y_pred[828], y_pred[82], y_pred[830], y_pred[832], y_pred[834],
-y_pred[836], y_pred[840], y_pred[843], y_pred[844], y_pred[849],
-y_pred[84], y_pred[853], y_pred[855], y_pred[857], y_pred[859],
-y_pred[85], y_pred[860], y_pred[862], y_pred[863], y_pred[864],
-y_pred[867], y_pred[868], y_pred[869], y_pred[870], y_pred[872],
-y_pred[874], y_pred[876], y_pred[878], y_pred[882], y_pred[886],
-y_pred[887], y_pred[889], y_pred[891], y_pred[892], y_pred[894],
-y_pred[898], y_pred[899], y_pred[89], y_pred[8], y_pred[900],
-y_pred[905], y_pred[90], y_pred[911], y_pred[912], y_pred[915],
-y_pred[916], y_pred[917], y_pred[918], y_pred[919], y_pred[91],
-y_pred[921], y_pred[927], y_pred[928], y_pred[930], y_pred[933],
-y_pred[934], y_pred[936], y_pred[937], y_pred[938], y_pred[941],
-y_pred[942], y_pred[944], y_pred[947], y_pred[949], y_pred[94],
-y_pred[952], y_pred[953], y_pred[954], y_pred[957], y_pred[958],
-y_pred[960], y_pred[962], y_pred[963], y_pred[967], y_pred[969],
-y_pred[970], y_pred[971], y_pred[972], y_pred[974], y_pred[975],
-y_pred[976], y_pred[977], y_pred[979], y_pred[97], y_pred[981],
-y_pred[982], y_pred[986], y_pred[987], y_pred[988], y_pred[991],
-y_pred[992], y_pred[994], y_pred[995], y_pred[996], y_pred[997],
-y_pred[99], y_pred[9] triggered diagnostic warnings.
- 
-The expectands p[118], p[132], p[188], p[209], p[226], p[267], p[276],
-p[337], p[375], p[38], p[425], p[433], p[466], p[471], p[4], p[526],
-p[545], p[554], p[56], p[681], p[702], p[734], p[753], p[795], p[809],
-p[846], p[906], p[942], p[969], y_pred[100], y_pred[101], y_pred[106],
-y_pred[108], y_pred[10], y_pred[114], y_pred[116], y_pred[121],
-y_pred[122], y_pred[123], y_pred[124], y_pred[126], y_pred[127],
-y_pred[130], y_pred[131], y_pred[132], y_pred[133], y_pred[134],
-y_pred[137], y_pred[138], y_pred[13], y_pred[144], y_pred[145],
-y_pred[149], y_pred[150], y_pred[151], y_pred[153], y_pred[154],
-y_pred[155], y_pred[156], y_pred[157], y_pred[158], y_pred[15],
-y_pred[160], y_pred[161], y_pred[163], y_pred[164], y_pred[165],
-y_pred[166], y_pred[167], y_pred[171], y_pred[173], y_pred[176],
-y_pred[177], y_pred[179], y_pred[17], y_pred[181], y_pred[182],
-y_pred[183], y_pred[184], y_pred[186], y_pred[187], y_pred[189],
-y_pred[18], y_pred[191], y_pred[194], y_pred[195], y_pred[197],
-y_pred[1], y_pred[200], y_pred[201], y_pred[202], y_pred[204],
-y_pred[205], y_pred[206], y_pred[207], y_pred[210], y_pred[211],
-y_pred[214], y_pred[216], y_pred[217], y_pred[219], y_pred[225],
-y_pred[227], y_pred[228], y_pred[233], y_pred[236], y_pred[239],
-y_pred[240], y_pred[241], y_pred[243], y_pred[244], y_pred[246],
-y_pred[249], y_pred[24], y_pred[250], y_pred[251], y_pred[252],
-y_pred[253], y_pred[255], y_pred[256], y_pred[257], y_pred[258],
-y_pred[260], y_pred[261], y_pred[265], y_pred[266], y_pred[267],
-y_pred[268], y_pred[26], y_pred[270], y_pred[272], y_pred[27],
-y_pred[281], y_pred[282], y_pred[283], y_pred[284], y_pred[286],
-y_pred[287], y_pred[289], y_pred[290], y_pred[291], y_pred[293],
-y_pred[294], y_pred[296], y_pred[297], y_pred[298], y_pred[29],
-y_pred[2], y_pred[300], y_pred[301], y_pred[303], y_pred[304],
-y_pred[308], y_pred[30], y_pred[310], y_pred[315], y_pred[316],
-y_pred[318], y_pred[319], y_pred[31], y_pred[324], y_pred[325],
-y_pred[326], y_pred[328], y_pred[32], y_pred[330], y_pred[332],
-y_pred[335], y_pred[336], y_pred[338], y_pred[339], y_pred[33],
-y_pred[341], y_pred[342], y_pred[344], y_pred[345], y_pred[347],
-y_pred[348], y_pred[349], y_pred[352], y_pred[353], y_pred[356],
-y_pred[359], y_pred[35], y_pred[363], y_pred[364], y_pred[365],
-y_pred[366], y_pred[367], y_pred[371], y_pred[372], y_pred[373],
-y_pred[376], y_pred[378], y_pred[379], y_pred[381], y_pred[382],
-y_pred[384], y_pred[386], y_pred[387], y_pred[388], y_pred[391],
-y_pred[392], y_pred[393], y_pred[395], y_pred[397], y_pred[398],
-y_pred[399], y_pred[3], y_pred[400], y_pred[401], y_pred[403],
-y_pred[404], y_pred[405], y_pred[40], y_pred[410], y_pred[413],
-y_pred[414], y_pred[415], y_pred[417], y_pred[418], y_pred[41],
-y_pred[422], y_pred[423], y_pred[427], y_pred[42], y_pred[430],
+y_pred[364], y_pred[365], y_pred[366], y_pred[367], y_pred[371],
+y_pred[372], y_pred[373], y_pred[376], y_pred[379], y_pred[381],
+y_pred[382], y_pred[384], y_pred[386], y_pred[387], y_pred[388],
+y_pred[391], y_pred[392], y_pred[393], y_pred[395], y_pred[397],
+y_pred[398], y_pred[399], y_pred[3], y_pred[400], y_pred[401],
+y_pred[403], y_pred[404], y_pred[405], y_pred[40], y_pred[410],
+y_pred[413], y_pred[414], y_pred[415], y_pred[417], y_pred[418],
+y_pred[41], y_pred[422], y_pred[423], y_pred[427], y_pred[430],
 y_pred[435], y_pred[436], y_pred[437], y_pred[439], y_pred[43],
 y_pred[440], y_pred[441], y_pred[445], y_pred[447], y_pred[449],
 y_pred[451], y_pred[452], y_pred[454], y_pred[456], y_pred[457],
@@ -2570,12 +2350,12 @@ y_pred[464], y_pred[465], y_pred[468], y_pred[469], y_pred[473],
 y_pred[474], y_pred[475], y_pred[476], y_pred[477], y_pred[479],
 y_pred[47], y_pred[480], y_pred[481], y_pred[482], y_pred[484],
 y_pred[485], y_pred[487], y_pred[488], y_pred[489], y_pred[490],
-y_pred[491], y_pred[494], y_pred[495], y_pred[496], y_pred[498],
-y_pred[500], y_pred[503], y_pred[504], y_pred[506], y_pred[508],
-y_pred[509], y_pred[50], y_pred[510], y_pred[511], y_pred[513],
-y_pred[517], y_pred[518], y_pred[51], y_pred[521], y_pred[522],
-y_pred[523], y_pred[524], y_pred[52], y_pred[530], y_pred[531],
-y_pred[532], y_pred[536], y_pred[537], y_pred[539], y_pred[53],
+y_pred[491], y_pred[492], y_pred[494], y_pred[495], y_pred[496],
+y_pred[498], y_pred[500], y_pred[503], y_pred[504], y_pred[506],
+y_pred[508], y_pred[509], y_pred[50], y_pred[510], y_pred[511],
+y_pred[513], y_pred[517], y_pred[518], y_pred[51], y_pred[521],
+y_pred[522], y_pred[523], y_pred[524], y_pred[52], y_pred[530],
+y_pred[531], y_pred[536], y_pred[537], y_pred[539], y_pred[53],
 y_pred[540], y_pred[543], y_pred[544], y_pred[545], y_pred[547],
 y_pred[549], y_pred[551], y_pred[553], y_pred[554], y_pred[555],
 y_pred[559], y_pred[55], y_pred[562], y_pred[564], y_pred[565],
@@ -2608,258 +2388,340 @@ y_pred[806], y_pred[808], y_pred[80], y_pred[812], y_pred[814],
 y_pred[815], y_pred[816], y_pred[817], y_pred[818], y_pred[81],
 y_pred[821], y_pred[822], y_pred[823], y_pred[824], y_pred[825],
 y_pred[826], y_pred[827], y_pred[828], y_pred[82], y_pred[830],
-y_pred[832], y_pred[834], y_pred[836], y_pred[840], y_pred[843],
-y_pred[844], y_pred[849], y_pred[84], y_pred[853], y_pred[855],
+y_pred[832], y_pred[834], y_pred[836], y_pred[838], y_pred[840],
+y_pred[843], y_pred[844], y_pred[84], y_pred[853], y_pred[855],
 y_pred[857], y_pred[859], y_pred[85], y_pred[860], y_pred[862],
 y_pred[863], y_pred[864], y_pred[867], y_pred[868], y_pred[869],
-y_pred[870], y_pred[872], y_pred[874], y_pred[876], y_pred[878],
+y_pred[870], y_pred[872], y_pred[874], y_pred[876], y_pred[882],
+y_pred[886], y_pred[887], y_pred[889], y_pred[891], y_pred[892],
+y_pred[894], y_pred[898], y_pred[899], y_pred[89], y_pred[8],
+y_pred[900], y_pred[905], y_pred[90], y_pred[911], y_pred[912],
+y_pred[915], y_pred[916], y_pred[917], y_pred[918], y_pred[919],
+y_pred[921], y_pred[927], y_pred[928], y_pred[930], y_pred[933],
+y_pred[934], y_pred[936], y_pred[937], y_pred[938], y_pred[941],
+y_pred[942], y_pred[944], y_pred[947], y_pred[949], y_pred[94],
+y_pred[952], y_pred[953], y_pred[954], y_pred[957], y_pred[958],
+y_pred[960], y_pred[962], y_pred[963], y_pred[967], y_pred[969],
+y_pred[970], y_pred[971], y_pred[972], y_pred[974], y_pred[975],
+y_pred[976], y_pred[977], y_pred[979], y_pred[97], y_pred[981],
+y_pred[982], y_pred[986], y_pred[987], y_pred[991], y_pred[992],
+y_pred[994], y_pred[995], y_pred[996], y_pred[997], y_pred[99],
+y_pred[9] triggered diagnostic warnings.
+ 
+The expectands y_pred[100], y_pred[101], y_pred[106], y_pred[108],
+y_pred[10], y_pred[114], y_pred[116], y_pred[121], y_pred[122],
+y_pred[123], y_pred[124], y_pred[126], y_pred[127], y_pred[130],
+y_pred[131], y_pred[132], y_pred[133], y_pred[134], y_pred[137],
+y_pred[138], y_pred[13], y_pred[144], y_pred[149], y_pred[151],
+y_pred[153], y_pred[154], y_pred[155], y_pred[156], y_pred[157],
+y_pred[15], y_pred[160], y_pred[161], y_pred[163], y_pred[164],
+y_pred[165], y_pred[166], y_pred[167], y_pred[16], y_pred[171],
+y_pred[173], y_pred[176], y_pred[177], y_pred[179], y_pred[17],
+y_pred[181], y_pred[182], y_pred[183], y_pred[184], y_pred[186],
+y_pred[187], y_pred[189], y_pred[18], y_pred[191], y_pred[194],
+y_pred[195], y_pred[197], y_pred[1], y_pred[200], y_pred[201],
+y_pred[202], y_pred[204], y_pred[205], y_pred[206], y_pred[207],
+y_pred[210], y_pred[211], y_pred[214], y_pred[216], y_pred[217],
+y_pred[219], y_pred[225], y_pred[226], y_pred[227], y_pred[228],
+y_pred[233], y_pred[236], y_pred[239], y_pred[240], y_pred[241],
+y_pred[243], y_pred[244], y_pred[246], y_pred[249], y_pred[24],
+y_pred[250], y_pred[251], y_pred[252], y_pred[253], y_pred[255],
+y_pred[256], y_pred[257], y_pred[258], y_pred[260], y_pred[261],
+y_pred[265], y_pred[266], y_pred[267], y_pred[268], y_pred[26],
+y_pred[270], y_pred[272], y_pred[27], y_pred[281], y_pred[282],
+y_pred[283], y_pred[284], y_pred[286], y_pred[287], y_pred[289],
+y_pred[290], y_pred[291], y_pred[294], y_pred[296], y_pred[297],
+y_pred[298], y_pred[29], y_pred[2], y_pred[300], y_pred[301],
+y_pred[303], y_pred[304], y_pred[308], y_pred[309], y_pred[30],
+y_pred[310], y_pred[315], y_pred[316], y_pred[318], y_pred[319],
+y_pred[31], y_pred[324], y_pred[325], y_pred[326], y_pred[328],
+y_pred[32], y_pred[330], y_pred[332], y_pred[333], y_pred[335],
+y_pred[336], y_pred[338], y_pred[339], y_pred[33], y_pred[341],
+y_pred[342], y_pred[344], y_pred[345], y_pred[347], y_pred[348],
+y_pred[349], y_pred[352], y_pred[353], y_pred[356], y_pred[359],
+y_pred[35], y_pred[364], y_pred[365], y_pred[366], y_pred[367],
+y_pred[371], y_pred[372], y_pred[373], y_pred[376], y_pred[379],
+y_pred[381], y_pred[382], y_pred[384], y_pred[386], y_pred[387],
+y_pred[388], y_pred[391], y_pred[392], y_pred[393], y_pred[395],
+y_pred[397], y_pred[398], y_pred[399], y_pred[3], y_pred[400],
+y_pred[401], y_pred[403], y_pred[404], y_pred[405], y_pred[40],
+y_pred[410], y_pred[413], y_pred[414], y_pred[415], y_pred[417],
+y_pred[418], y_pred[41], y_pred[422], y_pred[423], y_pred[427],
+y_pred[430], y_pred[435], y_pred[436], y_pred[437], y_pred[439],
+y_pred[43], y_pred[440], y_pred[441], y_pred[445], y_pred[447],
+y_pred[449], y_pred[451], y_pred[452], y_pred[454], y_pred[456],
+y_pred[457], y_pred[459], y_pred[45], y_pred[460], y_pred[462],
+y_pred[463], y_pred[464], y_pred[465], y_pred[468], y_pred[469],
+y_pred[473], y_pred[474], y_pred[475], y_pred[476], y_pred[477],
+y_pred[479], y_pred[47], y_pred[480], y_pred[481], y_pred[482],
+y_pred[484], y_pred[485], y_pred[487], y_pred[488], y_pred[489],
+y_pred[490], y_pred[491], y_pred[492], y_pred[494], y_pred[495],
+y_pred[496], y_pred[498], y_pred[500], y_pred[503], y_pred[504],
+y_pred[506], y_pred[508], y_pred[509], y_pred[50], y_pred[510],
+y_pred[511], y_pred[513], y_pred[517], y_pred[518], y_pred[51],
+y_pred[521], y_pred[522], y_pred[523], y_pred[524], y_pred[52],
+y_pred[530], y_pred[531], y_pred[536], y_pred[537], y_pred[539],
+y_pred[53], y_pred[540], y_pred[543], y_pred[544], y_pred[545],
+y_pred[547], y_pred[549], y_pred[551], y_pred[553], y_pred[554],
+y_pred[555], y_pred[559], y_pred[55], y_pred[562], y_pred[564],
+y_pred[565], y_pred[56], y_pred[570], y_pred[571], y_pred[573],
+y_pred[575], y_pred[576], y_pred[577], y_pred[578], y_pred[579],
+y_pred[57], y_pred[584], y_pred[586], y_pred[590], y_pred[592],
+y_pred[593], y_pred[595], y_pred[597], y_pred[598], y_pred[599],
+y_pred[59], y_pred[601], y_pred[604], y_pred[606], y_pred[608],
+y_pred[609], y_pred[60], y_pred[611], y_pred[612], y_pred[613],
+y_pred[614], y_pred[617], y_pred[622], y_pred[624], y_pred[629],
+y_pred[62], y_pred[630], y_pred[632], y_pred[634], y_pred[635],
+y_pred[636], y_pred[637], y_pred[640], y_pred[646], y_pred[647],
+y_pred[648], y_pred[64], y_pred[651], y_pred[657], y_pred[65],
+y_pred[661], y_pred[668], y_pred[66], y_pred[670], y_pred[671],
+y_pred[672], y_pred[675], y_pred[678], y_pred[679], y_pred[67],
+y_pred[680], y_pred[684], y_pred[686], y_pred[689], y_pred[68],
+y_pred[690], y_pred[691], y_pred[692], y_pred[694], y_pred[696],
+y_pred[698], y_pred[699], y_pred[69], y_pred[700], y_pred[701],
+y_pred[703], y_pred[704], y_pred[710], y_pred[713], y_pred[714],
+y_pred[715], y_pred[716], y_pred[71], y_pred[722], y_pred[726],
+y_pred[728], y_pred[729], y_pred[730], y_pred[733], y_pred[735],
+y_pred[736], y_pred[737], y_pred[73], y_pred[742], y_pred[743],
+y_pred[744], y_pred[745], y_pred[747], y_pred[74], y_pred[754],
+y_pred[755], y_pred[757], y_pred[758], y_pred[760], y_pred[763],
+y_pred[764], y_pred[767], y_pred[770], y_pred[771], y_pred[772],
+y_pred[775], y_pred[776], y_pred[778], y_pred[779], y_pred[780],
+y_pred[781], y_pred[784], y_pred[785], y_pred[792], y_pred[794],
+y_pred[798], y_pred[799], y_pred[79], y_pred[7], y_pred[801],
+y_pred[805], y_pred[806], y_pred[808], y_pred[80], y_pred[812],
+y_pred[814], y_pred[815], y_pred[816], y_pred[817], y_pred[818],
+y_pred[81], y_pred[821], y_pred[822], y_pred[823], y_pred[824],
+y_pred[825], y_pred[826], y_pred[827], y_pred[828], y_pred[82],
+y_pred[830], y_pred[832], y_pred[834], y_pred[836], y_pred[838],
+y_pred[840], y_pred[843], y_pred[844], y_pred[84], y_pred[853],
+y_pred[855], y_pred[857], y_pred[859], y_pred[85], y_pred[860],
+y_pred[862], y_pred[863], y_pred[864], y_pred[867], y_pred[868],
+y_pred[869], y_pred[870], y_pred[872], y_pred[874], y_pred[876],
 y_pred[882], y_pred[886], y_pred[887], y_pred[889], y_pred[891],
 y_pred[892], y_pred[894], y_pred[898], y_pred[899], y_pred[89],
 y_pred[8], y_pred[900], y_pred[905], y_pred[90], y_pred[911],
 y_pred[912], y_pred[915], y_pred[916], y_pred[917], y_pred[918],
-y_pred[919], y_pred[91], y_pred[921], y_pred[927], y_pred[928],
-y_pred[930], y_pred[933], y_pred[934], y_pred[936], y_pred[937],
-y_pred[938], y_pred[941], y_pred[942], y_pred[944], y_pred[947],
-y_pred[949], y_pred[94], y_pred[952], y_pred[953], y_pred[954],
-y_pred[957], y_pred[958], y_pred[960], y_pred[962], y_pred[963],
-y_pred[967], y_pred[969], y_pred[970], y_pred[971], y_pred[972],
-y_pred[974], y_pred[975], y_pred[976], y_pred[977], y_pred[979],
-y_pred[97], y_pred[981], y_pred[982], y_pred[986], y_pred[987],
-y_pred[988], y_pred[991], y_pred[992], y_pred[994], y_pred[995],
-y_pred[996], y_pred[997], y_pred[99], y_pred[9] triggered tail hat{xi}
-warnings.
+y_pred[919], y_pred[921], y_pred[927], y_pred[928], y_pred[930],
+y_pred[933], y_pred[934], y_pred[936], y_pred[937], y_pred[938],
+y_pred[941], y_pred[942], y_pred[944], y_pred[947], y_pred[949],
+y_pred[94], y_pred[952], y_pred[953], y_pred[954], y_pred[957],
+y_pred[958], y_pred[960], y_pred[962], y_pred[963], y_pred[967],
+y_pred[969], y_pred[970], y_pred[971], y_pred[972], y_pred[974],
+y_pred[975], y_pred[976], y_pred[977], y_pred[979], y_pred[97],
+y_pred[981], y_pred[982], y_pred[986], y_pred[987], y_pred[991],
+y_pred[992], y_pred[994], y_pred[995], y_pred[996], y_pred[997],
+y_pred[99], y_pred[9] triggered tail hat{xi} warnings.
   Large tail hat{xi}s suggest that the expectand might not be
 sufficiently integrable.
  
 The expectands alpha, beta[1], beta[2], beta[3], p[1000], p[100],
-p[101], p[102], p[103], p[104], p[105], p[106], p[107], p[108], p[109],
-p[10], p[110], p[111], p[112], p[113], p[114], p[115], p[116], p[117],
-p[118], p[119], p[11], p[120], p[121], p[122], p[123], p[124], p[125],
-p[126], p[127], p[128], p[129], p[12], p[130], p[131], p[132], p[133],
-p[134], p[135], p[136], p[137], p[138], p[139], p[13], p[140], p[141],
-p[142], p[143], p[144], p[145], p[146], p[147], p[148], p[149], p[14],
-p[150], p[151], p[152], p[153], p[154], p[155], p[156], p[157], p[158],
-p[159], p[15], p[160], p[161], p[162], p[163], p[164], p[165], p[166],
-p[167], p[168], p[169], p[16], p[170], p[171], p[172], p[173], p[174],
-p[175], p[176], p[177], p[178], p[179], p[17], p[180], p[181], p[182],
-p[183], p[184], p[185], p[186], p[187], p[188], p[189], p[18], p[190],
-p[191], p[192], p[193], p[194], p[195], p[196], p[197], p[198], p[199],
-p[19], p[1], p[200], p[201], p[202], p[203], p[204], p[205], p[206],
-p[207], p[208], p[209], p[20], p[210], p[211], p[212], p[213], p[214],
-p[215], p[216], p[217], p[218], p[219], p[21], p[220], p[221], p[222],
-p[223], p[224], p[225], p[226], p[227], p[228], p[229], p[22], p[230],
-p[231], p[232], p[233], p[234], p[235], p[236], p[237], p[238], p[239],
-p[23], p[240], p[241], p[242], p[243], p[244], p[245], p[246], p[247],
-p[248], p[249], p[24], p[250], p[251], p[252], p[253], p[254], p[255],
-p[256], p[257], p[258], p[259], p[25], p[260], p[261], p[262], p[263],
-p[264], p[265], p[266], p[267], p[268], p[269], p[26], p[270], p[271],
-p[272], p[273], p[274], p[275], p[276], p[277], p[278], p[279], p[27],
-p[280], p[281], p[282], p[283], p[284], p[285], p[286], p[287], p[288],
-p[289], p[28], p[290], p[291], p[292], p[293], p[294], p[295], p[296],
+p[101], p[102], p[103], p[105], p[106], p[107], p[108], p[109], p[10],
+p[110], p[111], p[112], p[113], p[114], p[116], p[118], p[119], p[11],
+p[120], p[121], p[122], p[123], p[124], p[125], p[126], p[127], p[128],
+p[129], p[130], p[132], p[133], p[134], p[135], p[136], p[137], p[139],
+p[13], p[140], p[141], p[142], p[143], p[144], p[145], p[146], p[147],
+p[148], p[14], p[150], p[151], p[152], p[153], p[154], p[155], p[156],
+p[157], p[158], p[159], p[160], p[161], p[162], p[163], p[164], p[165],
+p[166], p[167], p[168], p[169], p[16], p[170], p[171], p[172], p[174],
+p[175], p[176], p[177], p[179], p[17], p[180], p[181], p[182], p[184],
+p[185], p[186], p[187], p[188], p[189], p[18], p[190], p[191], p[192],
+p[193], p[195], p[196], p[197], p[198], p[199], p[19], p[1], p[200],
+p[201], p[202], p[203], p[204], p[205], p[206], p[207], p[208], p[209],
+p[20], p[210], p[211], p[212], p[213], p[214], p[215], p[216], p[217],
+p[218], p[219], p[21], p[222], p[223], p[225], p[226], p[227], p[228],
+p[229], p[22], p[230], p[231], p[232], p[234], p[235], p[236], p[237],
+p[238], p[239], p[240], p[241], p[242], p[243], p[244], p[245], p[246],
+p[248], p[249], p[24], p[250], p[251], p[252], p[254], p[255], p[256],
+p[257], p[258], p[259], p[25], p[260], p[262], p[263], p[264], p[265],
+p[266], p[267], p[268], p[269], p[26], p[270], p[271], p[272], p[273],
+p[274], p[275], p[276], p[277], p[278], p[279], p[280], p[281], p[282],
+p[283], p[285], p[286], p[287], p[288], p[28], p[290], p[294], p[295],
 p[297], p[298], p[299], p[29], p[2], p[300], p[301], p[302], p[303],
-p[304], p[305], p[306], p[307], p[308], p[309], p[30], p[310], p[311],
-p[312], p[313], p[314], p[315], p[316], p[317], p[318], p[319], p[31],
-p[320], p[321], p[322], p[323], p[324], p[325], p[326], p[327], p[328],
-p[329], p[32], p[330], p[331], p[332], p[333], p[334], p[335], p[336],
-p[337], p[338], p[339], p[33], p[340], p[341], p[342], p[343], p[344],
-p[345], p[346], p[347], p[348], p[349], p[34], p[350], p[351], p[352],
-p[353], p[354], p[355], p[356], p[357], p[358], p[359], p[35], p[360],
-p[361], p[362], p[363], p[364], p[365], p[366], p[367], p[368], p[369],
-p[36], p[370], p[371], p[372], p[373], p[374], p[375], p[376], p[377],
-p[378], p[379], p[37], p[380], p[381], p[382], p[383], p[384], p[385],
-p[386], p[387], p[388], p[389], p[38], p[390], p[391], p[392], p[393],
-p[394], p[395], p[396], p[397], p[398], p[399], p[39], p[3], p[400],
-p[401], p[402], p[403], p[404], p[405], p[406], p[407], p[408], p[409],
-p[40], p[410], p[411], p[412], p[413], p[414], p[415], p[416], p[417],
-p[418], p[419], p[41], p[420], p[421], p[422], p[423], p[424], p[425],
-p[426], p[427], p[428], p[429], p[42], p[430], p[431], p[432], p[433],
-p[434], p[435], p[436], p[437], p[438], p[439], p[43], p[440], p[441],
-p[442], p[443], p[444], p[445], p[446], p[447], p[448], p[449], p[44],
-p[450], p[451], p[452], p[453], p[454], p[455], p[456], p[457], p[458],
-p[459], p[45], p[460], p[461], p[462], p[463], p[464], p[465], p[466],
-p[467], p[468], p[469], p[46], p[470], p[471], p[472], p[473], p[474],
-p[475], p[476], p[477], p[478], p[479], p[47], p[480], p[481], p[482],
-p[483], p[484], p[485], p[486], p[487], p[488], p[489], p[48], p[490],
-p[491], p[492], p[493], p[494], p[495], p[496], p[497], p[498], p[499],
-p[49], p[4], p[500], p[501], p[502], p[503], p[504], p[505], p[506],
-p[507], p[508], p[509], p[50], p[510], p[511], p[512], p[513], p[514],
-p[515], p[516], p[517], p[518], p[519], p[51], p[520], p[521], p[522],
-p[523], p[524], p[525], p[526], p[527], p[528], p[529], p[52], p[530],
-p[531], p[532], p[533], p[534], p[535], p[536], p[537], p[538], p[539],
-p[53], p[540], p[541], p[542], p[543], p[544], p[545], p[546], p[547],
-p[548], p[549], p[54], p[550], p[551], p[552], p[553], p[554], p[555],
-p[556], p[557], p[558], p[559], p[55], p[560], p[561], p[562], p[563],
-p[564], p[565], p[566], p[567], p[568], p[569], p[56], p[570], p[571],
-p[572], p[573], p[574], p[575], p[576], p[577], p[578], p[579], p[57],
-p[580], p[581], p[582], p[583], p[584], p[585], p[586], p[587], p[588],
-p[589], p[58], p[590], p[591], p[592], p[593], p[594], p[595], p[596],
-p[597], p[598], p[599], p[59], p[5], p[600], p[601], p[602], p[603],
-p[604], p[605], p[606], p[607], p[608], p[609], p[60], p[610], p[611],
-p[612], p[613], p[614], p[615], p[616], p[617], p[618], p[619], p[61],
-p[620], p[621], p[622], p[623], p[624], p[625], p[626], p[627], p[628],
-p[629], p[62], p[630], p[631], p[632], p[633], p[634], p[635], p[636],
-p[637], p[638], p[639], p[63], p[640], p[641], p[642], p[643], p[644],
-p[645], p[646], p[647], p[648], p[649], p[64], p[650], p[651], p[652],
-p[653], p[654], p[655], p[656], p[657], p[658], p[659], p[65], p[660],
-p[661], p[662], p[663], p[664], p[665], p[666], p[667], p[668], p[669],
-p[66], p[670], p[671], p[672], p[673], p[674], p[675], p[676], p[677],
-p[678], p[679], p[67], p[680], p[681], p[682], p[683], p[684], p[685],
-p[686], p[687], p[688], p[689], p[68], p[690], p[691], p[692], p[693],
-p[694], p[695], p[696], p[697], p[698], p[699], p[69], p[6], p[700],
-p[701], p[702], p[703], p[704], p[705], p[706], p[707], p[708], p[709],
-p[70], p[710], p[711], p[712], p[713], p[714], p[715], p[716], p[717],
-p[718], p[719], p[71], p[720], p[721], p[722], p[723], p[724], p[725],
-p[726], p[727], p[728], p[729], p[72], p[730], p[731], p[732], p[733],
-p[734], p[735], p[736], p[737], p[738], p[739], p[73], p[740], p[741],
-p[742], p[743], p[744], p[745], p[746], p[747], p[748], p[749], p[74],
-p[750], p[751], p[752], p[753], p[754], p[755], p[756], p[757], p[758],
-p[759], p[75], p[760], p[761], p[762], p[763], p[764], p[765], p[766],
-p[767], p[768], p[769], p[76], p[770], p[771], p[772], p[773], p[774],
-p[775], p[776], p[777], p[778], p[779], p[77], p[780], p[781], p[782],
-p[783], p[784], p[785], p[786], p[787], p[788], p[789], p[78], p[790],
-p[791], p[792], p[793], p[794], p[795], p[796], p[797], p[798], p[799],
-p[79], p[7], p[800], p[801], p[802], p[803], p[804], p[805], p[806],
-p[807], p[808], p[809], p[80], p[810], p[811], p[812], p[813], p[814],
-p[815], p[816], p[817], p[818], p[819], p[81], p[820], p[821], p[822],
-p[823], p[824], p[825], p[826], p[827], p[828], p[829], p[82], p[830],
-p[831], p[832], p[833], p[834], p[835], p[836], p[837], p[838], p[839],
-p[83], p[840], p[841], p[842], p[843], p[844], p[845], p[846], p[847],
-p[848], p[849], p[84], p[850], p[851], p[852], p[853], p[854], p[855],
-p[856], p[857], p[858], p[859], p[85], p[860], p[861], p[862], p[863],
-p[864], p[865], p[866], p[867], p[868], p[86], p[870], p[871], p[872],
-p[873], p[874], p[875], p[876], p[877], p[878], p[879], p[87], p[880],
-p[881], p[882], p[883], p[884], p[885], p[886], p[887], p[888], p[889],
-p[88], p[890], p[891], p[892], p[893], p[894], p[895], p[896], p[897],
-p[898], p[899], p[89], p[8], p[900], p[901], p[902], p[903], p[904],
-p[905], p[906], p[907], p[908], p[909], p[90], p[910], p[911], p[912],
-p[913], p[914], p[915], p[916], p[917], p[918], p[919], p[91], p[920],
-p[921], p[922], p[923], p[924], p[925], p[926], p[927], p[928], p[929],
-p[92], p[930], p[931], p[932], p[933], p[934], p[935], p[936], p[937],
-p[938], p[939], p[93], p[940], p[941], p[942], p[943], p[944], p[945],
-p[946], p[947], p[948], p[949], p[94], p[950], p[951], p[952], p[953],
-p[954], p[955], p[956], p[957], p[958], p[959], p[95], p[960], p[961],
-p[962], p[963], p[964], p[965], p[966], p[967], p[968], p[969], p[96],
-p[970], p[971], p[972], p[973], p[974], p[975], p[976], p[977], p[978],
-p[979], p[97], p[980], p[981], p[982], p[983], p[984], p[985], p[986],
-p[987], p[988], p[989], p[98], p[990], p[991], p[992], p[993], p[994],
-p[995], p[996], p[997], p[998], p[999], p[99], p[9] triggered hat{R}
-warnings.
+p[304], p[305], p[306], p[307], p[309], p[30], p[310], p[311], p[312],
+p[313], p[314], p[315], p[316], p[317], p[318], p[319], p[320], p[322],
+p[323], p[324], p[325], p[326], p[327], p[328], p[329], p[32], p[331],
+p[332], p[333], p[334], p[335], p[336], p[337], p[33], p[340], p[341],
+p[342], p[343], p[344], p[345], p[346], p[347], p[348], p[349], p[34],
+p[350], p[351], p[352], p[353], p[354], p[356], p[357], p[358], p[359],
+p[35], p[360], p[361], p[363], p[366], p[367], p[368], p[369], p[370],
+p[371], p[372], p[373], p[374], p[375], p[376], p[377], p[378], p[379],
+p[37], p[380], p[381], p[382], p[383], p[384], p[385], p[386], p[387],
+p[388], p[389], p[38], p[390], p[391], p[392], p[394], p[396], p[397],
+p[398], p[399], p[39], p[3], p[400], p[401], p[402], p[403], p[404],
+p[405], p[407], p[408], p[409], p[40], p[410], p[411], p[412], p[413],
+p[414], p[415], p[416], p[417], p[418], p[419], p[41], p[420], p[421],
+p[422], p[423], p[424], p[425], p[426], p[428], p[429], p[42], p[430],
+p[431], p[432], p[433], p[434], p[435], p[436], p[437], p[438], p[439],
+p[43], p[440], p[441], p[443], p[444], p[445], p[446], p[447], p[448],
+p[449], p[44], p[450], p[451], p[452], p[453], p[454], p[455], p[456],
+p[457], p[458], p[459], p[460], p[461], p[462], p[463], p[464], p[465],
+p[466], p[467], p[468], p[469], p[46], p[470], p[471], p[472], p[473],
+p[474], p[475], p[476], p[477], p[478], p[47], p[480], p[481], p[482],
+p[483], p[484], p[485], p[487], p[48], p[490], p[491], p[492], p[493],
+p[494], p[495], p[496], p[497], p[498], p[499], p[49], p[4], p[501],
+p[502], p[503], p[504], p[505], p[506], p[507], p[508], p[509], p[50],
+p[510], p[511], p[512], p[514], p[515], p[516], p[517], p[518], p[519],
+p[51], p[520], p[522], p[524], p[525], p[526], p[527], p[528], p[529],
+p[52], p[530], p[531], p[532], p[533], p[534], p[535], p[536], p[537],
+p[538], p[539], p[53], p[540], p[541], p[542], p[543], p[544], p[545],
+p[546], p[547], p[548], p[549], p[54], p[550], p[551], p[552], p[553],
+p[554], p[555], p[556], p[557], p[558], p[559], p[55], p[560], p[561],
+p[562], p[563], p[564], p[566], p[567], p[568], p[569], p[56], p[570],
+p[571], p[572], p[573], p[574], p[575], p[576], p[578], p[57], p[580],
+p[581], p[582], p[583], p[584], p[585], p[586], p[587], p[588], p[589],
+p[58], p[590], p[591], p[592], p[593], p[594], p[596], p[597], p[599],
+p[59], p[5], p[600], p[601], p[602], p[604], p[605], p[606], p[607],
+p[608], p[609], p[60], p[610], p[612], p[613], p[615], p[616], p[617],
+p[618], p[619], p[61], p[620], p[621], p[622], p[623], p[624], p[625],
+p[626], p[627], p[628], p[629], p[630], p[631], p[632], p[633], p[634],
+p[635], p[636], p[637], p[638], p[639], p[63], p[640], p[641], p[642],
+p[643], p[644], p[645], p[648], p[649], p[650], p[651], p[652], p[653],
+p[654], p[655], p[656], p[657], p[658], p[659], p[65], p[662], p[663],
+p[664], p[665], p[666], p[667], p[668], p[669], p[66], p[670], p[671],
+p[672], p[673], p[674], p[675], p[676], p[677], p[678], p[679], p[67],
+p[680], p[681], p[682], p[683], p[684], p[685], p[687], p[688], p[689],
+p[690], p[691], p[692], p[693], p[694], p[695], p[697], p[698], p[69],
+p[6], p[700], p[701], p[702], p[703], p[704], p[705], p[706], p[707],
+p[708], p[709], p[70], p[710], p[712], p[714], p[715], p[717], p[719],
+p[71], p[720], p[721], p[723], p[724], p[725], p[726], p[727], p[728],
+p[729], p[72], p[730], p[731], p[732], p[733], p[734], p[735], p[736],
+p[737], p[738], p[739], p[73], p[740], p[741], p[742], p[743], p[744],
+p[745], p[746], p[747], p[748], p[749], p[74], p[750], p[751], p[752],
+p[753], p[754], p[755], p[756], p[757], p[758], p[759], p[75], p[760],
+p[761], p[762], p[764], p[765], p[766], p[767], p[768], p[769], p[76],
+p[770], p[771], p[772], p[773], p[774], p[775], p[776], p[777], p[778],
+p[779], p[77], p[780], p[781], p[782], p[783], p[784], p[785], p[786],
+p[787], p[788], p[789], p[78], p[790], p[791], p[792], p[793], p[794],
+p[795], p[797], p[798], p[799], p[79], p[7], p[801], p[802], p[803],
+p[804], p[805], p[806], p[807], p[808], p[809], p[80], p[810], p[811],
+p[812], p[813], p[817], p[818], p[819], p[81], p[820], p[821], p[822],
+p[823], p[824], p[825], p[827], p[828], p[829], p[831], p[832], p[833],
+p[834], p[835], p[836], p[837], p[838], p[839], p[83], p[841], p[842],
+p[843], p[844], p[845], p[846], p[847], p[848], p[849], p[850], p[851],
+p[852], p[854], p[855], p[856], p[857], p[858], p[859], p[85], p[860],
+p[861], p[862], p[864], p[865], p[866], p[867], p[868], p[86], p[870],
+p[871], p[872], p[873], p[874], p[875], p[876], p[877], p[878], p[879],
+p[87], p[880], p[881], p[882], p[883], p[884], p[885], p[886], p[887],
+p[888], p[889], p[88], p[890], p[891], p[892], p[893], p[895], p[896],
+p[897], p[899], p[89], p[8], p[900], p[901], p[902], p[904], p[905],
+p[906], p[907], p[908], p[909], p[90], p[910], p[911], p[913], p[914],
+p[915], p[916], p[917], p[918], p[919], p[91], p[920], p[921], p[922],
+p[923], p[924], p[925], p[926], p[927], p[928], p[929], p[92], p[930],
+p[931], p[932], p[933], p[934], p[935], p[937], p[938], p[939], p[93],
+p[940], p[941], p[942], p[943], p[944], p[945], p[946], p[947], p[948],
+p[94], p[950], p[951], p[952], p[953], p[954], p[955], p[956], p[957],
+p[958], p[959], p[95], p[960], p[961], p[962], p[963], p[964], p[965],
+p[966], p[968], p[969], p[96], p[970], p[971], p[972], p[973], p[974],
+p[975], p[976], p[977], p[978], p[979], p[97], p[980], p[981], p[982],
+p[983], p[984], p[985], p[986], p[987], p[989], p[98], p[991], p[992],
+p[993], p[994], p[995], p[996], p[997], p[998], p[999], p[99], p[9]
+triggered hat{R} warnings.
   Split Rhat larger than 1.1 suggests that at least one of the Markov
 chains has not reached an equilibrium.
  
 The expectands alpha, beta[1], beta[2], beta[3], p[1000], p[100],
-p[101], p[102], p[103], p[104], p[105], p[106], p[107], p[108], p[109],
-p[10], p[110], p[111], p[112], p[113], p[114], p[115], p[116], p[117],
-p[118], p[119], p[11], p[120], p[121], p[122], p[123], p[124], p[125],
-p[126], p[127], p[128], p[129], p[12], p[130], p[131], p[132], p[133],
-p[134], p[135], p[136], p[137], p[138], p[139], p[13], p[140], p[141],
-p[142], p[143], p[144], p[145], p[146], p[147], p[148], p[149], p[14],
-p[150], p[151], p[152], p[153], p[154], p[155], p[156], p[157], p[158],
-p[159], p[15], p[160], p[161], p[162], p[163], p[164], p[165], p[166],
-p[167], p[168], p[169], p[16], p[170], p[171], p[172], p[173], p[174],
-p[175], p[176], p[177], p[178], p[179], p[17], p[180], p[181], p[182],
-p[183], p[184], p[185], p[186], p[187], p[188], p[189], p[18], p[190],
-p[191], p[192], p[193], p[194], p[195], p[196], p[197], p[198], p[199],
-p[19], p[1], p[200], p[201], p[202], p[203], p[204], p[205], p[206],
-p[207], p[208], p[209], p[20], p[210], p[211], p[212], p[213], p[214],
-p[215], p[216], p[217], p[218], p[219], p[21], p[220], p[221], p[222],
-p[223], p[224], p[225], p[226], p[227], p[228], p[229], p[22], p[230],
-p[231], p[232], p[233], p[234], p[235], p[236], p[237], p[238], p[239],
-p[23], p[240], p[241], p[242], p[243], p[244], p[245], p[246], p[247],
-p[248], p[249], p[24], p[250], p[251], p[252], p[253], p[254], p[255],
-p[256], p[257], p[258], p[259], p[25], p[260], p[261], p[262], p[263],
-p[264], p[265], p[266], p[267], p[268], p[269], p[26], p[270], p[271],
-p[272], p[273], p[274], p[275], p[276], p[277], p[278], p[279], p[27],
-p[280], p[281], p[282], p[283], p[284], p[285], p[286], p[287], p[288],
-p[289], p[28], p[290], p[291], p[292], p[293], p[294], p[295], p[296],
+p[101], p[102], p[103], p[105], p[106], p[107], p[108], p[109], p[10],
+p[110], p[111], p[112], p[113], p[114], p[116], p[118], p[119], p[11],
+p[120], p[121], p[122], p[123], p[124], p[125], p[126], p[127], p[128],
+p[129], p[130], p[132], p[133], p[134], p[135], p[136], p[137], p[139],
+p[13], p[140], p[141], p[142], p[143], p[144], p[145], p[146], p[147],
+p[148], p[14], p[150], p[151], p[152], p[153], p[154], p[155], p[156],
+p[157], p[158], p[159], p[160], p[161], p[162], p[163], p[164], p[165],
+p[166], p[167], p[168], p[169], p[16], p[170], p[171], p[172], p[174],
+p[175], p[176], p[177], p[179], p[17], p[180], p[181], p[182], p[184],
+p[185], p[186], p[187], p[188], p[189], p[18], p[190], p[191], p[192],
+p[193], p[195], p[196], p[197], p[198], p[199], p[19], p[1], p[200],
+p[201], p[202], p[203], p[204], p[205], p[206], p[207], p[208], p[209],
+p[20], p[210], p[211], p[212], p[213], p[214], p[215], p[216], p[217],
+p[218], p[219], p[21], p[222], p[223], p[225], p[226], p[227], p[228],
+p[229], p[22], p[230], p[231], p[232], p[234], p[235], p[236], p[237],
+p[238], p[239], p[240], p[241], p[242], p[243], p[244], p[245], p[246],
+p[248], p[249], p[24], p[250], p[251], p[252], p[254], p[255], p[256],
+p[257], p[258], p[259], p[25], p[260], p[262], p[263], p[264], p[265],
+p[266], p[267], p[268], p[269], p[26], p[270], p[271], p[272], p[273],
+p[274], p[275], p[276], p[277], p[278], p[279], p[280], p[281], p[282],
+p[283], p[285], p[286], p[287], p[288], p[28], p[290], p[294], p[295],
 p[297], p[298], p[299], p[29], p[2], p[300], p[301], p[302], p[303],
-p[304], p[305], p[306], p[307], p[308], p[309], p[30], p[310], p[311],
-p[312], p[313], p[314], p[315], p[316], p[317], p[318], p[319], p[31],
-p[320], p[321], p[322], p[323], p[324], p[325], p[326], p[327], p[328],
-p[329], p[32], p[330], p[331], p[332], p[333], p[334], p[335], p[336],
-p[337], p[338], p[339], p[33], p[340], p[341], p[342], p[343], p[344],
-p[345], p[346], p[347], p[348], p[349], p[34], p[350], p[351], p[352],
-p[353], p[354], p[355], p[356], p[357], p[358], p[359], p[35], p[360],
-p[361], p[362], p[363], p[364], p[365], p[366], p[367], p[368], p[369],
-p[36], p[370], p[371], p[372], p[373], p[374], p[375], p[376], p[377],
-p[378], p[379], p[37], p[380], p[381], p[382], p[383], p[384], p[385],
-p[386], p[387], p[388], p[389], p[38], p[390], p[391], p[392], p[393],
-p[394], p[395], p[396], p[397], p[398], p[399], p[39], p[3], p[400],
-p[401], p[402], p[403], p[404], p[405], p[406], p[407], p[408], p[409],
-p[40], p[410], p[411], p[412], p[413], p[414], p[415], p[416], p[417],
-p[418], p[419], p[41], p[420], p[421], p[422], p[423], p[424], p[425],
-p[426], p[427], p[428], p[429], p[42], p[430], p[431], p[432], p[433],
-p[434], p[435], p[436], p[437], p[438], p[439], p[43], p[440], p[441],
-p[442], p[443], p[444], p[445], p[446], p[447], p[448], p[449], p[44],
-p[450], p[451], p[452], p[453], p[454], p[455], p[456], p[457], p[458],
-p[459], p[45], p[460], p[461], p[462], p[463], p[464], p[465], p[466],
-p[467], p[468], p[469], p[46], p[470], p[471], p[472], p[473], p[474],
-p[475], p[476], p[477], p[478], p[479], p[47], p[480], p[481], p[482],
-p[483], p[484], p[485], p[486], p[487], p[488], p[489], p[48], p[490],
-p[491], p[492], p[493], p[494], p[495], p[496], p[497], p[498], p[499],
-p[49], p[4], p[500], p[501], p[502], p[503], p[504], p[505], p[506],
-p[507], p[508], p[509], p[50], p[510], p[511], p[512], p[513], p[514],
-p[515], p[516], p[517], p[518], p[519], p[51], p[520], p[521], p[522],
-p[523], p[524], p[525], p[526], p[527], p[528], p[529], p[52], p[530],
-p[531], p[532], p[533], p[534], p[535], p[536], p[537], p[538], p[539],
-p[53], p[540], p[541], p[542], p[543], p[544], p[545], p[546], p[547],
-p[548], p[549], p[54], p[550], p[551], p[552], p[553], p[554], p[555],
-p[556], p[557], p[558], p[559], p[55], p[560], p[561], p[562], p[563],
-p[564], p[565], p[566], p[567], p[568], p[569], p[56], p[570], p[571],
-p[572], p[573], p[574], p[575], p[576], p[577], p[578], p[579], p[57],
-p[580], p[581], p[582], p[583], p[584], p[585], p[586], p[587], p[588],
-p[589], p[58], p[590], p[591], p[592], p[593], p[594], p[595], p[596],
-p[597], p[598], p[599], p[59], p[5], p[600], p[601], p[602], p[603],
-p[604], p[605], p[606], p[607], p[608], p[609], p[60], p[610], p[611],
-p[612], p[613], p[614], p[615], p[616], p[617], p[618], p[619], p[61],
-p[620], p[621], p[622], p[623], p[624], p[625], p[626], p[627], p[628],
-p[629], p[62], p[630], p[631], p[632], p[633], p[634], p[635], p[636],
-p[637], p[638], p[639], p[63], p[640], p[641], p[642], p[643], p[644],
-p[645], p[646], p[647], p[648], p[649], p[64], p[650], p[651], p[652],
-p[653], p[654], p[655], p[656], p[657], p[658], p[659], p[65], p[660],
-p[661], p[662], p[663], p[664], p[665], p[666], p[667], p[668], p[669],
-p[66], p[670], p[671], p[672], p[673], p[674], p[675], p[676], p[677],
-p[678], p[679], p[67], p[680], p[681], p[682], p[683], p[684], p[685],
-p[686], p[687], p[688], p[689], p[68], p[690], p[691], p[692], p[693],
-p[694], p[695], p[696], p[697], p[698], p[699], p[69], p[6], p[700],
-p[701], p[702], p[703], p[704], p[705], p[706], p[707], p[708], p[709],
-p[70], p[710], p[711], p[712], p[713], p[714], p[715], p[716], p[717],
-p[718], p[719], p[71], p[720], p[721], p[722], p[723], p[724], p[725],
-p[726], p[727], p[728], p[729], p[72], p[730], p[731], p[732], p[733],
-p[734], p[735], p[736], p[737], p[738], p[739], p[73], p[740], p[741],
-p[742], p[743], p[744], p[745], p[746], p[747], p[748], p[749], p[74],
-p[750], p[751], p[752], p[753], p[754], p[755], p[756], p[757], p[758],
-p[759], p[75], p[760], p[761], p[762], p[763], p[764], p[765], p[766],
-p[767], p[768], p[769], p[76], p[770], p[771], p[772], p[773], p[774],
-p[775], p[776], p[777], p[778], p[779], p[77], p[780], p[781], p[782],
-p[783], p[784], p[785], p[786], p[787], p[788], p[789], p[78], p[790],
-p[791], p[792], p[793], p[794], p[795], p[796], p[797], p[798], p[799],
-p[79], p[7], p[800], p[801], p[802], p[803], p[804], p[805], p[806],
-p[807], p[808], p[809], p[80], p[810], p[811], p[812], p[813], p[814],
-p[815], p[816], p[817], p[818], p[819], p[81], p[820], p[821], p[822],
-p[823], p[824], p[825], p[826], p[827], p[828], p[829], p[82], p[830],
-p[831], p[832], p[833], p[834], p[835], p[836], p[837], p[838], p[839],
-p[83], p[840], p[841], p[842], p[843], p[844], p[845], p[846], p[847],
-p[848], p[849], p[84], p[850], p[851], p[852], p[853], p[854], p[855],
-p[856], p[857], p[858], p[859], p[85], p[860], p[861], p[862], p[863],
-p[864], p[865], p[866], p[867], p[868], p[86], p[870], p[871], p[872],
-p[873], p[874], p[875], p[876], p[877], p[878], p[879], p[87], p[880],
-p[881], p[882], p[883], p[884], p[885], p[886], p[887], p[888], p[889],
-p[88], p[890], p[891], p[892], p[893], p[894], p[895], p[896], p[897],
-p[898], p[899], p[89], p[8], p[900], p[901], p[902], p[903], p[904],
-p[905], p[906], p[907], p[908], p[909], p[90], p[910], p[911], p[912],
-p[913], p[914], p[915], p[916], p[917], p[918], p[919], p[91], p[920],
-p[921], p[922], p[923], p[924], p[925], p[926], p[927], p[928], p[929],
-p[92], p[930], p[931], p[932], p[933], p[934], p[935], p[936], p[937],
-p[938], p[939], p[93], p[940], p[941], p[942], p[943], p[944], p[945],
-p[946], p[947], p[948], p[949], p[94], p[950], p[951], p[952], p[953],
-p[954], p[955], p[956], p[957], p[958], p[959], p[95], p[960], p[961],
-p[962], p[963], p[964], p[965], p[966], p[967], p[968], p[969], p[96],
-p[970], p[971], p[972], p[973], p[974], p[975], p[976], p[977], p[978],
-p[979], p[97], p[980], p[981], p[982], p[983], p[984], p[985], p[986],
-p[987], p[988], p[989], p[98], p[990], p[991], p[992], p[993], p[994],
-p[995], p[996], p[997], p[998], p[999], p[99], p[9] triggered hat{ESS}
-warnings.
+p[304], p[305], p[306], p[307], p[309], p[30], p[310], p[311], p[312],
+p[313], p[314], p[315], p[316], p[317], p[318], p[319], p[320], p[322],
+p[323], p[324], p[325], p[326], p[327], p[328], p[329], p[32], p[331],
+p[332], p[333], p[334], p[335], p[336], p[337], p[33], p[340], p[341],
+p[342], p[343], p[344], p[345], p[346], p[347], p[348], p[349], p[34],
+p[350], p[351], p[352], p[353], p[354], p[356], p[357], p[358], p[359],
+p[35], p[360], p[361], p[363], p[366], p[367], p[368], p[369], p[370],
+p[371], p[372], p[373], p[374], p[375], p[376], p[377], p[378], p[379],
+p[37], p[380], p[381], p[382], p[383], p[384], p[385], p[386], p[387],
+p[388], p[389], p[38], p[390], p[391], p[392], p[394], p[396], p[397],
+p[398], p[399], p[39], p[3], p[400], p[401], p[402], p[403], p[404],
+p[405], p[407], p[408], p[409], p[40], p[410], p[411], p[412], p[413],
+p[414], p[415], p[416], p[417], p[418], p[419], p[41], p[420], p[421],
+p[422], p[423], p[424], p[425], p[426], p[428], p[429], p[42], p[430],
+p[431], p[432], p[433], p[434], p[435], p[436], p[437], p[438], p[439],
+p[43], p[440], p[441], p[443], p[444], p[445], p[446], p[447], p[448],
+p[449], p[44], p[450], p[451], p[452], p[453], p[454], p[455], p[456],
+p[457], p[458], p[459], p[460], p[461], p[462], p[463], p[464], p[465],
+p[466], p[467], p[468], p[469], p[46], p[470], p[471], p[472], p[473],
+p[474], p[475], p[476], p[477], p[478], p[47], p[480], p[481], p[482],
+p[483], p[484], p[485], p[487], p[48], p[490], p[491], p[492], p[493],
+p[494], p[495], p[496], p[497], p[498], p[499], p[49], p[4], p[501],
+p[502], p[503], p[504], p[505], p[506], p[507], p[508], p[509], p[50],
+p[510], p[511], p[512], p[514], p[515], p[516], p[517], p[518], p[519],
+p[51], p[520], p[522], p[524], p[525], p[526], p[527], p[528], p[529],
+p[52], p[530], p[531], p[532], p[533], p[534], p[535], p[536], p[537],
+p[538], p[539], p[53], p[540], p[541], p[542], p[543], p[544], p[545],
+p[546], p[547], p[548], p[549], p[54], p[550], p[551], p[552], p[553],
+p[554], p[555], p[556], p[557], p[558], p[559], p[55], p[560], p[561],
+p[562], p[563], p[564], p[566], p[567], p[568], p[569], p[56], p[570],
+p[571], p[572], p[573], p[574], p[575], p[576], p[578], p[57], p[580],
+p[581], p[582], p[583], p[584], p[585], p[586], p[587], p[588], p[589],
+p[58], p[590], p[591], p[592], p[593], p[594], p[596], p[597], p[599],
+p[59], p[5], p[600], p[601], p[602], p[604], p[605], p[606], p[607],
+p[608], p[609], p[60], p[610], p[612], p[613], p[615], p[616], p[617],
+p[618], p[619], p[61], p[620], p[621], p[622], p[623], p[624], p[625],
+p[626], p[627], p[628], p[629], p[630], p[631], p[632], p[633], p[634],
+p[635], p[636], p[637], p[638], p[639], p[63], p[640], p[641], p[642],
+p[643], p[644], p[645], p[648], p[649], p[650], p[651], p[652], p[653],
+p[654], p[655], p[656], p[657], p[658], p[659], p[65], p[662], p[663],
+p[664], p[665], p[666], p[667], p[668], p[669], p[66], p[670], p[671],
+p[672], p[673], p[674], p[675], p[676], p[677], p[678], p[679], p[67],
+p[680], p[681], p[682], p[683], p[684], p[685], p[687], p[688], p[689],
+p[690], p[691], p[692], p[693], p[694], p[695], p[697], p[698], p[69],
+p[6], p[700], p[701], p[702], p[703], p[704], p[705], p[706], p[707],
+p[708], p[709], p[70], p[710], p[712], p[714], p[715], p[717], p[719],
+p[71], p[720], p[721], p[723], p[724], p[725], p[726], p[727], p[728],
+p[729], p[72], p[730], p[731], p[732], p[733], p[734], p[735], p[736],
+p[737], p[738], p[739], p[73], p[740], p[741], p[742], p[743], p[744],
+p[745], p[746], p[747], p[748], p[749], p[74], p[750], p[751], p[752],
+p[753], p[754], p[755], p[756], p[757], p[758], p[759], p[75], p[760],
+p[761], p[762], p[764], p[765], p[766], p[767], p[768], p[769], p[76],
+p[770], p[771], p[772], p[773], p[774], p[775], p[776], p[777], p[778],
+p[779], p[77], p[780], p[781], p[782], p[783], p[784], p[785], p[786],
+p[787], p[788], p[789], p[78], p[790], p[791], p[792], p[793], p[794],
+p[795], p[797], p[798], p[799], p[79], p[7], p[801], p[802], p[803],
+p[804], p[805], p[806], p[807], p[808], p[809], p[80], p[810], p[811],
+p[812], p[813], p[817], p[818], p[819], p[81], p[820], p[821], p[822],
+p[823], p[824], p[825], p[827], p[828], p[829], p[831], p[832], p[833],
+p[834], p[835], p[836], p[837], p[838], p[839], p[83], p[841], p[842],
+p[843], p[844], p[845], p[846], p[847], p[848], p[849], p[850], p[851],
+p[852], p[854], p[855], p[856], p[857], p[858], p[859], p[85], p[860],
+p[861], p[862], p[864], p[865], p[866], p[867], p[868], p[86], p[870],
+p[871], p[872], p[873], p[874], p[875], p[876], p[877], p[878], p[879],
+p[87], p[880], p[881], p[882], p[883], p[884], p[885], p[886], p[887],
+p[888], p[889], p[88], p[890], p[891], p[892], p[893], p[895], p[896],
+p[897], p[899], p[89], p[8], p[900], p[901], p[902], p[904], p[905],
+p[906], p[907], p[908], p[909], p[90], p[910], p[911], p[913], p[914],
+p[915], p[916], p[917], p[918], p[919], p[91], p[920], p[921], p[922],
+p[923], p[924], p[925], p[926], p[927], p[928], p[929], p[92], p[930],
+p[931], p[932], p[933], p[934], p[935], p[937], p[938], p[939], p[93],
+p[940], p[941], p[942], p[943], p[944], p[945], p[946], p[947], p[948],
+p[94], p[950], p[951], p[952], p[953], p[954], p[955], p[956], p[957],
+p[958], p[959], p[95], p[960], p[961], p[962], p[963], p[964], p[965],
+p[966], p[968], p[969], p[96], p[970], p[971], p[972], p[973], p[974],
+p[975], p[976], p[977], p[978], p[979], p[97], p[980], p[981], p[982],
+p[983], p[984], p[985], p[986], p[987], p[989], p[98], p[991], p[992],
+p[993], p[994], p[995], p[996], p[997], p[998], p[999], p[99], p[9]
+triggered hat{ESS} warnings.
 Small empirical effective sample sizes indicate strong empirical
 autocorrelations in the realized Markov chains. If the empirical
 effective sample size is too small then Markov chain Monte Carlo
@@ -2880,32 +2742,32 @@ parameter expectands.
 
 \begin{verbatim}
 alpha:
-  Split hat{R} (1.965) exceeds 1.1!
-  Chain 1: hat{ESS} (3.7) is smaller than desired (100)!
-  Chain 2: hat{ESS} (9.3) is smaller than desired (100)!
-  Chain 3: hat{ESS} (7.5) is smaller than desired (100)!
-  Chain 4: hat{ESS} (12.0) is smaller than desired (100)!
+  Split hat{R} (1.201) exceeds 1.1!
+  Chain 1: hat{ESS} (25.7) is smaller than desired (100)!
+  Chain 2: hat{ESS} (10.8) is smaller than desired (100)!
+  Chain 3: hat{ESS} (16.5) is smaller than desired (100)!
+  Chain 4: hat{ESS} (14.7) is smaller than desired (100)!
 
 beta[1]:
-  Split hat{R} (1.229) exceeds 1.1!
-  Chain 1: hat{ESS} (14.8) is smaller than desired (100)!
-  Chain 2: hat{ESS} (6.9) is smaller than desired (100)!
-  Chain 3: hat{ESS} (9.1) is smaller than desired (100)!
-  Chain 4: hat{ESS} (22.3) is smaller than desired (100)!
+  Split hat{R} (1.512) exceeds 1.1!
+  Chain 1: hat{ESS} (10.9) is smaller than desired (100)!
+  Chain 2: hat{ESS} (14.1) is smaller than desired (100)!
+  Chain 3: hat{ESS} (7.7) is smaller than desired (100)!
+  Chain 4: hat{ESS} (5.5) is smaller than desired (100)!
 
 beta[2]:
-  Split hat{R} (1.558) exceeds 1.1!
-  Chain 1: hat{ESS} (10.5) is smaller than desired (100)!
-  Chain 2: hat{ESS} (4.9) is smaller than desired (100)!
-  Chain 3: hat{ESS} (5.2) is smaller than desired (100)!
-  Chain 4: hat{ESS} (5.2) is smaller than desired (100)!
+  Split hat{R} (1.260) exceeds 1.1!
+  Chain 1: hat{ESS} (9.5) is smaller than desired (100)!
+  Chain 2: hat{ESS} (15.1) is smaller than desired (100)!
+  Chain 3: hat{ESS} (7.6) is smaller than desired (100)!
+  Chain 4: hat{ESS} (6.4) is smaller than desired (100)!
 
 beta[3]:
-  Split hat{R} (1.189) exceeds 1.1!
-  Chain 1: hat{ESS} (12.8) is smaller than desired (100)!
-  Chain 2: hat{ESS} (6.4) is smaller than desired (100)!
-  Chain 3: hat{ESS} (16.0) is smaller than desired (100)!
-  Chain 4: hat{ESS} (5.3) is smaller than desired (100)!
+  Split hat{R} (2.019) exceeds 1.1!
+  Chain 1: hat{ESS} (5.3) is smaller than desired (100)!
+  Chain 2: hat{ESS} (11.4) is smaller than desired (100)!
+  Chain 3: hat{ESS} (8.0) is smaller than desired (100)!
+  Chain 4: hat{ESS} (9.9) is smaller than desired (100)!
 
 
 Split Rhat larger than 1.1 suggests that at least one of the Markov
@@ -2943,13 +2805,7 @@ empirical correlograms for each parameter expectand.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-16-output-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-16-output-1.pdf}
 
 Regardless of whether or not these Markov chains are stationary they are
 extremely autocorrelated. Even assuming stationarity we wouldn't start
@@ -2970,13 +2826,7 @@ characteristic of a random walk.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-17-output-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-17-output-1.pdf}
 
 To more quantitatively blame the large split \(\hat{R}\)s on these
 strong autocorrelations we can plot the split \(\hat{R}\) from each
@@ -3001,13 +2851,7 @@ the smallest empirical effective sample size of the four Markov chains.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-18-output-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-18-output-1.pdf}
 
 Every expectand with a large split \(\hat{R}\)s also exhibits a
 particularly small minimum empirical effective sample size, confirming
@@ -3042,13 +2886,7 @@ bin probability estimates in dark red.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-19-output-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-19-output-1.pdf}
 
 If we look at the central estimates alone we might convince ourselves of
 all kinds of interesting structure. For example potential multi-modality
@@ -3077,13 +2915,7 @@ at the same time many of the visual artifacts recede.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-20-output-1.pdf}
-
-}
-
-\end{figure}
+\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-20-output-1.pdf}
 
 When the bin indicator functions enjoy Markov chain Monte Carlo central
 limit theorems these standard error bands allow us to discriminate
@@ -3092,8 +2924,7 @@ histogram binning. Even if central limit theorems don't hold the error
 bands provide one more way that we can potentially diagnose
 untrustworthy computation.
 
-\hypertarget{license}{%
-\section*{License}\label{license}}
+\section*{License}\label{license}
 \addcontentsline{toc}{section}{License}
 
 The code in this case study is copyrighted by Michael Betancourt and
@@ -3106,9 +2937,8 @@ Betancourt and licensed under the CC BY-NC 4.0 license:
 
 https://creativecommons.org/licenses/by-nc/4.0/
 
-\hypertarget{original-computing-environment}{%
 \section*{Original Computing
-Environment}\label{original-computing-environment}}
+Environment}\label{original-computing-environment}
 \addcontentsline{toc}{section}{Original Computing Environment}
 
 \begin{Shaded}
@@ -3119,7 +2949,7 @@ Environment}\label{original-computing-environment}}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-01-29T22:09:15.440363-08:00
+Last updated: 2024-03-28T17:07:19.028288-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6
@@ -3127,7 +2957,7 @@ IPython version      : 8.16.1
 
 Compiler    : Clang 12.0.0 (clang-1200.0.32.29)
 OS          : Darwin
-Release     : 23.2.0
+Release     : 23.4.0
 Machine     : x86_64
 Processor   : i386
 CPU cores   : 16
@@ -3143,7 +2973,7 @@ Architecture: 64bit
 \begin{verbatim}
 matplotlib: 3.8.0
 numpy     : 1.26.1
-stan      : 3.7.0
+stan      : 3.9.0
 scipy     : 1.11.3
 \end{verbatim}
 

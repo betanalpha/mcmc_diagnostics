@@ -368,6 +368,61 @@ display_ave_accept_proxy <- function(diagnostics) {
   }
 }
 
+# Display symplectic integrator trajectory times
+# @param diagnostics A named list of two-dimensional arrays for
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the
+#                    second dimension indexes the sequential
+#                    states within each Markov chain.
+# @param B The number of histogram bins
+# @param nlim Optional histogram range
+plot_int_times <- function(diagnostics, B, tlim=NULL) {
+  if (!is.vector(diagnostics)) {
+    stop('Input variable `diagnostics` is not a named list!')
+  }
+
+  lengths <- diagnostics[['n_leapfrog__']]
+  C <- dim(lengths)[1]
+  eps <- sapply(1:C, function(c) diagnostics[['stepsize__']][c, 1])
+
+  if (is.null(tlim)) {
+    # Automatically adjust histogram binning to range of outputs
+    min_t <- min(sapply(1:C, function(c) eps[c] * min(lengths[c,])))
+    max_t <- max(sapply(1:C, function(c) eps[c] * max(lengths[c,])))
+
+    tlim <- c(min_t, max_t)
+    delta <- (tlim[2] - tlim[1]) / B
+    bins <- seq(tlim[1] - delta, tlim[2] + delta, delta)
+    B = B + 2
+  } else {
+    delta <- (tlim[2] - tlim[1]) / B
+    bins <- seq(tlim[1], tlim[2], delta)
+  }
+
+  colors <- c(c_dark, c_mid_highlight, c_mid, c_light_highlight)
+
+  idx <- rep(1:B, each=2)
+  xs <- sapply(1:length(idx), function(b) if(b %% 2 == 1) bins[idx[b]]
+                                          else bins[idx[b] + 1])
+
+  max_counts <- 0
+  for (c in 1:C) {
+    counts <- hist(eps[c] * lengths[c,], bins, plot=FALSE)$counts
+    max_counts <- max(max_counts, max(counts))
+  }
+
+  plot(0, type="n",
+       xlab="Trajectory Integration Times",
+       xlim=tlim,
+       ylab="", ylim=c(0, 1.1 * max_counts), yaxt='n')
+
+  for (c in 1:C) {
+    counts <- hist(eps[c] * lengths[c,], bins, plot=FALSE)$counts
+    pad_counts <- counts[idx]
+    lines(xs, pad_counts, lwd=2, col=colors[c])
+  }
+}
+
 # Apply transformation identity, log, or logit transformation to
 # named samples and flatten the output.  Transformation defaults to 
 # identity if name is not included in `transforms` dictionary.  A 

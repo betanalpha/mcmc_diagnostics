@@ -408,6 +408,59 @@ def plot_int_times(ax, diagnostics, B, tlim=None):
   """Display symplectic integrator trajectory times"""
   if not isinstance(diagnostics, dict):
     raise TypeError('Input variable `diagnostics` is not a standard dictionary!')
+
+  lengths = diagnostics['n_leapfrog__']
+  C = lengths.shape[0]
+  eps = [ diagnostics['stepsize__'][c][0] for c in range(C) ]
+
+  if tlim is None:
+    # Automatically adjust histogram binning to range of outputs
+    min_t = max([ eps[c] * max(lengths[c]) for c in range(C) ])
+    max_t = max([ eps[c] * max(lenghts[c]) for c in range(C) ])
+
+    tlim = [min_t, max_t]
+    delta = (tlim[1] - tlim[0]) / B
+    bins = numpy.arange(tlim[0] - delta, tlim[1] + delta, delta)
+    B = B + 2
+  else:
+    delta = (tlim[1] - tlim[0]) / B
+    bins = numpy.arange(tlim[0], tlim[1] + delta, delta)
+
+  colors = [dark_highlight, dark, mid_highlight, mid, light_highlight]
+
+  idxs = [ idx for idx in range(B) for r in range(2) ]
+  xs = [ bins[b + o] for b in range(B) for o in range(2) ]
+
+  max_counts = 0
+
+  for c in range(C):
+    counts = numpy.histogram(eps[c] * lengths[c], bins=bins)[0]
+    ys = counts[idxs]
+    max_counts = max(max_counts, max(counts))
+
+    ax.plot(xs, ys, colors[c])
+
+  ax.set_xlabel("Trajectory Integration Times")
+  ax.set_xlim(tlim)
+  ax.set_ylabel("")
+  ax.get_yaxis().set_visible(False)
+  ax.set_ylim([0, 1.1 * max_counts])
+  ax.spines["top"].set_visible(False)
+  ax.spines["right"].set_visible(False)
+
+# Display symplectic integrator trajectory times
+# @ax Matplotlib axis object
+# @param diagnostics A dictionary of two-dimensional arrays for
+#                    each expectand.  The first dimension of each
+#                    element indexes the Markov chains and the
+#                    second dimension indexes the sequential
+#                    states within each Markov chain.
+# @param B The number of histogram bins
+# @param nlim Optional histogram range
+def plot_int_times(ax, diagnostics, B, tlim=None):
+  """Display symplectic integrator trajectory times"""
+  if not isinstance(diagnostics, dict):
+    raise TypeError('Input variable `diagnostics` is not a standard dictionary!')
   
   lengths = diagnostics['n_leapfrog__']
   C = lengths.shape[0]

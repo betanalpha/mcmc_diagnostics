@@ -1966,12 +1966,12 @@ plot_expectand_pushforward <- function(samples, B, display_name="f",
   
   S_low <- sum(c(samples, recursive=TRUE) < min_f)
   if (S_low > 0)
-    warning(sprintf('%s posterior samples (%.1f%%) fell below the histogram binning.',
+    warning(sprintf('%s samples (%.1f%%) fell below the histogram binning.',
                     S_low, 100 * S_low / S))
   
   S_high <- sum(max_f < c(samples, recursive=TRUE))
   if (S_high > 0) {
-    warning(sprintf('%s posterior samples (%.1f%%) fell above the histogram binning.',
+    warning(sprintf('%s samples (%.1f%%) fell above the histogram binning.',
                     S_high, 100 * S_high / S))
   }
   

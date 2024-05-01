@@ -1997,12 +1997,12 @@ def plot_expectand_pushforward(ax, samples, B, display_name="f",
 
   S_low = sum(samples.flatten() < min_f)
   if S_low > 0:
-    print(f'{S_low} posterior samples ({S_low / S:.2%})'
+    print(f'{S_low} samples ({S_low / S:.2%})'
            ' fell below the histogram binning.')
 
   S_high = sum(max_f < samples.flatten())
   if S_high > 0:
-    print(f'{S_high} posterior samples ({S_high / S:.2%})'
+    print(f'{S_high} samples ({S_high / S:.2%})'
            ' fell above the histogram binning.')
 
   # Compute bin heights

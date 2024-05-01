@@ -412,17 +412,12 @@ def plot_int_times(ax, diagnostics, B, tlim=None):
   
   if tlim is None:
     # Automatically adjust histogram binning to range of outputs
-    min_t = 0
-    max_t = max([ eps[c] * max(diagnostics['n_leapfrog__'][c]) 
-                  for c in range(C) ])
+    min_t = max([ eps[c] * max(lengths[c]) for c in range(C) ])
+    max_t = max([ eps[c] * max(lenghts[c]) for c in range(C) ])
     
-    # Add bounding bins
-    delta = (max_t - min_t) / B
-    min_t = min_t - delta
-    max_t = max_t + delta
     tlim = [min_t, max_t]
-    
-    bins = numpy.arange(min_t, max_t + delta, delta)
+    delta = (tlim[1] - tlim[0]) / B
+    bins = numpy.arange(tlim[0] - delta, tlim[1] + delta, delta)
     B = B + 2
   else:
     delta = (tlim[1] - tlim[0]) / B
@@ -1994,12 +1989,12 @@ def plot_expectand_pushforward(ax, samples, B, display_name="f",
 
   S_low = sum(samples.flatten() < min_f)
   if S_low > 0:
-    print(f'{S_low} posterior samples ({S_low / S:.2%})'
+    print(f'{S_low} samples ({S_low / S:.2%})'
            ' fell below the histogram binning.')
 
   S_high = sum(max_f < samples.flatten())
   if S_high > 0:
-    print(f'{S_high} posterior samples ({S_high / S:.2%})'
+    print(f'{S_high} samples ({S_high / S:.2%})'
            ' fell above the histogram binning.')
 
   # Compute bin heights

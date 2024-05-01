@@ -2308,7 +2308,11 @@ value estimates and their standard errors.
 \CommentTok{\#         second dimension indexing the sequential states within }
 \CommentTok{\#         each Markov chain.}
 \NormalTok{pushforward\_chains }\OperatorTok{\textless{}{-}}\NormalTok{ function(samples, expectand) \{}
-  \BuiltInTok{apply}\NormalTok{(samples, }\DecValTok{2}\NormalTok{, expectand)}
+  \ControlFlowTok{if}\NormalTok{ (dim(samples)[}\DecValTok{1}\NormalTok{] }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
+    \ImportTok{as}\NormalTok{.matrix(t(}\BuiltInTok{apply}\NormalTok{(samples, }\DecValTok{2}\NormalTok{, expectand)))}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+    \BuiltInTok{apply}\NormalTok{(samples, }\DecValTok{2}\NormalTok{, expectand)}
+\NormalTok{  \}}
 \NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
@@ -2439,12 +2443,12 @@ by estimating the target probabilities in histogram bins.
   
 \NormalTok{  S\_low }\OperatorTok{\textless{}{-}} \BuiltInTok{sum}\NormalTok{(c(samples, recursive}\OperatorTok{=}\NormalTok{TRUE) }\OperatorTok{\textless{}}\NormalTok{ min\_f)}
   \ControlFlowTok{if}\NormalTok{ (S\_low }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{)}
-\NormalTok{    warning(sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%s}\StringTok{ posterior samples (}\SpecialCharTok{\%.1f\%\%}\StringTok{) fell below the histogram binning.\textquotesingle{}}\NormalTok{,}
+\NormalTok{    warning(sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%s}\StringTok{ samples (}\SpecialCharTok{\%.1f\%\%}\StringTok{) fell below the histogram binning.\textquotesingle{}}\NormalTok{,}
 \NormalTok{                    S\_low, }\DecValTok{100} \OperatorTok{*}\NormalTok{ S\_low }\OperatorTok{/}\NormalTok{ S))}
   
 \NormalTok{  S\_high }\OperatorTok{\textless{}{-}} \BuiltInTok{sum}\NormalTok{(max\_f }\OperatorTok{\textless{}}\NormalTok{ c(samples, recursive}\OperatorTok{=}\NormalTok{TRUE))}
   \ControlFlowTok{if}\NormalTok{ (S\_high }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{) \{}
-\NormalTok{    warning(sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%s}\StringTok{ posterior samples (}\SpecialCharTok{\%.1f\%\%}\StringTok{) fell above the histogram binning.\textquotesingle{}}\NormalTok{,}
+\NormalTok{    warning(sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%s}\StringTok{ samples (}\SpecialCharTok{\%.1f\%\%}\StringTok{) fell above the histogram binning.\textquotesingle{}}\NormalTok{,}
 \NormalTok{                    S\_high, }\DecValTok{100} \OperatorTok{*}\NormalTok{ S\_high }\OperatorTok{/}\NormalTok{ S))}
 \NormalTok{  \}}
   
@@ -3690,7 +3694,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] colormap_0.1.4      rstan_2.32.3        StanHeaders_2.26.28
+[1] colormap_0.1.4     rstan_2.32.6       StanHeaders_2.32.7
 
 loaded via a namespace (and not attached):
  [1] gtable_0.3.4       jsonlite_1.8.8     compiler_4.3.2     Rcpp_1.0.11       

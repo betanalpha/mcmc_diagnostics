@@ -1553,7 +1553,7 @@ encode_all_diagnostics <- function(expectand_samples,
       # Check tail behavior in each Markov chain
       xi_hat_threshold <- 0.25
       xi_hats <- compute_tail_xi_hats(fs)
-      if (isnan(xi_hats[1]) | isnan(xi_hats[2])) {
+      if (is.nan(xi_hats[1]) | is.nan(xi_hats[2])) {
         xi_hat_warning <- TRUE
       } else if (xi_hats[1] >= xi_hat_threshold | 
           xi_hats[2] >= xi_hat_threshold) {

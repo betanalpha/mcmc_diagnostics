@@ -1472,6 +1472,7 @@ encode_all_diagnostics <- function(expectand_samples,
                                    min_eess_per_chain=100,
                                    exclude_zvar=FALSE) {
   warning_code <- 0
+  C <- dim(diagnostics[['divergent__']])[1]
   
   # Check divergences
   n = sum(sapply(1:C, function(c) diagnostics[['divergent__']][c,]))
@@ -1489,8 +1490,6 @@ encode_all_diagnostics <- function(expectand_samples,
   }
 
   # Checks the energy fraction of missing information (E-FMI)
-  C <- dim(diagnostics[['energy__']])[1]
-  
   no_efmi_warning <- TRUE
   no_accept_warning <- TRUE
   

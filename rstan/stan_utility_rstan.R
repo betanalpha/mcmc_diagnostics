@@ -1850,7 +1850,11 @@ plot_pairs_by_chain <- function(f1s, display_name1,
 #         second dimension indexing the sequential states within 
 #         each Markov chain.
 pushforward_chains <- function(samples, expectand) {
-  apply(samples, 2, expectand)
+  if (dim(samples)[1] == 1) {
+    as.matrix(t(apply(samples, 2, expectand)))
+  } else {
+    apply(samples, 2, expectand)
+  }
 }
 
 # Estimate expectand exectation value from a single Markov chain.

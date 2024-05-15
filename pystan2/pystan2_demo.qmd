@@ -459,7 +459,7 @@ Next we source all of these diagnostics into a local namespace to avoid
 any conflicts with other functions.
 
 ```{python}
-import stan_utility_pystan2 as util
+import mcmc_analysis_tools_pystan2 as util
 ```
 
 Then we can simulate some binary data from a logistic regression model.

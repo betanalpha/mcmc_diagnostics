@@ -2,7 +2,7 @@
 
 rm -f _includes/*
 
-utility_file='stan_utility_rstan.R'
+utility_file='mcmc_analysis_tools_rstan.R'
 N=$(wc -l $utility_file | sed 's,[ ]*\([0-9]*\) .*$,\1,')
 
 function_names=('extract_expectands' 'extract_hmc_diagnostics' 

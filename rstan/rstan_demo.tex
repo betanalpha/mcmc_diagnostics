@@ -2523,7 +2523,7 @@ avoid any conflicts with other functions.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{util }\OtherTok{\textless{}{-}} \FunctionTok{new.env}\NormalTok{()}
-\FunctionTok{source}\NormalTok{(}\StringTok{\textquotesingle{}stan\_utility\_rstan.R\textquotesingle{}}\NormalTok{, }\AttributeTok{local=}\NormalTok{util)}
+\FunctionTok{source}\NormalTok{(}\StringTok{\textquotesingle{}mcmc\_analysis\_tools\_rstan.R\textquotesingle{}}\NormalTok{, }\AttributeTok{local=}\NormalTok{util)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2728,7 +2728,7 @@ configuration of the Hamiltonian Markov transition.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-8-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-8-1.pdf}
 
 The problematic Markov chain also exhibits the most variation in its
 inverse metric elements, which in this case is probably an artifact of
@@ -2778,7 +2778,7 @@ to explore as far as those in the other chains.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-11-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-11-1.pdf}
 
 Finally because nearly every transition is divergent we can't extract
 much information from the divergent-labeled pairs plots.
@@ -2793,7 +2793,7 @@ much information from the divergent-labeled pairs plots.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-12-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-12-1.pdf}
 
 We can also color the divergent transitions by their numerical
 trajectory lengths. On average transitions from shorter numerical
@@ -2812,7 +2812,7 @@ boundary. For example plot of \texttt{beta{[}2{]}} against
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-13-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-13-1.pdf}
 
 Having examined the Hamiltonian Monte Carlo diagnostics let's now look
 through the expectand specific diagnostics. By default we'll look at the
@@ -3527,7 +3527,7 @@ empirical correlograms for each parameter expectand.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-18-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-18-1.pdf}
 
 Regardless of whether or not these Markov chains are stationary they are
 extremely autocorrelated. Assuming stationarity we don't start to forget
@@ -3548,7 +3548,7 @@ characteristic of a random walk.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-19-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-19-1.pdf}
 
 To more quantitatively blame the large split \(\hat{R}\)s on these
 strong autocorrelations we can plot the split \(\hat{R}\) from each
@@ -3569,7 +3569,7 @@ smallest empirical effective sample size amongst the four Markov chains.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-20-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-20-1.pdf}
 
 Every expectand with a large split \(\hat{R}\)s also exhibits a
 particularly small minimum empirical effective sample size, confirming
@@ -3601,7 +3601,7 @@ probability estimates in dark red.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-21-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-21-1.pdf}
 
 If we look at the central estimates alone we might convince ourselves of
 all kinds of interesting structure. For example potential multi-modality
@@ -3627,7 +3627,7 @@ at the same time many of the visual artifacts recede.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_rstan_files/figure-pdf/unnamed-chunk-22-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-22-1.pdf}
 
 When the bin indicator functions enjoy Markov chain Monte Carlo central
 limit theorems these standard error bands allow us to discriminate

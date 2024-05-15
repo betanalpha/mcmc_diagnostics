@@ -478,7 +478,7 @@ avoid any conflicts with other functions.
 #| warning: false
 #| message: false
 util <- new.env()
-source('stan_utility_rstan.R', local=util)
+source('mcmc_analysis_tools_rstan.R', local=util)
 ```
 
 Then we can simulate some binary data from a logistic regression model.

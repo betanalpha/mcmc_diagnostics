@@ -5118,7 +5118,7 @@ m &lt; \frac{1}{\xi}.
 <p>Next we source all of these diagnostics into a local environment to avoid any conflicts with other functions.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>util <span class="ot">&lt;-</span> <span class="fu">new.env</span>()</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&#39;stan_utility_rstan.R&#39;</span>, <span class="at">local=</span>util)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&#39;mcmc_analysis_tools_rstan.R&#39;</span>, <span class="at">local=</span>util)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Then we can simulate some binary data from a logistic regression model.</p>
 <div class="code-with-filename">
@@ -6139,17 +6139,16 @@ other attached packages:
 
 loaded via a namespace (and not attached):
  [1] gtable_0.3.4       jsonlite_1.8.8     compiler_4.3.2     Rcpp_1.0.11       
- [5] stringr_1.5.1      parallel_4.3.2     gridExtra_2.3      callr_3.7.3       
- [9] scales_1.3.0       yaml_2.3.8         fastmap_1.1.1      ggplot2_3.4.4     
-[13] R6_2.5.1           curl_5.2.0         knitr_1.45         tibble_3.2.1      
-[17] munsell_0.5.0      pillar_1.9.0       rlang_1.1.2        utf8_1.2.4        
-[21] V8_4.4.1           stringi_1.8.3      inline_0.3.19      xfun_0.41         
-[25] RcppParallel_5.1.7 cli_3.6.2          magrittr_2.0.3     ps_1.7.5          
-[29] processx_3.8.3     digest_0.6.33      grid_4.3.2         lifecycle_1.0.4   
-[33] vctrs_0.6.5        evaluate_0.23      glue_1.6.2         QuickJSR_1.0.8    
-[37] codetools_0.2-19   stats4_4.3.2       pkgbuild_1.4.3     fansi_1.0.6       
-[41] colorspace_2.1-0   rmarkdown_2.25     matrixStats_1.2.0  tools_4.3.2       
-[45] loo_2.6.0          pkgconfig_2.0.3    htmltools_0.5.7   </code></pre>
+ [5] stringr_1.5.1      parallel_4.3.2     gridExtra_2.3      scales_1.3.0      
+ [9] yaml_2.3.8         fastmap_1.1.1      ggplot2_3.4.4      R6_2.5.1          
+[13] curl_5.2.0         knitr_1.45         tibble_3.2.1       munsell_0.5.0     
+[17] pillar_1.9.0       rlang_1.1.2        utf8_1.2.4         V8_4.4.1          
+[21] stringi_1.8.3      inline_0.3.19      xfun_0.41          RcppParallel_5.1.7
+[25] cli_3.6.2          magrittr_2.0.3     digest_0.6.33      grid_4.3.2        
+[29] lifecycle_1.0.4    vctrs_0.6.5        evaluate_0.23      glue_1.6.2        
+[33] QuickJSR_1.0.8     codetools_0.2-19   stats4_4.3.2       pkgbuild_1.4.3    
+[37] fansi_1.0.6        colorspace_2.1-0   rmarkdown_2.25     matrixStats_1.2.0 
+[41] tools_4.3.2        loo_2.6.0          pkgconfig_2.0.3    htmltools_0.5.7   </code></pre>
 </div>
 </div>
 </section>

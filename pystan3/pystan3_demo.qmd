@@ -87,7 +87,7 @@ limit theorem conditions.  Divergences arise when the target distribution is
 compressed into a narrow region; this forces the Hamiltonian dynamics to
 accelerate which makes them more difficult to accurately simulate.
 
-Increasing `adapt_delta` will on average result in a less aggressive step size
+Increasing `delta` will on average result in a less aggressive step size
 optimization that in some cases may improve the stability of the numerical
 integration but at the cost of longer, and hence more expensive, numerical
 Hamiltonian trajectories.  In most cases, however, the only productive way to
@@ -434,7 +434,7 @@ Next we source all of these diagnostics into a local namespace to avoid
 any conflicts with other functions.
 
 ```{python}
-import stan_utility_pystan3 as util
+import mcmc_analysis_tools_pystan3 as util
 ```
 
 Then we can simulate some binary data from a logistic regression model.

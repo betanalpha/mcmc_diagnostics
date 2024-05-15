@@ -2,7 +2,7 @@
 
 rm -f _includes/*
 
-utility_file='stan_utility_pystan3.py'
+utility_file='mcmc_analysis_tools_pystan3.py'
 N=$(wc -l $utility_file | sed 's,[ ]*\([0-9]*\) .*$,\1,')
 
 function_names=('extract_expectands' 'extract_hmc_diagnostics' 

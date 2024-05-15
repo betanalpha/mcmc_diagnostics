@@ -296,13 +296,12 @@ when the target distribution is compressed into a narrow region; this
 forces the Hamiltonian dynamics to accelerate which makes them more
 difficult to accurately simulate.
 
-Increasing \texttt{adapt\_delta} will on average result in a less
-aggressive step size optimization that in some cases may improve the
-stability of the numerical integration but at the cost of longer, and
-hence more expensive, numerical Hamiltonian trajectories. In most cases,
-however, the only productive way to avoid divergences is to
-reparameterize the ambient space to decompress these pinches in the
-target distribution.
+Increasing \texttt{delta} will on average result in a less aggressive
+step size optimization that in some cases may improve the stability of
+the numerical integration but at the cost of longer, and hence more
+expensive, numerical Hamiltonian trajectories. In most cases, however,
+the only productive way to avoid divergences is to reparameterize the
+ambient space to decompress these pinches in the target distribution.
 
 Stan's Hamiltonian Monte Carlo sampler expands the length of the
 numerical Hamiltonian trajectories dynamically to maximize the
@@ -1876,7 +1875,7 @@ any conflicts with other functions.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\ImportTok{import}\NormalTok{ stan\_utility\_pystan3 }\ImportTok{as}\NormalTok{ util}
+\ImportTok{import}\NormalTok{ mcmc\_analysis\_tools\_pystan3 }\ImportTok{as}\NormalTok{ util}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2087,7 +2086,7 @@ configuration of the Hamiltonian Markov transition.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-8-output-1.pdf}
+\includegraphics{pystan3_demo_files/figure-pdf/cell-8-output-1.pdf}
 
 The problematic third Markov chain also exhibits the least variation in
 its inverse metric elements, which in this case is probably an artifact
@@ -2138,7 +2137,7 @@ explore as far as those in the other chains.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-11-output-1.pdf}
+\includegraphics{pystan3_demo_files/figure-pdf/cell-11-output-1.pdf}
 
 Finally because nearly every transition is divergent we can't extract
 much information from the divergent-labeled pairs plots.
@@ -2153,7 +2152,7 @@ much information from the divergent-labeled pairs plots.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-12-output-1.pdf}
+\includegraphics{pystan3_demo_files/figure-pdf/cell-12-output-1.pdf}
 
 We can also color the divergent transitions by their numerical
 trajectory lengths. On average transitions from shorter numerical
@@ -2173,7 +2172,7 @@ not inconsistent with a boundary defined by \[
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-13-output-1.pdf}
+\includegraphics{pystan3_demo_files/figure-pdf/cell-13-output-1.pdf}
 
 Having examined the Hamiltonian Monte Carlo diagnostics let's now look
 through the expectand specific diagnostics. By default we'll look at the
@@ -2805,7 +2804,7 @@ empirical correlograms for each parameter expectand.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-16-output-1.pdf}
+\includegraphics{pystan3_demo_files/figure-pdf/cell-16-output-1.pdf}
 
 Regardless of whether or not these Markov chains are stationary they are
 extremely autocorrelated. Even assuming stationarity we wouldn't start
@@ -2826,7 +2825,7 @@ characteristic of a random walk.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-17-output-1.pdf}
+\includegraphics{pystan3_demo_files/figure-pdf/cell-17-output-1.pdf}
 
 To more quantitatively blame the large split \(\hat{R}\)s on these
 strong autocorrelations we can plot the split \(\hat{R}\) from each
@@ -2851,7 +2850,7 @@ the smallest empirical effective sample size of the four Markov chains.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-18-output-1.pdf}
+\includegraphics{pystan3_demo_files/figure-pdf/cell-18-output-1.pdf}
 
 Every expectand with a large split \(\hat{R}\)s also exhibits a
 particularly small minimum empirical effective sample size, confirming
@@ -2886,7 +2885,7 @@ bin probability estimates in dark red.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-19-output-1.pdf}
+\includegraphics{pystan3_demo_files/figure-pdf/cell-19-output-1.pdf}
 
 If we look at the central estimates alone we might convince ourselves of
 all kinds of interesting structure. For example potential multi-modality
@@ -2915,7 +2914,7 @@ at the same time many of the visual artifacts recede.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{mcmc_diagnostics_pystan3_files/figure-pdf/cell-20-output-1.pdf}
+\includegraphics{pystan3_demo_files/figure-pdf/cell-20-output-1.pdf}
 
 When the bin indicator functions enjoy Markov chain Monte Carlo central
 limit theorems these standard error bands allow us to discriminate
@@ -2949,7 +2948,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-04-30T20:23:41.752982-04:00
+Last updated: 2024-05-14T23:29:52.540669-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

@@ -1,9 +1,11 @@
-General Markov chain Monte Carlo, and specific Hamiltonian Monte Carlo,
-diagnostic code compatible with RStan, PyStan2, and PyStan3.
+A suite of analysis and diagnostics tools in `R` and `python` for working with
+Markov chain Monte Carlo generally and Hamiltonian Monte Carlo specifically.
+The suite includes functions for interfacing with `RStan`, `PyStan2`, and
+`PyStan3` and notebooks demonstrating their use.
 
-The diagnostics can also be fully adapted to any other Hamiltonian Monte Carlo 
-implementation by re-implementing the `extract_expectands`,
-`extract_hmc_diagnostics`, and `plot_inv_metric` functions.
+These tools can also be interfaced with any Hamiltonian Monte Carlo code by
+implementing appropriate `extract_expectands`, `extract_hmc_diagnostics`, and
+`plot_inv_metric` functions.
 
 Recommendations for code optimization are welcomed and appreciated.
 

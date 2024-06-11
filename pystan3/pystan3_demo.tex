@@ -1819,10 +1819,12 @@ by estimating the target probabilities in histogram bins.
 \CommentTok{\# @param B The number of histogram bins}
 \CommentTok{\# @param display\_name Exectand name}
 \CommentTok{\# @param flim Optional histogram range}
-\CommentTok{\# @param baseline Optional baseline value for visual comparison}
 \CommentTok{\# @param title Optional plot title}
-\KeywordTok{def}\NormalTok{ plot\_expectand\_pushforward(ax, samples, B, display\_name}\OperatorTok{=}\StringTok{"f"}\NormalTok{, }
-\NormalTok{                               flim}\OperatorTok{=}\VariableTok{None}\NormalTok{, baseline}\OperatorTok{=}\VariableTok{None}\NormalTok{, title}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+\CommentTok{\# @param baseline Optional baseline value for visual comparison}
+\CommentTok{\# @param baseline\_color Color for plotting baseline value; defaults to "black"}
+\KeywordTok{def}\NormalTok{ plot\_expectand\_pushforward(ax, samples, B, display\_name}\OperatorTok{=}\StringTok{"f"}\NormalTok{,}
+\NormalTok{                               flim}\OperatorTok{=}\VariableTok{None}\NormalTok{, title}\OperatorTok{=}\VariableTok{None}\NormalTok{,}
+\NormalTok{                               baseline}\OperatorTok{=}\VariableTok{None}\NormalTok{, baseline\_color}\OperatorTok{=}\StringTok{"black"}\NormalTok{):}
   \CommentTok{"""Plot pushforward histogram of a given expectand using Markov chain}
 \CommentTok{     Monte Carlo estimators to estimate the output bin probabilities"""}
   \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(samples.shape) }\OperatorTok{!=} \DecValTok{2}\NormalTok{:}
@@ -2948,7 +2950,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-05-14T23:29:52.540669-04:00
+Last updated: 2024-06-11T14:12:39.654660-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

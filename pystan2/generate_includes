@@ -5,7 +5,7 @@ rm -f _includes/*
 utility_file='mcmc_analysis_tools_pystan2.py'
 N=$(wc -l $utility_file | sed 's,[ ]*\([0-9]*\) .*$,\1,')
 
-function_names=('compile_model' 'extract_expectands' 'extract_hmc_diagnostics' 
+function_names=('compile_model' 'extract_expectands' 'extract_hmc_diagnostics'
                 'check_all_hmc_diagnostics' 'plot_inv_metric'
                 'display_stepsizes' 'plot_num_leapfrogs' 'plot_num_leapfrogs_by_chain'
                 'display_ave_accept_proxy' 'apply_transform' 'plot_div_pairs'
@@ -32,10 +32,13 @@ for name in ${function_names[@]}; do
   let M=$N-$function_start
   let M++
   
-  delta=$(tail -$M $utility_file | grep -nh ^$ | sed 's,\(^[0-9]*\):.*,\1,')
-  
-  let function_end=$function_start+$delta
-  let function_end=$function_end-2
+  delta=$(tail -$M $utility_file | grep -nh ^# | sed 's,\(^[0-9]*\):.*,\1,' | head -1)
+  if [ -z $delta ]; then
+    let function_end=$N
+  else
+    let function_end=$function_start+$delta
+    let function_end=$function_end-3
+  fi
   
   touch _includes/${name}.qmd
   

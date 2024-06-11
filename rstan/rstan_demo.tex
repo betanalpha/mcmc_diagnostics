@@ -933,13 +933,21 @@ states themselves can be visualized with pairs plots.
 \NormalTok{  nondiv\_filter }\OperatorTok{\textless{}{-}}\NormalTok{ c(sapply(}\DecValTok{1}\NormalTok{:C, function(c) divs[c,] }\OperatorTok{==} \DecValTok{0}\NormalTok{))}
 \NormalTok{  div\_filter    }\OperatorTok{\textless{}{-}}\NormalTok{ c(sapply(}\DecValTok{1}\NormalTok{:C, function(c) divs[c,] }\OperatorTok{==} \DecValTok{1}\NormalTok{))}
   
-\NormalTok{  nlfs }\OperatorTok{\textless{}{-}}\NormalTok{ c(sapply(}\DecValTok{1}\NormalTok{:C, }
-\NormalTok{                   function(c) diagnostics[[}\StringTok{\textquotesingle{}n\_leapfrog\_\_\textquotesingle{}}\NormalTok{]][c,]))}
-\NormalTok{  div\_nlfs }\OperatorTok{\textless{}{-}}\NormalTok{ nlfs[div\_filter]}
-\NormalTok{  max\_nlf }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(div\_nlfs)}
-\NormalTok{  nom\_colors }\OperatorTok{\textless{}{-}}\NormalTok{ c(c\_light\_teal, c\_mid\_teal, c\_dark\_teal)}
-\NormalTok{  cmap }\OperatorTok{\textless{}{-}}\NormalTok{ colormap(colormap}\OperatorTok{=}\NormalTok{nom\_colors, nshades}\OperatorTok{=}\NormalTok{max\_nlf)}
-  
+  \ControlFlowTok{if}\NormalTok{ (plot\_mode }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
+    \ControlFlowTok{if}\NormalTok{ (}\BuiltInTok{sum}\NormalTok{(div\_filter) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{) \{}
+\NormalTok{      nlfs }\OperatorTok{\textless{}{-}}\NormalTok{ c(sapply(}\DecValTok{1}\NormalTok{:C,}
+\NormalTok{                       function(c) diagnostics[[}\StringTok{\textquotesingle{}n\_leapfrog\_\_\textquotesingle{}}\NormalTok{]][c,]))}
+\NormalTok{      div\_nlfs }\OperatorTok{\textless{}{-}}\NormalTok{ nlfs[div\_filter]}
+\NormalTok{      max\_nlf }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(div\_nlfs)}
+\NormalTok{      nom\_colors }\OperatorTok{\textless{}{-}}\NormalTok{ c(c\_light\_teal, c\_mid\_teal, c\_dark\_teal)}
+\NormalTok{      cmap }\OperatorTok{\textless{}{-}}\NormalTok{ colormap(colormap}\OperatorTok{=}\NormalTok{nom\_colors, nshades}\OperatorTok{=}\NormalTok{max\_nlf)}
+\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{      div\_nlfs }\OperatorTok{\textless{}{-}}\NormalTok{ c()}
+\NormalTok{      nom\_colors }\OperatorTok{\textless{}{-}}\NormalTok{ c(c\_light\_teal, c\_mid\_teal, c\_dark\_teal)}
+\NormalTok{      cmap }\OperatorTok{\textless{}{-}}\NormalTok{ colormap(colormap}\OperatorTok{=}\NormalTok{nom\_colors, nshades}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
+\NormalTok{    \}}
+\NormalTok{  \}}
+
   \CommentTok{\# Set plot layout dynamically}
 \NormalTok{  N\_cols }\OperatorTok{\textless{}{-}} \DecValTok{3}
 \NormalTok{  N\_plots }\OperatorTok{\textless{}{-}}\NormalTok{ length(pairs)}
@@ -2410,8 +2418,10 @@ by estimating the target probabilities in histogram bins.
 \CommentTok{\# @param display\_name Exectand name}
 \CommentTok{\# @param flim Optional histogram range}
 \CommentTok{\# @param baseline Optional baseline value for visual comparison}
-\NormalTok{plot\_expectand\_pushforward }\OperatorTok{\textless{}{-}}\NormalTok{ function(samples, B, display\_name}\OperatorTok{=}\StringTok{"f"}\NormalTok{, }
-\NormalTok{                                       flim}\OperatorTok{=}\NormalTok{NULL, main}\OperatorTok{=}\StringTok{""}\NormalTok{, baseline}\OperatorTok{=}\NormalTok{NULL) \{}
+\CommentTok{\# @param baseline\_col Color for plotting baseline value; defaults to "black"}
+\NormalTok{plot\_expectand\_pushforward }\OperatorTok{\textless{}{-}}\NormalTok{ function(samples, B, display\_name}\OperatorTok{=}\StringTok{"f"}\NormalTok{,}
+\NormalTok{                                       flim}\OperatorTok{=}\NormalTok{NULL, main}\OperatorTok{=}\StringTok{""}\NormalTok{, }
+\NormalTok{                                       baseline}\OperatorTok{=}\NormalTok{NULL, baseline\_col}\OperatorTok{=}\StringTok{"black"}\NormalTok{) \{}
   \ControlFlowTok{if}\NormalTok{ (length(dim(samples)) }\OperatorTok{!=} \DecValTok{2}\NormalTok{) \{}
 \NormalTok{    stop(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}samples\textasciigrave{} has the wrong dimension\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
@@ -2495,7 +2505,7 @@ by estimating the target probabilities in histogram bins.
   \CommentTok{\# Plot baseline if applicable}
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\KeywordTok{is}\NormalTok{.null(baseline)) \{}
 \NormalTok{    abline(v}\OperatorTok{=}\NormalTok{baseline, col}\OperatorTok{=}\StringTok{"white"}\NormalTok{, lty}\OperatorTok{=}\DecValTok{1}\NormalTok{, lwd}\OperatorTok{=}\DecValTok{4}\NormalTok{)}
-\NormalTok{    abline(v}\OperatorTok{=}\NormalTok{baseline, col}\OperatorTok{=}\StringTok{"black"}\NormalTok{, lty}\OperatorTok{=}\DecValTok{1}\NormalTok{, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+\NormalTok{    abline(v}\OperatorTok{=}\NormalTok{baseline, col}\OperatorTok{=}\NormalTok{baseline\_col, lty}\OperatorTok{=}\DecValTok{1}\NormalTok{, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
 \NormalTok{  \}}
 \NormalTok{\}}
 \end{Highlighting}

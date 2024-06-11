@@ -586,13 +586,21 @@ plot_div_pairs <- function(x_names, y_names,
   nondiv_filter <- c(sapply(1:C, function(c) divs[c,] == 0))
   div_filter    <- c(sapply(1:C, function(c) divs[c,] == 1))
   
-  nlfs <- c(sapply(1:C, 
-                   function(c) diagnostics[['n_leapfrog__']][c,]))
-  div_nlfs <- nlfs[div_filter]
-  max_nlf <- max(div_nlfs)
-  nom_colors <- c(c_light_teal, c_mid_teal, c_dark_teal)
-  cmap <- colormap(colormap=nom_colors, nshades=max_nlf)
-  
+  if (plot_mode == 1) {
+    if (sum(div_filter) > 0) {
+      nlfs <- c(sapply(1:C,
+                       function(c) diagnostics[['n_leapfrog__']][c,]))
+      div_nlfs <- nlfs[div_filter]
+      max_nlf <- max(div_nlfs)
+      nom_colors <- c(c_light_teal, c_mid_teal, c_dark_teal)
+      cmap <- colormap(colormap=nom_colors, nshades=max_nlf)
+    } else {
+      div_nlfs <- c()
+      nom_colors <- c(c_light_teal, c_mid_teal, c_dark_teal)
+      cmap <- colormap(colormap=nom_colors, nshades=1)
+    }
+  }
+
   # Set plot layout dynamically
   N_cols <- 3
   N_plots <- length(pairs)
@@ -1991,8 +1999,10 @@ ensemble_mcmc_est <- function(samples) {
 # @param display_name Exectand name
 # @param flim Optional histogram range
 # @param baseline Optional baseline value for visual comparison
-plot_expectand_pushforward <- function(samples, B, display_name="f", 
-                                       flim=NULL, main="", baseline=NULL) {
+# @param baseline_col Color for plotting baseline value; defaults to "black"
+plot_expectand_pushforward <- function(samples, B, display_name="f",
+                                       flim=NULL, main="", 
+                                       baseline=NULL, baseline_col="black") {
   if (length(dim(samples)) != 2) {
     stop('Input variable `samples` has the wrong dimension')
   }
@@ -2076,6 +2086,6 @@ plot_expectand_pushforward <- function(samples, B, display_name="f",
   # Plot baseline if applicable
   if (!is.null(baseline)) {
     abline(v=baseline, col="white", lty=1, lwd=4)
-    abline(v=baseline, col="black", lty=1, lwd=2)
+    abline(v=baseline, col=baseline_col, lty=1, lwd=2)
   }
 }

@@ -32,10 +32,13 @@ for name in ${function_names[@]}; do
   let M=$N-$function_start
   let M++
   
-  delta=$(tail -$M $utility_file | grep -nh ^$ | sed 's,\(^[0-9]*\):.*,\1,')
-  
-  let function_end=$function_start+$delta
-  let function_end=$function_end-2
+  delta=$(tail -$M $utility_file | grep -nh ^# | sed 's,\(^[0-9]*\):.*,\1,' | head -1)
+  if [ -z $delta ]; then
+    let function_end=$N
+  else
+    let function_end=$function_start+$delta
+    let function_end=$function_end-3
+  fi
   
   touch _includes/${name}.qmd
   

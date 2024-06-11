@@ -32,7 +32,7 @@ light_teal = "#6B8E8E"
 mid_teal = "#487575"
 dark_teal = "#1D4F4F"
 
-
+# Compile Stan program into an executable
 def compile_model(filename, model_name=None, **kwargs):
   """This will automatically cache models.
   
@@ -687,16 +687,19 @@ def plot_div_pairs(x_names, y_names, expectand_samples,
   divergences = diagnostics['divergent__'].flatten()
   
   if plot_mode == 1:
-    div_nlfs = [ x for x, d in 
-                 zip(diagnostics['n_leapfrog__'].flatten(), divergences)
-                 if d == 1  ]
-    if len(div_nlfs) > 0:
+    if sum(divergences) > 0:
+      div_nlfs = [ x for x, d in
+                   zip(diagnostics['n_leapfrog__'].flatten(), divergences)
+                   if d == 1  ]
       max_nlf = max(div_nlfs)
+      nom_colors = [light_teal, mid_teal, dark_teal]
+      cmap = LinearSegmentedColormap.from_list("teals", nom_colors,
+                                               N=max_nlf)
     else:
-      max_nlf = 0
-    nom_colors = [light_teal, mid_teal, dark_teal]
-    cmap = LinearSegmentedColormap.from_list("teals", nom_colors, 
-                                                      N=max_nlf)
+      div_nlfs = []
+      nom_colors = [light_teal, mid_teal, dark_teal]
+      cmap = LinearSegmentedColormap.from_list("teals", nom_colors,
+                                               N=1)
   
   # Set plot layout dynamically
   N_pairs = len(pairs)
@@ -2015,10 +2018,12 @@ def ensemble_mcmc_est(samples):
 # @param B The number of histogram bins
 # @param display_name Exectand name
 # @param flim Optional histogram range
-# @param baseline Optional baseline value for visual comparison
 # @param title Optional plot title
+# @param baseline Optional baseline value for visual comparison
+# @param baseline_color Color for plotting baseline value; defaults to "black"
 def plot_expectand_pushforward(ax, samples, B, display_name="f",
-                               flim=None, baseline=None, title=None):
+                               flim=None, title=None,
+                               baseline=None, baseline_color="black"):
   """Plot pushforward histogram of a given expectand using Markov chain
      Monte Carlo estimators to estimate the output bin probabilities"""
   if len(samples.shape) != 2:
@@ -2092,7 +2097,7 @@ def plot_expectand_pushforward(ax, samples, B, display_name="f",
   
   if baseline is not None:
     ax.axvline(x=baseline, linewidth=4, color="white")
-    ax.axvline(x=baseline, linewidth=2, color="black")
+    ax.axvline(x=baseline, linewidth=2, color=baseline_color)
 
   if title is not None:
     ax.set_title(title)

@@ -483,7 +483,7 @@ apply_transform <- function(name, samples, transforms) {
 #                    element indexes the Markov chains and the 
 #                    second dimension indexes the sequential 
 #                    states within each Markov chain.
-# @params transforms A named list of flags configurating which if any
+# @params transforms A named list of flags configuring which if any
 #                    transformation to apply to each named expectand:
 #                      0: identity
 #                      1: log
@@ -533,7 +533,7 @@ plot_div_pairs <- function(x_names, y_names,
       warning <- 
         paste0(sprintf('The transform flag %s for expectand %s ', 
                        transforms[[name]], name),
-               'is invalid.  Plot will default to no tranformation.')
+               'is invalid.  Plot will default to no transformation.')
       warning <- paste0(strwrap(warning, max_width, 0), collapse='\n')
       cat(warning)
     }
@@ -1920,7 +1920,7 @@ pushforward_chains <- function(samples, expectand) {
   }
 }
 
-# Estimate expectand exectation value from a single Markov chain.
+# Estimate expectand expectation value from a single Markov chain.
 # @param fs A one-dimensional array of sequential expectand values.
 # @return The Markov chain Monte Carlo estimate, its estimated standard 
 #         error, and empirical effective sample size.
@@ -1941,7 +1941,7 @@ mcmc_est <- function(fs) {
   return(c(summary[1], sqrt(summary[2] / eess), eess))
 }
 
-# Estimate expectand exectation value from a Markov chain ensemble.
+# Estimate expectand expectation value from a Markov chain ensemble.
 # @param samples A two-dimensional array of expectand values with the 
 #                first dimension indexing the Markov chains and the 
 #                second dimension indexing the sequential states within 
@@ -1996,7 +1996,7 @@ ensemble_mcmc_est <- function(samples) {
 #                second dimension indexing the sequential states within 
 #                each Markov chain.
 # @param B The number of histogram bins
-# @param display_name Exectand name
+# @param display_name Expectand name
 # @param flim Optional histogram range
 # @param baseline Optional baseline value for visual comparison
 # @param baseline_col Color for plotting baseline value; defaults to "black"

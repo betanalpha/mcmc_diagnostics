@@ -1828,7 +1828,7 @@ filter_expectands <- function(expectand_vals_list, requested_names,
     bad_names <- c()
     for (name in requested_names) {
       # Search for array suffix
-      array_names <- grep(paste0(name, '\\['),
+      array_names <- grep(paste0('^', name, '\\['),
                           names(expectand_vals_list),
                           value=TRUE)
       

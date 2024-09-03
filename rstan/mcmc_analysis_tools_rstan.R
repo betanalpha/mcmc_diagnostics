@@ -2095,6 +2095,33 @@ ensemble_mcmc_est <- function(expectand_vals) {
   c(mean, sqrt(var / total_ess), total_ess)
 }
 
+# Estimate expectand pushforward quantiles from a Markov chain ensemble.
+# @param expectand_vals A two-dimensional array of expectand values with
+#                       the first dimension indexing the Markov chains
+#                       and the second dimension indexing the sequential
+#                       states within each Markov chain.
+# @param probs An array of quantile probabilities.
+# @return The ensemble Markov chain Monte Carlo quantile estimate.
+ensemble_mcmc_quantile_est <- function(expectand_vals, probs) {
+  # Validate inputs
+  validate_array(expectand_vals, 'expectand_vals')
+
+  if (!is.vector(probs)) {
+    stop(paste0('Input variable `probs` is not a ',
+                'one-dimensional numeric array.'))
+  }
+
+  # Estimate and return quantile
+  q <- 0 * probs
+
+  C <- dim(expectand_vals)[1]
+  for (c in 1:C) {
+    q <- q + quantile(expectand_vals[c,], probs=probs) / C
+  }
+
+  return(q)
+}
+
 # Visualize pushforward distribution along a given expectand as a
 # sequence of bin probabilities weighted by bin widths that approximates
 # the pushforward probability density function.  Markov chain Monte

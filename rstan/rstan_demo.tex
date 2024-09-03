@@ -2456,9 +2456,61 @@ value estimates and their standard errors.
 \end{Highlighting}
 \end{Shaded}
 
-In addition to examining the single expectation value of an expectand we
-can also visualize the entire pushforward distribution of the expectand
-by estimating the target probabilities in histogram bins.
+We can also use realized Markov chains to estimate quantiles of the
+pushforward distribution along an expectand. Within a single Markov
+chain ordering the expectand values allow us to efficiently search for
+the value \(x_{q}\) whose corresponding interval probability first
+exceeds the defining quantile probability \(p\), \begin{align*}
+p
+&<
+\pi( \, \{ -\infty, x_{q} ] \, )
+\\
+&=
+\mathbb{E}_{\pi} \left[ I_{ \{ -\infty, x_{q} ] } \right]
+\\
+&\approx
+\frac{1}{N} \sum_{n = 1}^{N} I_{ \{ -\infty,  x_{q} ] }( \tilde{x}_{n}).
+\end{align*} The empirical quantiles within each Markov chain can then
+be averaged together to provide an ensemble estimator.
+
+In theory the empirical standard deviation of the individual Markov
+chain estimates consistently estimates the estimator error, but the
+estimation is unreliable without many Markov chains. Consequently it is
+not reported here.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Estimate expectand pushforward quantiles from a Markov chain ensemble.}
+\CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
+\CommentTok{\#                       the first dimension indexing the Markov chains}
+\CommentTok{\#                       and the second dimension indexing the sequential}
+\CommentTok{\#                       states within each Markov chain.}
+\CommentTok{\# @param probs An array of quantile probabilities.}
+\CommentTok{\# @return The ensemble Markov chain Monte Carlo quantile estimate.}
+\NormalTok{ensemble\_mcmc\_quantile\_est }\OperatorTok{\textless{}{-}}\NormalTok{ function(expectand\_vals, probs) \{}
+  \CommentTok{\# Validate inputs}
+\NormalTok{  validate\_array(expectand\_vals, }\StringTok{\textquotesingle{}expectand\_vals\textquotesingle{}}\NormalTok{)}
+
+  \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\KeywordTok{is}\NormalTok{.vector(probs)) \{}
+\NormalTok{    stop(paste0(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}probs\textasciigrave{} is not a \textquotesingle{}}\NormalTok{,}
+                \StringTok{\textquotesingle{}one{-}dimensional numeric array.\textquotesingle{}}\NormalTok{))}
+\NormalTok{  \}}
+
+  \CommentTok{\# Estimate and return quantile}
+\NormalTok{  q }\OperatorTok{\textless{}{-}} \DecValTok{0} \OperatorTok{*}\NormalTok{ probs}
+
+\NormalTok{  C }\OperatorTok{\textless{}{-}}\NormalTok{ dim(expectand\_vals)[}\DecValTok{1}\NormalTok{]}
+  \ControlFlowTok{for}\NormalTok{ (c }\KeywordTok{in} \DecValTok{1}\NormalTok{:C) \{}
+\NormalTok{    q }\OperatorTok{\textless{}{-}}\NormalTok{ q }\OperatorTok{+}\NormalTok{ quantile(expectand\_vals[c,], probs}\OperatorTok{=}\NormalTok{probs) }\OperatorTok{/}\NormalTok{ C}
+\NormalTok{  \}}
+
+  \ControlFlowTok{return}\NormalTok{(q)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Finally we can also visualize the entire pushforward distribution by
+estimating the target probabilities in histogram bins.
 
 \begin{Shaded}
 \begin{Highlighting}[]

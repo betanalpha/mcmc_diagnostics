@@ -2361,28 +2361,120 @@ If none of the diagnostics indicate an obstruction to a Markov chain
 Monte Carlo central limit theorem then we can construct expectation
 value estimates and their standard errors.
 
+When interested in expectands that have not already been computed we
+will need to evaluate the existing samples on these new functions,
+generating pushforward samples.
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Evaluate an expectand at the states of a Markov chain ensemble.}
-\CommentTok{\# @param samples A two{-}dimensional array of scalar Markov chain states }
-\CommentTok{\#                with the first dimension indexing the Markov chains and }
-\CommentTok{\#                the second dimension indexing the sequential states }
-\CommentTok{\#                within each Markov chain.}
-\CommentTok{\# @param expectand Scalar function to be applied to the Markov chain }
-\CommentTok{\#                  states.}
+\CommentTok{\# Evaluate an expectand on the values of a one{-}dimensional input}
+\CommentTok{\# variable.}
+\CommentTok{\# @param input\_vals A two{-}dimensional array of expectand values with}
+\CommentTok{\#                   the first dimension indexing the Markov chains}
+\CommentTok{\#                   and the second dimension indexing the sequential}
+\CommentTok{\#                   states within each Markov chain.}
+\CommentTok{\# @param expectand Expectand with one{-}dimensional input space.}
 \CommentTok{\# @return A two{-}dimensional array of expectand values with the }
 \CommentTok{\#         first dimension indexing the Markov chains and the }
 \CommentTok{\#         second dimension indexing the sequential states within }
 \CommentTok{\#         each Markov chain.}
-\NormalTok{pushforward\_chains }\OperatorTok{\textless{}{-}}\NormalTok{ function(samples, expectand) \{}
-  \ControlFlowTok{if}\NormalTok{ (dim(samples)[}\DecValTok{1}\NormalTok{] }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
-    \ImportTok{as}\NormalTok{.matrix(t(}\BuiltInTok{apply}\NormalTok{(samples, }\DecValTok{2}\NormalTok{, expectand)))}
+\NormalTok{eval\_uni\_expectand\_pushforward }\OperatorTok{\textless{}{-}}\NormalTok{ function(input\_vals, expectand) \{}
+  \ControlFlowTok{if}\NormalTok{ (dim(input\_vals)[}\DecValTok{1}\NormalTok{] }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
+    \ImportTok{as}\NormalTok{.matrix(t(}\BuiltInTok{apply}\NormalTok{(input\_vals, }\DecValTok{2}\NormalTok{, expectand)))}
 \NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
-    \BuiltInTok{apply}\NormalTok{(samples, }\DecValTok{2}\NormalTok{, expectand)}
+    \BuiltInTok{apply}\NormalTok{(input\_vals, }\DecValTok{2}\NormalTok{, expectand)}
 \NormalTok{  \}}
 \NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
+\CommentTok{\#                            each expectand.  The first dimension of}
+\CommentTok{\#                            each element indexes the Markov chains and}
+\CommentTok{\#                            the second dimension indexes the sequential}
+\CommentTok{\#                            states within each Markov chain.}
+\CommentTok{\# @param expectand Expectand with arbitrary input space.}
+\CommentTok{\# @param alt\_arg\_names Optional named list of replacements for the}
+\CommentTok{\#                      nominal expectand argument names; when used all}
+\CommentTok{\#                      argument names must be explicitly replaced.}
+\NormalTok{eval\_expectand\_pushforward }\OperatorTok{\textless{}{-}}\NormalTok{ function(expectand\_vals\_list,}
+\NormalTok{                                       expectand,}
+\NormalTok{                                       alt\_arg\_names}\OperatorTok{=}\NormalTok{NULL) \{}
+  \CommentTok{\# Validate inputs}
+\NormalTok{  validate\_named\_list\_of\_arrays(expectand\_vals\_list,}
+                                \StringTok{\textquotesingle{}expectand\_vals\_list\textquotesingle{}}\NormalTok{)}
+
+  \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\KeywordTok{is}\NormalTok{.function(expectand)) \{}
+\NormalTok{    stop(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\textasciigrave{} is not a function!\textquotesingle{}}\NormalTok{)}
+\NormalTok{  \}}
+
+  \CommentTok{\# Check existence of all expectand arguments}
+\NormalTok{  nominal\_arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ formalArgs(expectand)}
+
+  \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(alt\_arg\_names)) \{}
+\NormalTok{    arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ nominal\_arg\_names}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+    \CommentTok{\# Validate alternate argument names}
+    \ControlFlowTok{if}\NormalTok{ ( }\OperatorTok{!}\KeywordTok{is}\NormalTok{.}\BuiltInTok{list}\NormalTok{(alt\_arg\_names) }\OperatorTok{|}
+          \KeywordTok{is}\NormalTok{.null(names(alt\_arg\_names)) ) \{}
+\NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}alt\_arg\_names\textasciigrave{} \textquotesingle{}}\NormalTok{,}
+                  \StringTok{\textquotesingle{}is not a named list!\textquotesingle{}}\NormalTok{))}
+\NormalTok{    \}}
+
+\NormalTok{    missing\_args }\OperatorTok{\textless{}{-}}\NormalTok{ setdiff(nominal\_arg\_names, names(alt\_arg\_names))}
+    \ControlFlowTok{if}\NormalTok{ (length(missing\_args) }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
+\NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}The nominal expectand argument \textquotesingle{}}\NormalTok{,}
+\NormalTok{                  paste(missing\_args, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{),}
+                  \StringTok{\textquotesingle{} does not have a replacement in \textquotesingle{}}\NormalTok{,}
+                  \StringTok{\textquotesingle{}\textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
+\NormalTok{    \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (length(missing\_args) }\OperatorTok{\textgreater{}} \DecValTok{1}\NormalTok{) \{}
+\NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}The nominal expectand arguments \textquotesingle{}}\NormalTok{,}
+\NormalTok{                  paste(missing\_args, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{),}
+                  \StringTok{\textquotesingle{} do not have a replacement in \textquotesingle{}}\NormalTok{,}
+                  \StringTok{\textquotesingle{}\textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
+\NormalTok{    \}}
+
+\NormalTok{    arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(nominal\_arg\_names,}
+\NormalTok{                        function(name) alt\_arg\_names[[name]],}
+\NormalTok{                        USE.NAMES}\OperatorTok{=}\NormalTok{FALSE)}
+\NormalTok{  \}}
+
+\NormalTok{  missing\_args }\OperatorTok{\textless{}{-}}\NormalTok{ setdiff(arg\_names, names(expectand\_vals\_list))}
+  \ControlFlowTok{if}\NormalTok{ (length(missing\_args) }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
+\NormalTok{    stop(paste0(}\StringTok{\textquotesingle{}The expectand argument \textquotesingle{}}\NormalTok{,}
+\NormalTok{                paste(missing\_args, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{),}
+                \StringTok{\textquotesingle{} is not in \textasciigrave{}expectand\_samples\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
+\NormalTok{  \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (length(missing\_args)) \{}
+\NormalTok{    stop(paste0(}\StringTok{\textquotesingle{}The expectand arguments \textquotesingle{}}\NormalTok{,}
+\NormalTok{                paste(missing\_args, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{),}
+                \StringTok{\textquotesingle{} are not in \textasciigrave{}expectand\_samples\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
+\NormalTok{  \}}
+
+  \CommentTok{\# Apply expectand to all inputs}
+\NormalTok{  C }\OperatorTok{\textless{}{-}}\NormalTok{ dim(expectand\_vals\_list[[}\DecValTok{1}\NormalTok{]])[}\DecValTok{1}\NormalTok{]}
+\NormalTok{  S }\OperatorTok{\textless{}{-}}\NormalTok{ dim(expectand\_vals\_list[[}\DecValTok{1}\NormalTok{]])[}\DecValTok{2}\NormalTok{]}
+\NormalTok{  pushforward\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ matrix(NA, nrow}\OperatorTok{=}\NormalTok{C, ncol}\OperatorTok{=}\NormalTok{S)}
+  \ControlFlowTok{for}\NormalTok{ (c }\KeywordTok{in} \DecValTok{1}\NormalTok{:C) \{}
+    \ControlFlowTok{for}\NormalTok{ (s }\KeywordTok{in} \DecValTok{1}\NormalTok{:S) \{}
+\NormalTok{      arg\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ lapply(arg\_names,}
+\NormalTok{                         function(name)}
+\NormalTok{                         expectand\_vals\_list[[name]][c, s])}
+\NormalTok{      pushforward\_vals[c, s] }\OperatorTok{\textless{}{-}}\NormalTok{ do.call(expectand, arg\_vals)}
+\NormalTok{    \}}
+\NormalTok{  \}}
+
+  \ControlFlowTok{return}\NormalTok{(pushforward\_vals)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Regardless of whether the expectand samples were generated by
+\texttt{Stan} or if we had to derive them ourselves the Markov chain
+Monte Carlo estimation is the same. In particular we can estimate
+expectation values using either a single Markov chain or an entire
+ensemble of Markov chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2596,7 +2688,8 @@ estimating the target probabilities in histogram bins.
 \NormalTok{    bin\_indicator }\OperatorTok{\textless{}{-}}\NormalTok{ function(x) \{}
 \NormalTok{      ifelse(bins[b] }\OperatorTok{\textless{}=}\NormalTok{ x }\OperatorTok{\&}\NormalTok{ x }\OperatorTok{\textless{}}\NormalTok{ bins[b }\OperatorTok{+} \DecValTok{1}\NormalTok{], }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{)}
 \NormalTok{    \}}
-\NormalTok{    indicator\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ pushforward\_chains(expectand\_vals, bin\_indicator)}
+\NormalTok{    indicator\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ eval\_uni\_expectand\_pushforward(expectand\_vals,}
+\NormalTok{                                                     bin\_indicator)}
 \NormalTok{    est }\OperatorTok{\textless{}{-}}\NormalTok{ ensemble\_mcmc\_est(indicator\_vals)}
 
     \CommentTok{\# Normalize bin probabilities by bin width to allow}
@@ -3792,7 +3885,7 @@ the ground truth in simulation studies.
 \includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-23-1.pdf}
 
 Moreover the expectand pushforward histograms can be plotted on top of
-each other for more direct comparison.
+each other for a more direct comparison.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -3822,6 +3915,30 @@ each other for more direct comparison.
 \end{Shaded}
 
 \includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-24-1.pdf}
+
+Finally if we want to explore the pushforward posterior distribution of
+other expectands that have not already been evaluated in the
+\texttt{Stan} program then we need to evaluate them ourselves.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{euclidean\_length }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x1, x2, x3) \{}
+  \FunctionTok{sqrt}\NormalTok{(x1}\SpecialCharTok{**}\DecValTok{2} \SpecialCharTok{+}\NormalTok{ x2}\SpecialCharTok{**}\DecValTok{2} \SpecialCharTok{+}\NormalTok{ x3}\SpecialCharTok{**}\DecValTok{2}\NormalTok{)}
+\NormalTok{\}}
+
+\NormalTok{pushforward\_samples }\OtherTok{\textless{}{-}}
+\NormalTok{  util}\SpecialCharTok{$}\FunctionTok{eval\_expectand\_pushforward}\NormalTok{(samples, euclidean\_length,}
+                                  \FunctionTok{list}\NormalTok{(}\StringTok{\textquotesingle{}x1\textquotesingle{}} \OtherTok{=} \StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{,}
+                                       \StringTok{\textquotesingle{}x2\textquotesingle{}} \OtherTok{=} \StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{,}
+                                       \StringTok{\textquotesingle{}x3\textquotesingle{}} \OtherTok{=} \StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{))}
+
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{), }\AttributeTok{mar =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(pushforward\_samples, }\DecValTok{10}\NormalTok{,}
+                                \AttributeTok{display\_name=}\StringTok{"Slope Vector Length"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-25-1.pdf}
 
 \section*{License}\label{license}
 \addcontentsline{toc}{section}{License}

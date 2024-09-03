@@ -2012,23 +2012,101 @@ plot_pairs_by_chain <- function(expectand1_vals, display_name1,
   }
 }
 
-# Evaluate an expectand at the states of a Markov chain ensemble.
-# @param samples A two-dimensional array of scalar Markov chain states 
-#                with the first dimension indexing the Markov chains and 
-#                the second dimension indexing the sequential states 
-#                within each Markov chain.
-# @param expectand Scalar function to be applied to the Markov chain 
-#                  states.
+# Evaluate an expectand on the values of a one-dimensional input
+# variable.
+# @param input_vals A two-dimensional array of expectand values with
+#                   the first dimension indexing the Markov chains
+#                   and the second dimension indexing the sequential
+#                   states within each Markov chain.
+# @param expectand Expectand with one-dimensional input space.
 # @return A two-dimensional array of expectand values with the 
 #         first dimension indexing the Markov chains and the 
 #         second dimension indexing the sequential states within 
 #         each Markov chain.
-pushforward_chains <- function(samples, expectand) {
-  if (dim(samples)[1] == 1) {
-    as.matrix(t(apply(samples, 2, expectand)))
+eval_uni_expectand_pushforward <- function(input_vals, expectand) {
+  if (dim(input_vals)[1] == 1) {
+    as.matrix(t(apply(input_vals, 2, expectand)))
   } else {
-    apply(samples, 2, expectand)
+    apply(input_vals, 2, expectand)
   }
+}
+
+# @param expectand_vals_list A named list of two-dimensional arrays for
+#                            each expectand.  The first dimension of
+#                            each element indexes the Markov chains and
+#                            the second dimension indexes the sequential
+#                            states within each Markov chain.
+# @param expectand Expectand with arbitrary input space.
+# @param alt_arg_names Optional named list of replacements for the
+#                      nominal expectand argument names; when used all
+#                      argument names must be explicitly replaced.
+eval_expectand_pushforward <- function(expectand_vals_list,
+                                       expectand,
+                                       alt_arg_names=NULL) {
+  # Validate inputs
+  validate_named_list_of_arrays(expectand_vals_list,
+                                'expectand_vals_list')
+
+  if(!is.function(expectand)) {
+    stop('Input variable `expectand` is not a function!')
+  }
+
+  # Check existence of all expectand arguments
+  nominal_arg_names <- formalArgs(expectand)
+
+  if (is.null(alt_arg_names)) {
+    arg_names <- nominal_arg_names
+  } else {
+    # Validate alternate argument names
+    if ( !is.list(alt_arg_names) |
+          is.null(names(alt_arg_names)) ) {
+      stop(paste0('Input variable `alt_arg_names` ',
+                  'is not a named list!'))
+    }
+
+    missing_args <- setdiff(nominal_arg_names, names(alt_arg_names))
+    if (length(missing_args) == 1) {
+      stop(paste0('The nominal expectand argument ',
+                  paste(missing_args, collapse=", "),
+                  ' does not have a replacement in ',
+                  '`alt_arg_names`.'))
+    } else if (length(missing_args) > 1) {
+      stop(paste0('The nominal expectand arguments ',
+                  paste(missing_args, collapse=", "),
+                  ' do not have a replacement in ',
+                  '`alt_arg_names`.'))
+    }
+
+    arg_names <- sapply(nominal_arg_names,
+                        function(name) alt_arg_names[[name]],
+                        USE.NAMES=FALSE)
+  }
+
+  missing_args <- setdiff(arg_names, names(expectand_vals_list))
+  if (length(missing_args) == 1) {
+    stop(paste0('The expectand argument ',
+                paste(missing_args, collapse=", "),
+                ' is not in `expectand_samples`.'))
+  } else if (length(missing_args)) {
+    stop(paste0('The expectand arguments ',
+                paste(missing_args, collapse=", "),
+                ' are not in `expectand_samples`.'))
+  }
+
+  # Apply expectand to all inputs
+  C <- dim(expectand_vals_list[[1]])[1]
+  S <- dim(expectand_vals_list[[1]])[2]
+  pushforward_vals <- matrix(NA, nrow=C, ncol=S)
+  for (c in 1:C) {
+    for (s in 1:S) {
+      arg_vals <- lapply(arg_names,
+                         function(name)
+                         expectand_vals_list[[name]][c, s])
+      pushforward_vals[c, s] <- do.call(expectand, arg_vals)
+    }
+  }
+
+  return(pushforward_vals)
 }
 
 # Estimate expectand expectation value from a single Markov chain.
@@ -2204,7 +2282,8 @@ plot_expectand_pushforward <- function(expectand_vals, B,
     bin_indicator <- function(x) {
       ifelse(bins[b] <= x & x < bins[b + 1], 1, 0)
     }
-    indicator_vals <- pushforward_chains(expectand_vals, bin_indicator)
+    indicator_vals <- eval_uni_expectand_pushforward(expectand_vals,
+                                                     bin_indicator)
     est <- ensemble_mcmc_est(indicator_vals)
 
     # Normalize bin probabilities by bin width to allow

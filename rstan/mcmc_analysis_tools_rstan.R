@@ -2095,10 +2095,12 @@ ensemble_mcmc_est <- function(expectand_vals) {
   c(mean, sqrt(var / total_ess), total_ess)
 }
 
-# Visualize pushforward distribution of a given expectand as a 
-# histogram, using Markov chain Monte Carlo estimators to estimate the 
-# output bin probabilities.  Bin probability estimator error is shown 
-# in gray.
+# Visualize pushforward distribution along a given expectand as a
+# sequence of bin probabilities weighted by bin widths that approximates
+# the pushforward probability density function.  Markov chain Monte
+# Carlo estimates the output bin probabilities from the input samples,
+# with the bin probability estimator errors visualized in the border
+# color.
 # @param expectand_vals A two-dimensional array of expectand values with
 #                       the first dimension indexing the Markov chains
 #                       and the second dimension indexing the sequential
@@ -2106,40 +2108,50 @@ ensemble_mcmc_est <- function(expectand_vals) {
 # @param B The number of histogram bins
 # @param display_name Expectand name
 # @param flim Optional histogram range
+# @param ylim Optional y-axis range; ignored if add is TRUE
+# @param col Color for plotting weighted bin probabilities; defaults to
+#            c_dark.
+# @param border Color for plotting estimator error; defaults to gray
+# @param add Configure plot to overlay over existing plot; defaults to
+#            FALSE
+# @param main Optional plot title
 # @param baseline Optional baseline value for visual comparison
-# @param baseline_col Color for plotting baseline value; defaults to "black"
+# @param baseline_col Color for plotting baseline value; defaults to
+#                     "black"
 plot_expectand_pushforward <- function(expectand_vals, B,
                                        display_name="f",
-                                       flim=NULL, main="", 
+                                       flim=NULL, ylim=NULL,
+                                       col=c_dark, border="#DDDDDD",
+                                       add=FALSE, main="",
                                        baseline=NULL,
                                        baseline_col="black") {
   validate_array(expectand_vals, 'expectand_vals')
-  
+
   # Automatically adjust histogram range to range of expectand values
   # if range is not already set as an input variable
   if (is.null(flim)) {
     min_f <- min(expectand_vals)
     max_f <- max(expectand_vals)
     delta <- (max_f - min_f) / B
-    
+
     # Add bounding bins
     B <- B + 2
     min_f <- min_f - delta
     max_f <- max_f + delta
     flim <- c(min_f, max_f)
-    
+
     bins <- seq(min_f, max_f, delta)
   } else {
     min_f <- flim[1]
     max_f <- flim[2]
-    
+
     delta <- (max_f - min_f) / B
     bins <- seq(min_f, max_f, delta)
   }
-  
-  # Check sample containment
+
+  # Check value containment
   S <- dim(expectand_vals)[1] * dim(expectand_vals)[2]
-  
+
   S_low <- sum(c(expectand_vals, recursive=TRUE) < min_f)
   if (S_low == 1)
     warning(sprintf('%i value (%.1f%%) fell below the histogram binning.',
@@ -2156,11 +2168,10 @@ plot_expectand_pushforward <- function(expectand_vals, B,
     warning(sprintf('%i values (%.1f%%) fell above the histogram binning.',
                     S_high, 100 * S_high / S))
 
-  
   # Compute bin heights
   mean_p <- rep(0, B)
   delta_p <- rep(0, B)
-  
+
   for (b in 1:B) {
     # Estimate bin probabilities
     bin_indicator <- function(x) {
@@ -2168,14 +2179,14 @@ plot_expectand_pushforward <- function(expectand_vals, B,
     }
     indicator_vals <- pushforward_chains(expectand_vals, bin_indicator)
     est <- ensemble_mcmc_est(indicator_vals)
-    
+
     # Normalize bin probabilities by bin width to allow
     # for direct comparison to probability density functions
     width = bins[b + 1] - bins[b]
     mean_p[b] = est[1] / width
     delta_p[b] = est[2] / width
   }
-  
+
   # Plot histogram
   idx <- rep(1:B, each=2)
   x <- sapply(1:length(idx), function(b) if(b %% 2 == 1) bins[idx[b]]
@@ -2184,19 +2195,27 @@ plot_expectand_pushforward <- function(expectand_vals, B,
     max(mean_p[n] - 2 * delta_p[n], 0))
   upper_inter <- sapply(idx, function (n)
     min(mean_p[n] + 2 * delta_p[n], 1 / width))
-  
-  min_y <- min(lower_inter)
-  max_y <- max(1.05 * upper_inter)
-  
-  plot(1, type="n", main=main,
-       xlim=flim, xlab=display_name,
-       ylim=c(min_y, max_y), ylab="", yaxt="n")
-  title(ylab="Estimated Bin\nProbabilities / Bin Width", mgp=c(1, 1, 0))
-  
-  polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),
-          col = "#DDDDDD", border = NA)
-  lines(x, mean_p[idx], col=c_dark, lwd=2)
-  
+
+  if (add) {
+    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),
+            col=border, border=NA)
+    lines(x, mean_p[idx], col=col, lwd=2)
+  } else {
+    if (is.null(ylim)) {
+      ylim=c(min(lower_inter), max(1.05 * upper_inter))
+    }
+
+    plot(1, type="n", main=main,
+         xlim=flim, xlab=display_name,
+         ylim=ylim, ylab="", yaxt="n")
+    title(ylab="Estimated Bin\nProbabilities / Bin Width",
+          mgp=c(1, 1, 0))
+
+    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),
+            col=border, border=NA)
+    lines(x, mean_p[idx], col=col, lwd=2)
+  }
+
   # Plot baseline if applicable
   if (!is.null(baseline)) {
     abline(v=baseline, col="white", lty=1, lwd=4)

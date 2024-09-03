@@ -763,6 +763,46 @@ structure and accidental artifacts regardless of the histogram binning.  Even if
 central limit theorems don't hold the error bands provide one more way that we
 can potentially diagnose untrustworthy computation.
 
+The `plot_expectand_pushforward` can also overlay a baseline value for
+comparison, for example when comparing posterior inferences to the ground
+truth in simulation studies.
+
+```{r}
+par(mfrow=c(1, 1), mar = c(5, 4, 2, 1))
+util$plot_expectand_pushforward(samples[["alpha"]], 10,
+                                display_name="alpha",
+                                baseline=0.5,
+                                baseline_col=util$c_mid_teal)
+```
+
+Moreover the expectand pushforward histograms can be plotted on top of each
+other for more direct comparison.
+
+```{r}
+par(mfrow=c(1, 1), mar=c(5, 5, 1, 1))
+
+util$plot_expectand_pushforward(samples[["beta[1]"]], 50,
+                                flim=c(-0.15, 0.4),
+                                ylim=c(0, 80),
+                                display_name="Slopes",
+                                col=util$c_light)
+text(0.33, 60, "beta[1]", col=util$c_light)
+
+util$plot_expectand_pushforward(samples[["beta[2]"]], 50,
+                                flim=c(-0.15, 0.4),
+                                col=util$c_mid,
+                                border="#BBBBBB88",
+                                add=TRUE)
+text(0.00, 75, "beta[2]", col=util$c_mid)
+
+util$plot_expectand_pushforward(samples[["beta[3]"]], 50,
+                                flim=c(-0.15, 0.4),
+                                col=util$c_dark,
+                                border="#BBBBBB88",
+                                add=TRUE)
+text(-0.08, 45, "beta[3]", col=util$c_dark)
+```
+
 # License {-}
 
 The code in this case study is copyrighted by Michael Betancourt and licensed

@@ -2139,7 +2139,7 @@ immediate interest.
 \NormalTok{    bad\_names }\OperatorTok{\textless{}{-}}\NormalTok{ c()}
     \ControlFlowTok{for}\NormalTok{ (name }\KeywordTok{in}\NormalTok{ requested\_names) \{}
       \CommentTok{\# Search for array suffix}
-\NormalTok{      array\_names }\OperatorTok{\textless{}{-}}\NormalTok{ grep(paste0(name, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{[\textquotesingle{}}\NormalTok{),}
+\NormalTok{      array\_names }\OperatorTok{\textless{}{-}}\NormalTok{ grep(paste0(}\StringTok{\textquotesingle{}\^{}\textquotesingle{}}\NormalTok{, name, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{[\textquotesingle{}}\NormalTok{),}
 \NormalTok{                          names(expectand\_vals\_list),}
 \NormalTok{                          value}\OperatorTok{=}\NormalTok{TRUE)}
       
@@ -2462,10 +2462,12 @@ by estimating the target probabilities in histogram bins.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Visualize pushforward distribution of a given expectand as a }
-\CommentTok{\# histogram, using Markov chain Monte Carlo estimators to estimate the }
-\CommentTok{\# output bin probabilities.  Bin probability estimator error is shown }
-\CommentTok{\# in gray.}
+\CommentTok{\# Visualize pushforward distribution along a given expectand as a}
+\CommentTok{\# sequence of bin probabilities weighted by bin widths that approximates}
+\CommentTok{\# the pushforward probability density function.  Markov chain Monte}
+\CommentTok{\# Carlo estimates the output bin probabilities from the input samples,}
+\CommentTok{\# with the bin probability estimator errors visualized in the border}
+\CommentTok{\# color.}
 \CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
@@ -2473,40 +2475,50 @@ by estimating the target probabilities in histogram bins.
 \CommentTok{\# @param B The number of histogram bins}
 \CommentTok{\# @param display\_name Expectand name}
 \CommentTok{\# @param flim Optional histogram range}
+\CommentTok{\# @param ylim Optional y{-}axis range; ignored if add is TRUE}
+\CommentTok{\# @param col Color for plotting weighted bin probabilities; defaults to}
+\CommentTok{\#            c\_dark.}
+\CommentTok{\# @param border Color for plotting estimator error; defaults to gray}
+\CommentTok{\# @param add Configure plot to overlay over existing plot; defaults to}
+\CommentTok{\#            FALSE}
+\CommentTok{\# @param main Optional plot title}
 \CommentTok{\# @param baseline Optional baseline value for visual comparison}
-\CommentTok{\# @param baseline\_col Color for plotting baseline value; defaults to "black"}
+\CommentTok{\# @param baseline\_col Color for plotting baseline value; defaults to}
+\CommentTok{\#                     "black"}
 \NormalTok{plot\_expectand\_pushforward }\OperatorTok{\textless{}{-}}\NormalTok{ function(expectand\_vals, B,}
 \NormalTok{                                       display\_name}\OperatorTok{=}\StringTok{"f"}\NormalTok{,}
-\NormalTok{                                       flim}\OperatorTok{=}\NormalTok{NULL, main}\OperatorTok{=}\StringTok{""}\NormalTok{, }
+\NormalTok{                                       flim}\OperatorTok{=}\NormalTok{NULL, ylim}\OperatorTok{=}\NormalTok{NULL,}
+\NormalTok{                                       col}\OperatorTok{=}\NormalTok{c\_dark, border}\OperatorTok{=}\StringTok{"\#DDDDDD"}\NormalTok{,}
+\NormalTok{                                       add}\OperatorTok{=}\NormalTok{FALSE, main}\OperatorTok{=}\StringTok{""}\NormalTok{,}
 \NormalTok{                                       baseline}\OperatorTok{=}\NormalTok{NULL,}
 \NormalTok{                                       baseline\_col}\OperatorTok{=}\StringTok{"black"}\NormalTok{) \{}
 \NormalTok{  validate\_array(expectand\_vals, }\StringTok{\textquotesingle{}expectand\_vals\textquotesingle{}}\NormalTok{)}
-  
+
   \CommentTok{\# Automatically adjust histogram range to range of expectand values}
   \CommentTok{\# if range is not already set as an input variable}
   \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(flim)) \{}
 \NormalTok{    min\_f }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(expectand\_vals)}
 \NormalTok{    max\_f }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(expectand\_vals)}
 \NormalTok{    delta }\OperatorTok{\textless{}{-}}\NormalTok{ (max\_f }\OperatorTok{{-}}\NormalTok{ min\_f) }\OperatorTok{/}\NormalTok{ B}
-    
+
     \CommentTok{\# Add bounding bins}
 \NormalTok{    B }\OperatorTok{\textless{}{-}}\NormalTok{ B }\OperatorTok{+} \DecValTok{2}
 \NormalTok{    min\_f }\OperatorTok{\textless{}{-}}\NormalTok{ min\_f }\OperatorTok{{-}}\NormalTok{ delta}
 \NormalTok{    max\_f }\OperatorTok{\textless{}{-}}\NormalTok{ max\_f }\OperatorTok{+}\NormalTok{ delta}
 \NormalTok{    flim }\OperatorTok{\textless{}{-}}\NormalTok{ c(min\_f, max\_f)}
-    
+
 \NormalTok{    bins }\OperatorTok{\textless{}{-}}\NormalTok{ seq(min\_f, max\_f, delta)}
 \NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
 \NormalTok{    min\_f }\OperatorTok{\textless{}{-}}\NormalTok{ flim[}\DecValTok{1}\NormalTok{]}
 \NormalTok{    max\_f }\OperatorTok{\textless{}{-}}\NormalTok{ flim[}\DecValTok{2}\NormalTok{]}
-    
+
 \NormalTok{    delta }\OperatorTok{\textless{}{-}}\NormalTok{ (max\_f }\OperatorTok{{-}}\NormalTok{ min\_f) }\OperatorTok{/}\NormalTok{ B}
 \NormalTok{    bins }\OperatorTok{\textless{}{-}}\NormalTok{ seq(min\_f, max\_f, delta)}
 \NormalTok{  \}}
-  
-  \CommentTok{\# Check sample containment}
+
+  \CommentTok{\# Check value containment}
 \NormalTok{  S }\OperatorTok{\textless{}{-}}\NormalTok{ dim(expectand\_vals)[}\DecValTok{1}\NormalTok{] }\OperatorTok{*}\NormalTok{ dim(expectand\_vals)[}\DecValTok{2}\NormalTok{]}
-  
+
 \NormalTok{  S\_low }\OperatorTok{\textless{}{-}} \BuiltInTok{sum}\NormalTok{(c(expectand\_vals, recursive}\OperatorTok{=}\NormalTok{TRUE) }\OperatorTok{\textless{}}\NormalTok{ min\_f)}
   \ControlFlowTok{if}\NormalTok{ (S\_low }\OperatorTok{==} \DecValTok{1}\NormalTok{)}
 \NormalTok{    warning(sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%i}\StringTok{ value (}\SpecialCharTok{\%.1f\%\%}\StringTok{) fell below the histogram binning.\textquotesingle{}}\NormalTok{,}
@@ -2523,11 +2535,10 @@ by estimating the target probabilities in histogram bins.
 \NormalTok{    warning(sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%i}\StringTok{ values (}\SpecialCharTok{\%.1f\%\%}\StringTok{) fell above the histogram binning.\textquotesingle{}}\NormalTok{,}
 \NormalTok{                    S\_high, }\DecValTok{100} \OperatorTok{*}\NormalTok{ S\_high }\OperatorTok{/}\NormalTok{ S))}
 
-  
   \CommentTok{\# Compute bin heights}
 \NormalTok{  mean\_p }\OperatorTok{\textless{}{-}}\NormalTok{ rep(}\DecValTok{0}\NormalTok{, B)}
 \NormalTok{  delta\_p }\OperatorTok{\textless{}{-}}\NormalTok{ rep(}\DecValTok{0}\NormalTok{, B)}
-  
+
   \ControlFlowTok{for}\NormalTok{ (b }\KeywordTok{in} \DecValTok{1}\NormalTok{:B) \{}
     \CommentTok{\# Estimate bin probabilities}
 \NormalTok{    bin\_indicator }\OperatorTok{\textless{}{-}}\NormalTok{ function(x) \{}
@@ -2535,14 +2546,14 @@ by estimating the target probabilities in histogram bins.
 \NormalTok{    \}}
 \NormalTok{    indicator\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ pushforward\_chains(expectand\_vals, bin\_indicator)}
 \NormalTok{    est }\OperatorTok{\textless{}{-}}\NormalTok{ ensemble\_mcmc\_est(indicator\_vals)}
-    
+
     \CommentTok{\# Normalize bin probabilities by bin width to allow}
     \CommentTok{\# for direct comparison to probability density functions}
 \NormalTok{    width }\OperatorTok{=}\NormalTok{ bins[b }\OperatorTok{+} \DecValTok{1}\NormalTok{] }\OperatorTok{{-}}\NormalTok{ bins[b]}
 \NormalTok{    mean\_p[b] }\OperatorTok{=}\NormalTok{ est[}\DecValTok{1}\NormalTok{] }\OperatorTok{/}\NormalTok{ width}
 \NormalTok{    delta\_p[b] }\OperatorTok{=}\NormalTok{ est[}\DecValTok{2}\NormalTok{] }\OperatorTok{/}\NormalTok{ width}
 \NormalTok{  \}}
-  
+
   \CommentTok{\# Plot histogram}
 \NormalTok{  idx }\OperatorTok{\textless{}{-}}\NormalTok{ rep(}\DecValTok{1}\NormalTok{:B, each}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
 \NormalTok{  x }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(}\DecValTok{1}\NormalTok{:length(idx), function(b) }\ControlFlowTok{if}\NormalTok{(b }\OperatorTok{\%\%} \DecValTok{2} \OperatorTok{==} \DecValTok{1}\NormalTok{) bins[idx[b]]}
@@ -2551,19 +2562,27 @@ by estimating the target probabilities in histogram bins.
     \BuiltInTok{max}\NormalTok{(mean\_p[n] }\OperatorTok{{-}} \DecValTok{2} \OperatorTok{*}\NormalTok{ delta\_p[n], }\DecValTok{0}\NormalTok{))}
 \NormalTok{  upper\_inter }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(idx, function (n)}
     \BuiltInTok{min}\NormalTok{(mean\_p[n] }\OperatorTok{+} \DecValTok{2} \OperatorTok{*}\NormalTok{ delta\_p[n], }\DecValTok{1} \OperatorTok{/}\NormalTok{ width))}
-  
-\NormalTok{  min\_y }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(lower\_inter)}
-\NormalTok{  max\_y }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(}\FloatTok{1.05} \OperatorTok{*}\NormalTok{ upper\_inter)}
-  
-\NormalTok{  plot(}\DecValTok{1}\NormalTok{, }\BuiltInTok{type}\OperatorTok{=}\StringTok{"n"}\NormalTok{, main}\OperatorTok{=}\NormalTok{main,}
-\NormalTok{       xlim}\OperatorTok{=}\NormalTok{flim, xlab}\OperatorTok{=}\NormalTok{display\_name,}
-\NormalTok{       ylim}\OperatorTok{=}\NormalTok{c(min\_y, max\_y), ylab}\OperatorTok{=}\StringTok{""}\NormalTok{, yaxt}\OperatorTok{=}\StringTok{"n"}\NormalTok{)}
-\NormalTok{  title(ylab}\OperatorTok{=}\StringTok{"Estimated Bin}\CharTok{\textbackslash{}n}\StringTok{Probabilities / Bin Width"}\NormalTok{, mgp}\OperatorTok{=}\NormalTok{c(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
-  
-\NormalTok{  polygon(c(x, rev(x)), c(lower\_inter, rev(upper\_inter)),}
-\NormalTok{          col }\OperatorTok{=} \StringTok{"\#DDDDDD"}\NormalTok{, border }\OperatorTok{=}\NormalTok{ NA)}
-\NormalTok{  lines(x, mean\_p[idx], col}\OperatorTok{=}\NormalTok{c\_dark, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
-  
+
+  \ControlFlowTok{if}\NormalTok{ (add) \{}
+\NormalTok{    polygon(c(x, rev(x)), c(lower\_inter, rev(upper\_inter)),}
+\NormalTok{            col}\OperatorTok{=}\NormalTok{border, border}\OperatorTok{=}\NormalTok{NA)}
+\NormalTok{    lines(x, mean\_p[idx], col}\OperatorTok{=}\NormalTok{col, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+    \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(ylim)) \{}
+\NormalTok{      ylim}\OperatorTok{=}\NormalTok{c(}\BuiltInTok{min}\NormalTok{(lower\_inter), }\BuiltInTok{max}\NormalTok{(}\FloatTok{1.05} \OperatorTok{*}\NormalTok{ upper\_inter))}
+\NormalTok{    \}}
+
+\NormalTok{    plot(}\DecValTok{1}\NormalTok{, }\BuiltInTok{type}\OperatorTok{=}\StringTok{"n"}\NormalTok{, main}\OperatorTok{=}\NormalTok{main,}
+\NormalTok{         xlim}\OperatorTok{=}\NormalTok{flim, xlab}\OperatorTok{=}\NormalTok{display\_name,}
+\NormalTok{         ylim}\OperatorTok{=}\NormalTok{ylim, ylab}\OperatorTok{=}\StringTok{""}\NormalTok{, yaxt}\OperatorTok{=}\StringTok{"n"}\NormalTok{)}
+\NormalTok{    title(ylab}\OperatorTok{=}\StringTok{"Estimated Bin}\CharTok{\textbackslash{}n}\StringTok{Probabilities / Bin Width"}\NormalTok{,}
+\NormalTok{          mgp}\OperatorTok{=}\NormalTok{c(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
+
+\NormalTok{    polygon(c(x, rev(x)), c(lower\_inter, rev(upper\_inter)),}
+\NormalTok{            col}\OperatorTok{=}\NormalTok{border, border}\OperatorTok{=}\NormalTok{NA)}
+\NormalTok{    lines(x, mean\_p[idx], col}\OperatorTok{=}\NormalTok{col, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+\NormalTok{  \}}
+
   \CommentTok{\# Plot baseline if applicable}
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\KeywordTok{is}\NormalTok{.null(baseline)) \{}
 \NormalTok{    abline(v}\OperatorTok{=}\NormalTok{baseline, col}\OperatorTok{=}\StringTok{"white"}\NormalTok{, lty}\OperatorTok{=}\DecValTok{1}\NormalTok{, lwd}\OperatorTok{=}\DecValTok{4}\NormalTok{)}
@@ -3703,6 +3722,54 @@ between meaningful structure and accidental artifacts regardless of the
 histogram binning. Even if central limit theorems don't hold the error
 bands provide one more way that we can potentially diagnose
 untrustworthy computation.
+
+The \texttt{plot\_expectand\_pushforward} can also overlay a baseline
+value for comparison, for example when comparing posterior inferences to
+the ground truth in simulation studies.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{), }\AttributeTok{mar =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"alpha"}\NormalTok{]], }\DecValTok{10}\NormalTok{,}
+                                \AttributeTok{display\_name=}\StringTok{"alpha"}\NormalTok{,}
+                                \AttributeTok{baseline=}\FloatTok{0.5}\NormalTok{,}
+                                \AttributeTok{baseline\_col=}\NormalTok{util}\SpecialCharTok{$}\NormalTok{c\_mid\_teal)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-23-1.pdf}
+
+Moreover the expectand pushforward histograms can be plotted on top of
+each other for more direct comparison.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{), }\AttributeTok{mar=}\FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[1]"}\NormalTok{]], }\DecValTok{50}\NormalTok{,}
+                                \AttributeTok{flim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.15}\NormalTok{, }\FloatTok{0.4}\NormalTok{),}
+                                \AttributeTok{ylim=}\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{80}\NormalTok{),}
+                                \AttributeTok{display\_name=}\StringTok{"Slopes"}\NormalTok{,}
+                                \AttributeTok{col=}\NormalTok{util}\SpecialCharTok{$}\NormalTok{c\_light)}
+\FunctionTok{text}\NormalTok{(}\FloatTok{0.33}\NormalTok{, }\DecValTok{60}\NormalTok{, }\StringTok{"beta[1]"}\NormalTok{, }\AttributeTok{col=}\NormalTok{util}\SpecialCharTok{$}\NormalTok{c\_light)}
+
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[2]"}\NormalTok{]], }\DecValTok{50}\NormalTok{,}
+                                \AttributeTok{flim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.15}\NormalTok{, }\FloatTok{0.4}\NormalTok{),}
+                                \AttributeTok{col=}\NormalTok{util}\SpecialCharTok{$}\NormalTok{c\_mid,}
+                                \AttributeTok{border=}\StringTok{"\#BBBBBB88"}\NormalTok{,}
+                                \AttributeTok{add=}\ConstantTok{TRUE}\NormalTok{)}
+\FunctionTok{text}\NormalTok{(}\FloatTok{0.00}\NormalTok{, }\DecValTok{75}\NormalTok{, }\StringTok{"beta[2]"}\NormalTok{, }\AttributeTok{col=}\NormalTok{util}\SpecialCharTok{$}\NormalTok{c\_mid)}
+
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(samples[[}\StringTok{"beta[3]"}\NormalTok{]], }\DecValTok{50}\NormalTok{,}
+                                \AttributeTok{flim=}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.15}\NormalTok{, }\FloatTok{0.4}\NormalTok{),}
+                                \AttributeTok{col=}\NormalTok{util}\SpecialCharTok{$}\NormalTok{c\_dark,}
+                                \AttributeTok{border=}\StringTok{"\#BBBBBB88"}\NormalTok{,}
+                                \AttributeTok{add=}\ConstantTok{TRUE}\NormalTok{)}
+\FunctionTok{text}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.08}\NormalTok{, }\DecValTok{45}\NormalTok{, }\StringTok{"beta[3]"}\NormalTok{, }\AttributeTok{col=}\NormalTok{util}\SpecialCharTok{$}\NormalTok{c\_dark)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-24-1.pdf}
 
 \section*{License}\label{license}
 \addcontentsline{toc}{section}{License}

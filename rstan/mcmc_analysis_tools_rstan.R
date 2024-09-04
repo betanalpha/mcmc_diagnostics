@@ -456,9 +456,9 @@ plot_int_times <- function(diagnostics, B, tlim=NULL) {
 }
 
 # Apply transformation identity, log, or logit transformation to
-# named samples and flatten the output.  Transformation defaults to 
+# named values and flatten the output.  Transformation defaults to
 # identity if name is not included in `transforms` dictionary.  A 
-# ValueError is thrown if samples are not properly constrained.
+# ValueError is thrown if values are not properly constrained.
 # @param name Expectand name.
 # @param expectand_vals_list A named list of two-dimensional arrays for
 #                            each expectand.  The first dimension of
@@ -545,11 +545,11 @@ plot_div_pairs <- function(x_names, y_names,
                            transforms=list(), xlim=NULL, ylim=NULL,
                            plot_mode=0, max_width=72) {
   if (!is.vector(x_names)) {
-    stop('Input variable `x_names` is not an array!')
+    stop('Input variable `x_names` is not an array.')
   }
   
   if (!is.vector(y_names)) {
-    stop('Input variable `y_names` is not an array!')
+    stop('Input variable `y_names` is not an array.')
   }
   
   validate_named_list_of_arrays(expectand_vals_list,
@@ -647,7 +647,7 @@ plot_div_pairs <- function(x_names, y_names,
     par(mfrow=c(3, N_cols), mar = c(5, 5, 2, 1))
   }
   
-  # Plot!
+  # Plot
   c_dark_trans <- c("#8F272780")
   c_green_trans <- c("#00FF0080")
   
@@ -718,7 +718,7 @@ compute_xi_hat <- function(vals) {
 
   # Return erroneous result if all input values are not positive
   if (sorted_vals[1] < 0) {
-    cat("Input values must be positive!")
+    cat("Input values must be positive.")
     return (NaN)
   }
 
@@ -935,19 +935,19 @@ compute_split_rhat <- function(expectand_vals) {
   validate_array(expectand_vals, 'expectand_vals')
   C <- dim(expectand_vals)[1]
   
-  split_chains <- unlist(lapply(1:C, 
-                                function(c)
-                                split_chain(expectand_vals[c,])),
-                         recursive=FALSE)
+  split_chain_vals <- unlist(lapply(1:C,
+                                    function(c)
+                                    split_chain(expectand_vals[c,])),
+                             recursive=FALSE)
 
-  N_chains <- length(split_chains)
+  N_chains <- length(split_chain_vals)
   N <- sum(sapply(1:C, function(c) length(expectand_vals[c,])))
 
   means <- rep(0, N_chains)
   vars <- rep(0, N_chains)
 
   for (c in 1:N_chains) {
-    summary <- welford_summary(split_chains[[c]])
+    summary <- welford_summary(split_chain_vals[[c]])
     means[c] <- summary[1]
     vars[c] <- summary[2]
   }
@@ -999,9 +999,9 @@ check_rhat <- function(expectand_vals, max_width=72) {
 
   if (is.nan(rhat)) {
     message <- paste0(message, 
-                      'All Markov chains appear to be frozen!\n')
+                      'All Markov chains appear to be frozen.\n')
   } else if (rhat > 1.1) {
-    message <- paste0(message, sprintf('Split hat{R} is %f!\n', rhat))
+    message <- paste0(message, sprintf('Split hat{R} is %f.\n', rhat))
     no_warning <- FALSE
   }
   
@@ -1078,15 +1078,15 @@ compute_tau_hat <- function(vals) {
   }
 }
 
-# Check the empirical integrated autocorrelation time for all the given
-# expectand values.
+# Check the incremental empirical integrated autocorrelation time for
+# all the given expectand values.
 # @param expectand_vals A two-dimensional array of expectand values with
 #                       the first dimension indexing the Markov chains
 #                       and the second dimension indexing the sequential
 #                       states within each Markov chain.
 # @param max_width Maximum line width for printing
-check_tau_hat <- function(expectand_vals,
-                          max_width=72) {
+check_inc_tau_hat <- function(expectand_vals,
+                              max_width=72) {
   validate_array(expectand_vals, 'expectand_vals')
 
   C <- dim(expectand_vals)[1]
@@ -1097,26 +1097,27 @@ check_tau_hat <- function(expectand_vals,
 
   for (c in 1:C) {
     tau_hat <- compute_tau_hat(expectand_vals[c,])
-    tau_hat_per <- tau_hat / S
-    if (tau_hat_per > 5) {
-      body <- print0('  Chain %s: The empirical integrated ',
-                     'autocorrelation time per iteration %.3f ',
+    inc_tau_hat <- tau_hat / S
+    if (inc_tau_hat > 5) {
+      body <- print0('  Chain %s: The incremental empirical ',
+                     'integrated autocorrelation time %.3f ',
                      'is too large.\n')
-      message <- paste0(message, sprintf(body, c, tau_hat_per))
+      message <- paste0(message, sprintf(body, c, inc_tau_hat))
       no_warning <- FALSE
     }
   }
   if (no_warning) {
-    desc <- paste0('The empirical integrated autocorrelation time ',
-                   'per iteration is small enough for the empirical ',
-                   'autocorrelation estimates to be reliable.\n\n')
+    desc <- paste0('The incremental empirical integrated ',
+                   'autocorrelation time is small enough for the ',
+                   'empirical autocorrelation estimates to be ',
+                   'reliable.\n\n')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc)
   } else {
-    desc <- paste0('If the empirical integrated autocorrelation times ',
-                   'per iteration are too large then the Markov ',
-                   'chains have not explored long enough for the ',
-                   'autocorrelation estimates to be reliable.\n\n')
+    desc <- paste0('If the incremental empirical integrated ',
+                   'autocorrelation times are too large then the ',
+                   'Markov chains have not explored long enough for ',
+                   'the autocorrelation estimates to be reliable.\n\n')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
     message <- paste0(message, desc)
   }
@@ -1177,7 +1178,7 @@ check_ess_hat <- function(expectand_vals,
     ess_hat <- S / tau_hat
     if (ess_hat < min_ess_hat_per_chain) {
       body <- paste0('  Chain %s: The empirical effective sample size',
-                     '%.3f is too small!\n')
+                     '%.3f is too small.\n')
       message <- paste0(message, sprintf(body, c, ess_hat))
       no_warning <- FALSE
     }
@@ -1186,7 +1187,7 @@ check_ess_hat <- function(expectand_vals,
     desc <- paste0('Assuming that a central limit theorem holds the ',
                    'empirical effective sample size is large enough ',
                    'for Markov chain Monte Carlo estimation to be',
-                   'reasonably precise .\n\n')
+                   'reasonably precise.\n\n')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc)
   } else {
@@ -1221,7 +1222,7 @@ check_all_expectand_diagnostics <- function(expectand_vals_list,
   no_xi_hat_warning <- TRUE
   no_zvar_warning <- TRUE
   no_rhat_warning <- TRUE
-  no_tau_hat_warning <- TRUE
+  no_inc_tau_hat_warning <- TRUE
   no_ess_hat_warning <- TRUE
 
   message <- ""
@@ -1320,36 +1321,31 @@ check_all_expectand_diagnostics <- function(expectand_vals_list,
 
     if (is.nan(rhat)) {
       local_message <- paste0(local_message,
-                              '  Split hat{R} is ill-defined!\n')
+                              '  Split hat{R} is ill-defined.\n')
     } else if (rhat > 1.1) {
       no_rhat_warning <- FALSE
       local_warning <- TRUE
-      body <- '  Split hat{R} (%.3f) exceeds 1.1!\n'
+      body <- '  Split hat{R} (%.3f) exceeds 1.1.\n'
       local_message <- paste0(local_message, sprintf(body, rhat))
     }
 
     for (c in 1:C) {
-      # Check empirical integrated autocorrelation time per iteration
       vals <- expectand_vals[c,]
-
       tau_hat <- compute_tau_hat(vals)
-      tau_hat_per <- tau_hat / S
 
-      if (tau_hat_per > 5) {
-        no_tau_hat_warning <- FALSE
+      # Check incremental empirical integrated autocorrelation time
+      inc_tau_hat <- tau_hat / S
+
+      if (inc_tau_hat > 5) {
+        no_inc_tau_hat_warning <- FALSE
         local_warning <- TRUE
-        body <- paste0('  Chain %s: hat{tau} per iteration (%.3f) is ',
+        body <- paste0('  Chain %s: Incremental hat{tau} (%.3f) is ',
                        'too large.\n')
         local_message <- paste0(local_message,
-                                sprintf(body, tau_hat_per))
+                                sprintf(body, inc_tau_hat))
       }
-    }
 
-    for (c in 1:C) {
       # Check empirical effective sample size
-      vals <- expectand_vals[c,]
-      
-      tau_hat <- compute_tau_hat(vals)
       ess_hat <- S / tau_hat
       
       if (ess_hat < min_ess_hat_per_chain) {
@@ -1388,11 +1384,11 @@ check_all_expectand_diagnostics <- function(expectand_vals_list,
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, '\n', desc, '\n')
   }
-  if (!no_tau_hat_warning) {
-    desc <- paste0('If the empirical integrated autocorrelation times ',
-                   'per iteration are too large then the Markov ',
-                   'chains have not explored long enough for the ',
-                   'autocorrelation estimates to be reliable.\n\n')
+  if (!no_inc_tau_hat_warning) {
+    desc <- paste0('If the incremental empirical integrated ',
+                   'autocorrelation times are too large then the ',
+                   'Markov chains have not explored long enough for',
+                   'the autocorrelation estimates to be reliable.\n\n')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, '\n', desc)
   }
@@ -1404,7 +1400,7 @@ check_all_expectand_diagnostics <- function(expectand_vals_list,
   }
 
   if(no_xi_hat_warning & no_zvar_warning & 
-     no_rhat_warning & no_tau_hat_warning & no_ess_hat_warning) {
+     no_rhat_warning & no_inc_tau_hat_warning & no_ess_hat_warning) {
     desc <- paste0('All expectands checked appear to be behaving ',
                    'well enough for reliable Markov chain Monte ',
                    'Carlo estimation.\n\n')
@@ -1438,7 +1434,7 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
   failed_xi_hat_names <- c()
   failed_zvar_names <- c()
   failed_rhat_names <- c()
-  failed_tau_hat_names <- c()
+  failed_inc_tau_hat_names <- c()
   failed_ess_hat_names <- c()
 
   for (name in names(expectand_vals_list)) {
@@ -1500,19 +1496,17 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
     }
 
     for (c in 1:C) {
-      # Check empirical integrated autocorrelation time
       tau_hat <- compute_tau_hat(expectand_vals[c,])
-      tau_hat_per <- tau_hat / S
 
-      if (tau_hat_per > 5) {
+      # Check incremental empirical integrated autocorrelation time
+      inc_tau_hat <- tau_hat / S
+
+      if (inc_tau_hat > 5) {
         failed_names <- c(failed_names, name)
-        failed_tau_hat_names <- c(failed_tau_hat_names, name)
+        failed_inc_tau_hat_names <- c(failed_inc_tau_hat_names, name)
       }
-    }
 
-    for (c in 1:C) {
       # Check empirical effective sample size
-      tau_hat <- compute_tau_hat(expectand_vals[c,])
       ess_hat <- S / tau_hat
       
       if (ess_hat < min_ess_hat_per_chain) {
@@ -1574,15 +1568,16 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
     message <- paste0(message, desc, '\n\n')
   }
   
-  failed_tau_hat_names <- unique(failed_tau_hat_names)
-  if (length(failed_tau_hat_names)) {
+  failed_inc_tau_hat_names <- unique(failed_inc_tau_hat_names)
+  if (length(failed_inc_tau_hat_names)) {
     desc <-
-      paste0(sprintf('The expectands %s triggered hat{tau} warnings.\n\n',
-             paste(failed_tau_hat_names, collapse=", ")),
-             'If the empirical integrated autocorrelation times ',
-             'per iteration are too large then the Markov ',
-             'chains have not explored long enough for the ',
-             'autocorrelation estimates to be reliable.\n\n')
+      body <- paste0('The expectands %s triggered incremental ',
+                     'hat{tau} warnings.\n\n')
+      paste0(sprintf(body, paste(failed_tau_hat_names, collapse=", ")),
+             'If the incremental empirical integrated autocorrelation ',
+             'times are too large then the Markov chains have not ',
+             'explored long enough for the autocorrelation estimates ',
+             'to be reliable.\n\n')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }
@@ -1683,7 +1678,7 @@ encode_all_diagnostics <- function(expectand_vals_list,
   zvar_warning <- FALSE
   xi_hat_warning <- FALSE
   rhat_warning <- FALSE
-  tau_hat_warning <- FALSE
+  inc_tau_hat_warning <- FALSE
   ess_hat_warning <- FALSE
   
   for (name in names(expectand_vals_list)) {
@@ -1730,14 +1725,14 @@ encode_all_diagnostics <- function(expectand_vals_list,
 
       # Check empirical integrated autocorrelation time
       tau_hat <- compute_tau_hat(vals)
-      tau_hat_per <- S / tau_hat
+      inc_tau_hat <- tau_hat /  S
 
-      if (tau_hat_per > 5) {
-        tau_hat_warning <- TRUE
+      if (int_tau_hat > 5) {
+        inc_tau_hat_warning <- TRUE
       }
 
       # Check empirical effective sample size
-      ess_hat <- 1 / tau_hat_per
+      ess_hat <- S / tau_hat
 
       if (ess_hat < min_ess_hat_per_chain) {
         ess_hat_warning <- TRUE
@@ -1766,7 +1761,7 @@ encode_all_diagnostics <- function(expectand_vals_list,
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 6))
   }
   
-  if (tau_hat_warning) {
+  if (inc_tau_hat_warning) {
     warning_code <- bitwOr(warning_code, bitwShiftL(1, 7))
   }
 
@@ -1796,7 +1791,7 @@ decode_warning_code <- function(warning_code) {
   if (bitwAnd(warning_code, bitwShiftL(1, 6)))
     print("  Rhat warning")
   if (bitwAnd(warning_code, bitwShiftL(1, 7)))
-    print("  tau_hat per iteration warning")
+    print("  incremental tau_hat warning")
   if (bitwAnd(warning_code, bitwShiftL(1, 7)))
     print("  min ess_hat warning")
 }
@@ -1820,7 +1815,7 @@ filter_expectands <- function(expectand_vals_list, requested_names,
                                 'expectand_vals_list')
   
   if (length(requested_names) == 0) {
-    stop('Input variable requested_names must be non-empty!')
+    stop('Input variable requested_names must be non-empty.')
   }
   
   if (check_arrays == TRUE) {
@@ -2048,7 +2043,7 @@ eval_expectand_pushforward <- function(expectand_vals_list,
                                 'expectand_vals_list')
 
   if(!is.function(expectand)) {
-    stop('Input variable `expectand` is not a function!')
+    stop('Input variable `expectand` is not a function.')
   }
 
   # Check existence of all expectand arguments
@@ -2061,7 +2056,7 @@ eval_expectand_pushforward <- function(expectand_vals_list,
     if ( !is.list(alt_arg_names) |
           is.null(names(alt_arg_names)) ) {
       stop(paste0('Input variable `alt_arg_names` ',
-                  'is not a named list!'))
+                  'is not a named list.'))
     }
 
     missing_args <- setdiff(nominal_arg_names, names(alt_arg_names))

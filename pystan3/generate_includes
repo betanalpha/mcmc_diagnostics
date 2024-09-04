@@ -16,7 +16,8 @@ function_names=('extract_expectand_vals' 'extract_hmc_diagnostics'
                 'check_all_expectand_diagnostics' 'summarize_expectand_diagnostics'
                 'filter_expectands' 'compute_rhos' 'plot_empirical_correlogram'
                 'plot_pairs_by_chain' 'pushforward_chains'
-                'mcmc_est' 'ensemble_mcmc_est' 'plot_expectand_pushforward')
+                'mcmc_est' 'ensemble_mcmc_est' 'ensemble_mcmc_quantile_est'
+                'plot_expectand_pushforward')
  
 for name in ${function_names[@]}; do
   echo $name

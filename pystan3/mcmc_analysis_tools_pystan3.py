@@ -2080,6 +2080,29 @@ def ensemble_mcmc_est(expectand_vals):
 
   return [mean, math.sqrt(var / total_ess), total_ess]
 
+# Estimate expectand pushforward quantiles from a Markov chain ensemble.
+# @param expectand_vals A two-dimensional array of expectand values with
+#                       the first dimension indexing the Markov chains
+#                       and the second dimension indexing the sequential
+#                       states within each Markov chain.
+# @param probs An array of quantile percentages in [0, 100].
+# @return The ensemble Markov chain Monte Carlo quantile estimate.
+def ensemble_mcmc_quantile_est(expectand_vals, probs):
+  # Validate inputs
+  util.validate_array(expectand_vals, 'expectand_vals')
+
+  if not isinstance(probs, list):
+    raise TypeError(('Input variable `probs` is not a list.'))
+
+  # Estimate and return quantile
+  q = numpy.zeros(len(probs))
+
+  C = expectand_vals.shape[0]
+  for c in range(C):
+    q += numpy.percentile(expectand_vals[c,:], probs) / C
+
+  return q
+
 # Visualize pushforward distribution of a given expectand as a
 # histogram, using Markov chain Monte Carlo estimators to estimate the
 # output bin probabilities.  Bin probability estimator error is shown

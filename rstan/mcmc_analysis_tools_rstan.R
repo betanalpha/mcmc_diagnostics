@@ -2303,7 +2303,7 @@ plot_expectand_pushforward <- function(expectand_vals, B,
     lines(x, mean_p[idx], col=col, lwd=2)
   } else {
     if (is.null(ylim)) {
-      ylim=c(min(lower_inter), max(1.05 * upper_inter))
+      ylim=c(0, max(1.05 * upper_inter))
     }
 
     plot(1, type="n", main=main,

@@ -2712,7 +2712,7 @@ estimating the target probabilities in histogram bins.
 \NormalTok{    lines(x, mean\_p[idx], col}\OperatorTok{=}\NormalTok{col, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
 \NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
     \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(ylim)) \{}
-\NormalTok{      ylim}\OperatorTok{=}\NormalTok{c(}\BuiltInTok{min}\NormalTok{(lower\_inter), }\BuiltInTok{max}\NormalTok{(}\FloatTok{1.05} \OperatorTok{*}\NormalTok{ upper\_inter))}
+\NormalTok{      ylim}\OperatorTok{=}\NormalTok{c(}\DecValTok{0}\NormalTok{, }\BuiltInTok{max}\NormalTok{(}\FloatTok{1.05} \OperatorTok{*}\NormalTok{ upper\_inter))}
 \NormalTok{    \}}
 
 \NormalTok{    plot(}\DecValTok{1}\NormalTok{, }\BuiltInTok{type}\OperatorTok{=}\StringTok{"n"}\NormalTok{, main}\OperatorTok{=}\NormalTok{main,}

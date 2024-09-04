@@ -722,6 +722,48 @@ structure and accidental artifacts regardless of the histogram binning.  Even if
 central limit theorems don't hold the error bands provide one more way that we
 can potentially diagnose untrustworthy computation.
 
+The `plot_expectand_pushforward` can also overlay a baseline value for
+comparison, for example when comparing posterior inferences to the ground
+truth in simulation studies.
+
+```{python}
+util.plot_expectand_pushforward(plot.gca(), samples['alpha'],
+                                10, display_name="alpha",
+                                baseline=0.5,
+                                baseline_color=util.mid_teal)
+plot.show()
+```
+
+Moreover the expectand pushforward histograms can be plotted on top of each
+other for a more direct comparison.
+
+```{python}
+util.plot_expectand_pushforward(plot.gca(), samples['beta[1]'],
+                                50, flim=[-0.15, 0.4],
+                                ylim=[0, 60],
+                                display_name="Slopes",
+                                color=util.light)
+plot.gca().text(0.3, 55, "beta[1]", color=util.light)
+
+util.plot_expectand_pushforward(plot.gca(), samples['beta[2]'],
+                                50, flim=[-0.15, 0.4],
+                                color=util.mid,
+                                border="#BBBBBB",
+                                border_opacity=0.5,
+                                add=True)
+plot.gca().text(-0.03, 60, "beta[2]", color=util.mid)
+
+util.plot_expectand_pushforward(plot.gca(), samples['beta[3]'],
+                                50, flim=[-0.15, 0.4],
+                                color=util.dark,
+                                border="#BBBBBB",
+                                border_opacity=0.5,
+                                add=True)
+plot.gca().text(-0.1, 35, "beta[3]", color=util.dark)
+
+plot.show()
+```
+
 # License {-}
 
 The code in this case study is copyrighted by Michael Betancourt and licensed

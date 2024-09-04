@@ -2417,12 +2417,23 @@ by estimating the target probabilities in histogram bins.
 \CommentTok{\# @param B The number of histogram bins}
 \CommentTok{\# @param display\_name Expectand name}
 \CommentTok{\# @param flim Optional histogram range}
+\CommentTok{\# @param ylim Optional y{-}axis range; ignored if add is TRUE}
+\CommentTok{\# @param color Color for plotting weighted bin probabilities; defaults}
+\CommentTok{\#              to dark.}
+\CommentTok{\# @param border Color for plotting estimator error; defaults to gray}
+\CommentTok{\# @param border\_opacity Opacity for plotting estimator error; defaults}
+\CommentTok{\#                       to 1.}
+\CommentTok{\# @param add Configure plot to overlay over existing plot; defaults to}
+\CommentTok{\#            FALSE}
 \CommentTok{\# @param title Optional plot title}
 \CommentTok{\# @param baseline Optional baseline value for visual comparison}
 \CommentTok{\# @param baseline\_color Color for plotting baseline value; defaults to}
 \CommentTok{\#                       "black"}
 \KeywordTok{def}\NormalTok{ plot\_expectand\_pushforward(ax, expectand\_vals, B, display\_name}\OperatorTok{=}\StringTok{"f"}\NormalTok{,}
-\NormalTok{                               flim}\OperatorTok{=}\VariableTok{None}\NormalTok{, title}\OperatorTok{=}\VariableTok{None}\NormalTok{,}
+\NormalTok{                               flim}\OperatorTok{=}\VariableTok{None}\NormalTok{, ylim}\OperatorTok{=}\VariableTok{None}\NormalTok{,}
+\NormalTok{                               color}\OperatorTok{=}\NormalTok{dark, border}\OperatorTok{=}\StringTok{"\#DDDDDD"}\NormalTok{,}
+\NormalTok{                               border\_opacity}\OperatorTok{=}\DecValTok{1}\NormalTok{,}
+\NormalTok{                               add}\OperatorTok{=}\VariableTok{False}\NormalTok{, title}\OperatorTok{=}\VariableTok{None}\NormalTok{,}
 \NormalTok{                               baseline}\OperatorTok{=}\VariableTok{None}\NormalTok{, baseline\_color}\OperatorTok{=}\StringTok{"black"}\NormalTok{):}
   \CommentTok{"""Plot pushforward histogram of a given expectand using Markov chain}
 \CommentTok{     Monte Carlo estimators to estimate the output bin probabilities"""}
@@ -2492,27 +2503,36 @@ by estimating the target probabilities in histogram bins.
 \NormalTok{  upper\_inter }\OperatorTok{=}\NormalTok{ [ }\BuiltInTok{min}\NormalTok{(mean\_p[idx] }\OperatorTok{+} \DecValTok{2} \OperatorTok{*}\NormalTok{ delta\_p[idx], }\DecValTok{1} \OperatorTok{/}\NormalTok{ width) }
                   \ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ idxs ]}
   
-\NormalTok{  min\_y }\OperatorTok{=}        \BuiltInTok{min}\NormalTok{(lower\_inter)}
-\NormalTok{  max\_y }\OperatorTok{=} \FloatTok{1.05} \OperatorTok{*} \BuiltInTok{max}\NormalTok{(upper\_inter)}
-  
-\NormalTok{  ax.fill\_between(xs, lower\_inter, upper\_inter,}
-\NormalTok{                  facecolor}\OperatorTok{=}\NormalTok{light, color}\OperatorTok{=}\StringTok{"\#DDDDDD"}\NormalTok{)}
-\NormalTok{  ax.plot(xs, [ mean\_p[idx] }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ idxs ], color}\OperatorTok{=}\NormalTok{dark, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
-  
+  \ControlFlowTok{if}\NormalTok{ add:}
+\NormalTok{    ax.fill\_between(xs, lower\_inter, upper\_inter,}
+\NormalTok{                    color}\OperatorTok{=}\NormalTok{border, facecolor}\OperatorTok{=}\NormalTok{border,}
+\NormalTok{                    alpha}\OperatorTok{=}\NormalTok{border\_opacity)}
+\NormalTok{    ax.plot(xs, [ mean\_p[idx] }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ idxs ],}
+\NormalTok{            color}\OperatorTok{=}\NormalTok{color, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+  \ControlFlowTok{else}\NormalTok{:}
+    \ControlFlowTok{if}\NormalTok{ ylim }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
+\NormalTok{      ylim }\OperatorTok{=}\NormalTok{ [ }\DecValTok{0}\NormalTok{, }\FloatTok{1.05} \OperatorTok{*} \BuiltInTok{max}\NormalTok{(upper\_inter) ]}
+
+\NormalTok{    ax.fill\_between(xs, lower\_inter, upper\_inter,}
+\NormalTok{                    color}\OperatorTok{=}\NormalTok{border, facecolor}\OperatorTok{=}\NormalTok{border,}
+\NormalTok{                    alpha}\OperatorTok{=}\NormalTok{border\_opacity)}
+\NormalTok{    ax.plot(xs, [ mean\_p[idx] }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ idxs ],}
+\NormalTok{            color}\OperatorTok{=}\NormalTok{color, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+
+    \ControlFlowTok{if}\NormalTok{ title }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
+\NormalTok{      ax.set\_title(title)}
+\NormalTok{    ax.set\_xlim(flim)}
+\NormalTok{    ax.set\_xlabel(display\_name)}
+\NormalTok{    ax.set\_ylim(ylim)}
+\NormalTok{    ax.set\_ylabel(}\StringTok{"Estimated Bin}\CharTok{\textbackslash{}n}\StringTok{Probabilities / Bin Width"}\NormalTok{)}
+\NormalTok{    ax.get\_yaxis().set\_visible(}\VariableTok{False}\NormalTok{)}
+\NormalTok{    ax.spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
+\NormalTok{    ax.spines[}\StringTok{"left"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
+\NormalTok{    ax.spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
+
   \ControlFlowTok{if}\NormalTok{ baseline }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
 \NormalTok{    ax.axvline(x}\OperatorTok{=}\NormalTok{baseline, linewidth}\OperatorTok{=}\DecValTok{4}\NormalTok{, color}\OperatorTok{=}\StringTok{"white"}\NormalTok{)}
 \NormalTok{    ax.axvline(x}\OperatorTok{=}\NormalTok{baseline, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{, color}\OperatorTok{=}\NormalTok{baseline\_color)}
-
-  \ControlFlowTok{if}\NormalTok{ title }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
-\NormalTok{    ax.set\_title(title)}
-\NormalTok{  ax.set\_xlim(flim)}
-\NormalTok{  ax.set\_xlabel(display\_name)}
-\NormalTok{  ax.set\_ylim([min\_y, max\_y])}
-\NormalTok{  ax.set\_ylabel(}\StringTok{"Estimated Bin}\CharTok{\textbackslash{}n}\StringTok{Probabilities / Bin Width"}\NormalTok{)}
-\NormalTok{  ax.get\_yaxis().set\_visible(}\VariableTok{False}\NormalTok{)}
-\NormalTok{  ax.spines[}\StringTok{"top"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
-\NormalTok{  ax.spines[}\StringTok{"left"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
-\NormalTok{  ax.spines[}\StringTok{"right"}\NormalTok{].set\_visible(}\VariableTok{False}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3609,6 +3629,56 @@ histogram binning. Even if central limit theorems don't hold the error
 bands provide one more way that we can potentially diagnose
 untrustworthy computation.
 
+The \texttt{plot\_expectand\_pushforward} can also overlay a baseline
+value for comparison, for example when comparing posterior inferences to
+the ground truth in simulation studies.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{util.plot\_expectand\_pushforward(plot.gca(), samples[}\StringTok{\textquotesingle{}alpha\textquotesingle{}}\NormalTok{],}
+                                \DecValTok{10}\NormalTok{, display\_name}\OperatorTok{=}\StringTok{"alpha"}\NormalTok{,}
+\NormalTok{                                baseline}\OperatorTok{=}\FloatTok{0.5}\NormalTok{,}
+\NormalTok{                                baseline\_color}\OperatorTok{=}\NormalTok{util.mid\_teal)}
+\NormalTok{plot.show()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{pystan3_demo_files/figure-pdf/cell-21-output-1.pdf}
+
+Moreover the expectand pushforward histograms can be plotted on top of
+each other for a more direct comparison.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{util.plot\_expectand\_pushforward(plot.gca(), samples[}\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{],}
+                                \DecValTok{50}\NormalTok{, flim}\OperatorTok{=}\NormalTok{[}\OperatorTok{{-}}\FloatTok{0.15}\NormalTok{, }\FloatTok{0.4}\NormalTok{],}
+\NormalTok{                                ylim}\OperatorTok{=}\NormalTok{[}\DecValTok{0}\NormalTok{, }\DecValTok{60}\NormalTok{],}
+\NormalTok{                                display\_name}\OperatorTok{=}\StringTok{"Slopes"}\NormalTok{,}
+\NormalTok{                                color}\OperatorTok{=}\NormalTok{util.light)}
+\NormalTok{plot.gca().text(}\FloatTok{0.3}\NormalTok{, }\DecValTok{55}\NormalTok{, }\StringTok{"beta[1]"}\NormalTok{, color}\OperatorTok{=}\NormalTok{util.light)}
+
+\NormalTok{util.plot\_expectand\_pushforward(plot.gca(), samples[}\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{],}
+                                \DecValTok{50}\NormalTok{, flim}\OperatorTok{=}\NormalTok{[}\OperatorTok{{-}}\FloatTok{0.15}\NormalTok{, }\FloatTok{0.4}\NormalTok{],}
+\NormalTok{                                color}\OperatorTok{=}\NormalTok{util.mid,}
+\NormalTok{                                border}\OperatorTok{=}\StringTok{"\#BBBBBB"}\NormalTok{,}
+\NormalTok{                                border\_opacity}\OperatorTok{=}\FloatTok{0.5}\NormalTok{,}
+\NormalTok{                                add}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+\NormalTok{plot.gca().text(}\OperatorTok{{-}}\FloatTok{0.03}\NormalTok{, }\DecValTok{60}\NormalTok{, }\StringTok{"beta[2]"}\NormalTok{, color}\OperatorTok{=}\NormalTok{util.mid)}
+
+\NormalTok{util.plot\_expectand\_pushforward(plot.gca(), samples[}\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{],}
+                                \DecValTok{50}\NormalTok{, flim}\OperatorTok{=}\NormalTok{[}\OperatorTok{{-}}\FloatTok{0.15}\NormalTok{, }\FloatTok{0.4}\NormalTok{],}
+\NormalTok{                                color}\OperatorTok{=}\NormalTok{util.dark,}
+\NormalTok{                                border}\OperatorTok{=}\StringTok{"\#BBBBBB"}\NormalTok{,}
+\NormalTok{                                border\_opacity}\OperatorTok{=}\FloatTok{0.5}\NormalTok{,}
+\NormalTok{                                add}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+\NormalTok{plot.gca().text(}\OperatorTok{{-}}\FloatTok{0.1}\NormalTok{, }\DecValTok{35}\NormalTok{, }\StringTok{"beta[3]"}\NormalTok{, color}\OperatorTok{=}\NormalTok{util.dark)}
+
+\NormalTok{plot.show()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{pystan3_demo_files/figure-pdf/cell-22-output-1.pdf}
+
 \section*{License}\label{license}
 \addcontentsline{toc}{section}{License}
 
@@ -3634,7 +3704,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-04T17:14:19.234396-04:00
+Last updated: 2024-09-04T18:35:22.797188-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

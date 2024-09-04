@@ -2092,12 +2092,23 @@ def ensemble_mcmc_est(expectand_vals):
 # @param B The number of histogram bins
 # @param display_name Expectand name
 # @param flim Optional histogram range
+# @param ylim Optional y-axis range; ignored if add is TRUE
+# @param color Color for plotting weighted bin probabilities; defaults
+#              to dark.
+# @param border Color for plotting estimator error; defaults to gray
+# @param border_opacity Opacity for plotting estimator error; defaults
+#                       to 1.
+# @param add Configure plot to overlay over existing plot; defaults to
+#            FALSE
 # @param title Optional plot title
 # @param baseline Optional baseline value for visual comparison
 # @param baseline_color Color for plotting baseline value; defaults to
 #                       "black"
 def plot_expectand_pushforward(ax, expectand_vals, B, display_name="f",
-                               flim=None, title=None,
+                               flim=None, ylim=None,
+                               color=dark, border="#DDDDDD",
+                               border_opacity=1,
+                               add=False, title=None,
                                baseline=None, baseline_color="black"):
   """Plot pushforward histogram of a given expectand using Markov chain
      Monte Carlo estimators to estimate the output bin probabilities"""
@@ -2167,24 +2178,35 @@ def plot_expectand_pushforward(ax, expectand_vals, B, display_name="f",
   upper_inter = [ min(mean_p[idx] + 2 * delta_p[idx], 1 / width) 
                   for idx in idxs ]
   
-  min_y =        min(lower_inter)
-  max_y = 1.05 * max(upper_inter)
-  
-  ax.fill_between(xs, lower_inter, upper_inter,
-                  facecolor=light, color="#DDDDDD")
-  ax.plot(xs, [ mean_p[idx] for idx in idxs ], color=dark, linewidth=2)
-  
+  if add:
+    ax.fill_between(xs, lower_inter, upper_inter,
+                    color=border, facecolor=border,
+                    alpha=border_opacity)
+    ax.plot(xs, [ mean_p[idx] for idx in idxs ],
+            color=color, linewidth=2)
+  else:
+    if ylim is None:
+      ylim = [ 0, 1.05 * max(upper_inter) ]
+
+    ax.fill_between(xs, lower_inter, upper_inter,
+                    color=border, facecolor=border,
+                    alpha=border_opacity)
+    ax.plot(xs, [ mean_p[idx] for idx in idxs ],
+            color=color, linewidth=2)
+
+    if title is not None:
+      ax.set_title(title)
+    ax.set_xlim(flim)
+    ax.set_xlabel(display_name)
+    ax.set_ylim(ylim)
+    ax.set_ylabel("Estimated Bin\nProbabilities / Bin Width")
+    ax.get_yaxis().set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
   if baseline is not None:
     ax.axvline(x=baseline, linewidth=4, color="white")
     ax.axvline(x=baseline, linewidth=2, color=baseline_color)
 
-  if title is not None:
-    ax.set_title(title)
-  ax.set_xlim(flim)
-  ax.set_xlabel(display_name)
-  ax.set_ylim([min_y, max_y])
-  ax.set_ylabel("Estimated Bin\nProbabilities / Bin Width")
-  ax.get_yaxis().set_visible(False)
-  ax.spines["top"].set_visible(False)
-  ax.spines["left"].set_visible(False)
-  ax.spines["right"].set_visible(False)
+

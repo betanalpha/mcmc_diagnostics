@@ -1496,7 +1496,8 @@ def summarize_expectand_diagnostics(expectand_vals_dict,
       if math.isnan(xi_hats[0]) or math.isnan(xi_hats[1]):
         failed_names.append(name)
         failed_xi_hat_names.append(name)
-      if xi_hats[0] >= xi_hat_threshold or xi_hats[1] >= xi_hat_threshold:
+      if (   xi_hats[0] >= xi_hat_threshold
+          or xi_hats[1] >= xi_hat_threshold):
         failed_names.append(name)
         failed_xi_hat_names.append(name)
     
@@ -1774,10 +1775,9 @@ def decode_warning_code(warning_code):
     if warning_code & (1 << 6):
         print("  Rhat warning")
     if warning_code & (1 << 7):
-        print("  incremental empirical integrated autocorrelation time"
-              " warning")
+        print("  incremental tau_hat warning")
     if warning_code & (1 << 8):
-        print("  min empirical effective sample size warning")
+        print("  min ess_hat warning")
 
 # Filter `expectand_vals_dict` by name.
 # @param expectand_vals_dict A dictionary of two-dimensional arrays for
@@ -1806,7 +1806,7 @@ def filter_expectands(expectand_vals_dict, requested_names,
     for name in requested_names:
       # Search for array suffix
       array_names = [ key for key in expectand_vals_dict.keys()
-                      if name + '[' in key ]
+                      if re.match('^' + name + '\[', key) ]
       # Append array names, if found
       if len(array_names) > 0:
         good_names += array_names

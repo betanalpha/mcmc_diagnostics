@@ -1523,6 +1523,9 @@ had sufficient time to explore. In my experience a good rule of thumb is
 that the empirical integrated autocorrelation time has cannot be larger
 than five times the number of total iterations, \[
 \hat{\tau}[f] < 5 \cdot N.
+\] Equivalently the incremental empirical integrated autocorrelation
+time cannot be larger than five, \[
+\frac{ \hat{\tau}[f] }{N} < 5.
 \]
 
 \begin{Shaded}
@@ -1918,7 +1921,8 @@ we can summarize the output more compactly.
       \ControlFlowTok{if}\NormalTok{ math.isnan(xi\_hats[}\DecValTok{0}\NormalTok{]) }\KeywordTok{or}\NormalTok{ math.isnan(xi\_hats[}\DecValTok{1}\NormalTok{]):}
 \NormalTok{        failed\_names.append(name)}
 \NormalTok{        failed\_xi\_hat\_names.append(name)}
-      \ControlFlowTok{if}\NormalTok{ xi\_hats[}\DecValTok{0}\NormalTok{] }\OperatorTok{\textgreater{}=}\NormalTok{ xi\_hat\_threshold }\KeywordTok{or}\NormalTok{ xi\_hats[}\DecValTok{1}\NormalTok{] }\OperatorTok{\textgreater{}=}\NormalTok{ xi\_hat\_threshold:}
+      \ControlFlowTok{if}\NormalTok{ (   xi\_hats[}\DecValTok{0}\NormalTok{] }\OperatorTok{\textgreater{}=}\NormalTok{ xi\_hat\_threshold}
+          \KeywordTok{or}\NormalTok{ xi\_hats[}\DecValTok{1}\NormalTok{] }\OperatorTok{\textgreater{}=}\NormalTok{ xi\_hat\_threshold):}
 \NormalTok{        failed\_names.append(name)}
 \NormalTok{        failed\_xi\_hat\_names.append(name)}
     
@@ -2071,7 +2075,7 @@ immediate interest.
     \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ requested\_names:}
       \CommentTok{\# Search for array suffix}
 \NormalTok{      array\_names }\OperatorTok{=}\NormalTok{ [ key }\ControlFlowTok{for}\NormalTok{ key }\KeywordTok{in}\NormalTok{ expectand\_vals\_dict.keys()}
-                      \ControlFlowTok{if}\NormalTok{ name }\OperatorTok{+} \StringTok{\textquotesingle{}[\textquotesingle{}} \KeywordTok{in}\NormalTok{ key ]}
+                      \ControlFlowTok{if}\NormalTok{ re.match(}\StringTok{\textquotesingle{}\^{}\textquotesingle{}} \OperatorTok{+}\NormalTok{ name }\OperatorTok{+} \StringTok{\textquotesingle{}\textbackslash{}[\textquotesingle{}}\NormalTok{, key) ]}
       \CommentTok{\# Append array names, if found}
       \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(array\_names) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
 \NormalTok{        good\_names }\OperatorTok{+=}\NormalTok{ array\_names}
@@ -3630,7 +3634,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-04T16:15:08.525600-04:00
+Last updated: 2024-09-04T17:14:19.234396-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

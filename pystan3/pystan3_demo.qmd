@@ -308,6 +308,11 @@ larger than five times the number of total iterations,
 $$
 \hat{\tau}[f] < 5 \cdot N.
 $$
+Equivalently the incremental  empirical integrated autocorrelation time
+cannot be larger than five,
+$$
+\frac{ \hat{\tau}[f] }{N} < 5.
+$$
 
 {{< include _includes/check_inc_tau_hat.qmd >}}
 

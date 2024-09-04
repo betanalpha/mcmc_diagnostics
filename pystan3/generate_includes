@@ -5,14 +5,14 @@ rm -f _includes/*
 utility_file='mcmc_analysis_tools_pystan3.py'
 N=$(wc -l $utility_file | sed 's,[ ]*\([0-9]*\) .*$,\1,')
 
-function_names=('extract_expectands' 'extract_hmc_diagnostics' 
+function_names=('extract_expectand_vals' 'extract_hmc_diagnostics'
                 'check_all_hmc_diagnostics' 'plot_inv_metric'
                 'display_stepsizes' 'plot_num_leapfrogs' 'plot_num_leapfrogs_by_chain'
                 'display_ave_accept_proxy' 'apply_transform' 'plot_div_pairs'
                 'compute_xi_hat' 'compute_tail_xi_hats' 'check_tail_xi_hats'
                 'welford_summary' 'check_variances'
                 'split_chain' 'compute_split_rhat' 'compute_split_rhats' 'check_rhat'
-                'compute_tau_hat' 'compute_min_eesss' 'check_eess'
+                'compute_tau_hat' 'check_inc_tau_hat' 'compute_min_ess_hats' 'check_ess_hat'
                 'check_all_expectand_diagnostics' 'summarize_expectand_diagnostics'
                 'filter_expectands' 'compute_rhos' 'plot_empirical_correlogram'
                 'plot_pairs_by_chain' 'pushforward_chains'

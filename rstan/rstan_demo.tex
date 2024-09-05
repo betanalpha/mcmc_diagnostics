@@ -2414,6 +2414,11 @@ generating pushforward samples.
 \NormalTok{  nominal\_arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ formalArgs(expectand)}
 
   \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(alt\_arg\_names)) \{}
+    \ControlFlowTok{if}\NormalTok{ (}\StringTok{\textquotesingle{}...\textquotesingle{}} \OperatorTok{\%}\KeywordTok{in}\OperatorTok{\%}\NormalTok{ nominal\_arg\_names) \{}
+\NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}An expectand \textasciigrave{}...\textasciigrave{} argument requires an \textquotesingle{}}\NormalTok{,}
+                  \StringTok{\textquotesingle{}explicit alt\_arg\_names argument with a \textquotesingle{}}\NormalTok{,}
+                  \StringTok{\textquotesingle{}\textasciigrave{}...\textasciigrave{} replacement.\textquotesingle{}}\NormalTok{))}
+\NormalTok{    \}}
 \NormalTok{    arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ nominal\_arg\_names}
 \NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
     \CommentTok{\# Validate alternate argument names}
@@ -2436,9 +2441,25 @@ generating pushforward samples.
                   \StringTok{\textquotesingle{}\textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
 \NormalTok{    \}}
 
-\NormalTok{    arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(nominal\_arg\_names,}
-\NormalTok{                        function(name) alt\_arg\_names[[name]],}
-\NormalTok{                        USE.NAMES}\OperatorTok{=}\NormalTok{FALSE)}
+    \ControlFlowTok{if}\NormalTok{ (}\StringTok{\textquotesingle{}...\textquotesingle{}} \OperatorTok{\%}\KeywordTok{in}\OperatorTok{\%}\NormalTok{ nominal\_arg\_names) \{}
+      \CommentTok{\# Validate ellipses replacement}
+      \ControlFlowTok{if}\NormalTok{ ( }\OperatorTok{!}\KeywordTok{is}\NormalTok{.vector(alt\_arg\_names[[}\StringTok{\textquotesingle{}...\textquotesingle{}}\NormalTok{]])   }\OperatorTok{|}
+           \OperatorTok{!}\KeywordTok{is}\NormalTok{.character(alt\_arg\_names[[}\StringTok{\textquotesingle{}...\textquotesingle{}}\NormalTok{]])  ) \{}
+\NormalTok{        stop(paste0(}\StringTok{\textquotesingle{}\textasciigrave{}...\textasciigrave{} replacement must be a character array.\textquotesingle{}}\NormalTok{))}
+\NormalTok{      \}}
+
+      \CommentTok{\# Replace non{-}ellipses arguments}
+\NormalTok{      names }\OperatorTok{\textless{}{-}}\NormalTok{ nominal\_arg\_names[nominal\_arg\_names }\OperatorTok{!=} \StringTok{\textquotesingle{}...\textquotesingle{}}\NormalTok{]}
+\NormalTok{      arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(names, function(name) alt\_arg\_names[[name]],}
+\NormalTok{                          USE.NAMES}\OperatorTok{=}\NormalTok{FALSE)}
+
+      \CommentTok{\# Replace ellipses argument}
+\NormalTok{      arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ c(arg\_names, alt\_arg\_names[[}\StringTok{\textquotesingle{}...\textquotesingle{}}\NormalTok{]])}
+\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{      arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(nominal\_arg\_names,}
+\NormalTok{                          function(name) alt\_arg\_names[[name]],}
+\NormalTok{                          USE.NAMES}\OperatorTok{=}\NormalTok{FALSE)}
+\NormalTok{    \}}
 \NormalTok{  \}}
 
 \NormalTok{  missing\_args }\OperatorTok{\textless{}{-}}\NormalTok{ setdiff(arg\_names, names(expectand\_vals\_list))}

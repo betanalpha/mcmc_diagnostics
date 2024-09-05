@@ -2052,6 +2052,11 @@ eval_expectand_pushforward <- function(expectand_vals_list,
   nominal_arg_names <- formalArgs(expectand)
 
   if (is.null(alt_arg_names)) {
+    if ('...' %in% nominal_arg_names) {
+      stop(paste0('An expectand `...` argument requires an ',
+                  'explicit alt_arg_names argument with a ',
+                  '`...` replacement.'))
+    }
     arg_names <- nominal_arg_names
   } else {
     # Validate alternate argument names
@@ -2074,9 +2079,25 @@ eval_expectand_pushforward <- function(expectand_vals_list,
                   '`alt_arg_names`.'))
     }
 
-    arg_names <- sapply(nominal_arg_names,
-                        function(name) alt_arg_names[[name]],
-                        USE.NAMES=FALSE)
+    if ('...' %in% nominal_arg_names) {
+      # Validate ellipses replacement
+      if ( !is.vector(alt_arg_names[['...']])   |
+           !is.character(alt_arg_names[['...']])  ) {
+        stop(paste0('`...` replacement must be a character array.'))
+      }
+
+      # Replace non-ellipses arguments
+      names <- nominal_arg_names[nominal_arg_names != '...']
+      arg_names <- sapply(names, function(name) alt_arg_names[[name]],
+                          USE.NAMES=FALSE)
+
+      # Replace ellipses argument
+      arg_names <- c(arg_names, alt_arg_names[['...']])
+    } else {
+      arg_names <- sapply(nominal_arg_names,
+                          function(name) alt_arg_names[[name]],
+                          USE.NAMES=FALSE)
+    }
   }
 
   missing_args <- setdiff(arg_names, names(expectand_vals_list))

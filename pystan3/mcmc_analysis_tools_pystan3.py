@@ -2297,4 +2297,3 @@ def plot_expectand_pushforward(ax, expectand_vals, B, display_name="f",
     ax.axvline(x=baseline, linewidth=4, color="white")
     ax.axvline(x=baseline, linewidth=2, color=baseline_color)
 
-

@@ -2005,20 +2005,84 @@ def plot_pairs_by_chain(expectand1_vals, display_name1,
   
   plot.show()
 
-# Evaluate an expectand at the states of a Markov chain ensemble.
-# @param expectand_vals A two-dimensional array of expectand values with
-#                       the first dimension indexing the Markov chains
-#                       and the second dimension indexing the sequential
-#                       states within each Markov chain.
+# Evaluate an expectand on the values of a one-dimensional input
+# variable.
+# @param input_vals A two-dimensional array of expectand values with
+#                   the first dimension indexing the Markov chains
+#                   and the second dimension indexing the sequential
+#                   states within each Markov chain.
 # @param expectand Scalar function to be applied to the Markov chain
 #                  states.
 # @return A two-dimensional array of expectand values with the
 #         first dimension indexing the Markov chains and the
 #         second dimension indexing the sequential states within
 #         each Markov chain.
-def pushforward_chains(expectand_vals, expectand):
+def eval_uni_expectand_pushforward(input_vals, expectand):
   """Evaluate an expectand along a Markov chain"""
-  return numpy.vectorize(expectand)(expectand_vals)
+  return numpy.vectorize(expectand)(input_vals)
+
+# Evaluate an expectand on the values of an arbitrary number of input
+# variables.
+# @param expectand_vals_dict A dictionary of two-dimensional arrays for
+#                            each expectand.  The first dimension of
+#                            each element indexes the Markov chains and
+#                            the second dimension indexes the sequential
+#                            states within each Markov chain.
+# @param expectand Expectand with arbitrary input space.
+# @param alt_arg_names Optional named list of replacements for the
+#                      nominal expectand argument names; when used all
+#                      argument names must be explicitly replaced.
+def eval_expectand_pushforward(expectand_vals_dict,
+                               expectand,
+                               alt_arg_names=None):
+  """Evaluate an expectand on the values of an arbitrary number
+     of input variables."""
+  # Validate inputs
+  validate_dict_of_arrays(expectand_vals_dict, 'expectand_vals_dict')
+
+  if not callable(expectand):
+    raise TypeError('Input variable `expectand` is not a '
+                    'callable function.')
+
+  # Check existence of all expectand arguments
+  arg_count = expectand.__code__.co_argcount
+  var_names = expectand.__code__.co_varnames
+  nominal_arg_names = var_names[:arg_count]
+
+  if alt_arg_names is None:
+    arg_names = nominal_arg_names
+  else:
+    # Validate alternate argument names
+    if not isinstance(alt_arg_names, dict):
+      raise TypeError('Input variable `alt_arg_names` '
+                      'is not a dictionary.')
+
+    alt_keys = alt_arg_names.keys()
+    missing_args = set(nominal_arg_names).difference(alt_keys)
+
+    if len(missing_args) == 1:
+      raise ValueError( 'The nominal expectand argument '
+                       f'{", ".join(missing_args)} does not have '
+                        'a replacement in `alt_arg_names`.')
+    elif len(missing_args) > 1:
+      raise ValueError( 'The nominal expectand arguments '
+                       f'{", ".join(missing_args)} do not have '
+                        'replacements in `alt_arg_names`.')
+
+    arg_names = [ alt_arg_names[nom] for nom in nominal_arg_names ]
+
+  # Apply expectand to all inputs
+  C = next(iter(expectand_vals_dict.values())).shape[0]
+  S = next(iter(expectand_vals_dict.values())).shape[1]
+
+  pushforward_vals = numpy.zeros([C, S])
+  for c in range(C):
+    for s in range(S):
+      arg_vals = [ expectand_vals_dict[name][c, s]
+                   for name in arg_names ]
+      pushforward_vals[c, s] = expectand(*arg_vals)
+
+  return pushforward_vals
 
 # Estimate expectand expectation value from a single Markov chain.
 # @param vals A one-dimensional array of sequential expectand values.
@@ -2184,7 +2248,8 @@ def plot_expectand_pushforward(ax, expectand_vals, B, display_name="f",
     def bin_indicator(x):
       return 1.0 if bins[b] <= x and x < bins[b + 1] else 0.0
     
-    indicator_vals = pushforward_chains(expectand_vals, bin_indicator)
+    indicator_vals = eval_uni_expectand_pushforward(expectand_vals,
+                                                    bin_indicator)
     est = ensemble_mcmc_est(indicator_vals)
     
     # Normalize bin probabilities by bin width to allow

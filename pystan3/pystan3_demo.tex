@@ -2318,20 +2318,88 @@ generating pushforward samples.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Evaluate an expectand at the states of a Markov chain ensemble.}
-\CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
-\CommentTok{\#                       the first dimension indexing the Markov chains}
-\CommentTok{\#                       and the second dimension indexing the sequential}
-\CommentTok{\#                       states within each Markov chain.}
+\CommentTok{\# Evaluate an expectand on the values of a one{-}dimensional input}
+\CommentTok{\# variable.}
+\CommentTok{\# @param input\_vals A two{-}dimensional array of expectand values with}
+\CommentTok{\#                   the first dimension indexing the Markov chains}
+\CommentTok{\#                   and the second dimension indexing the sequential}
+\CommentTok{\#                   states within each Markov chain.}
 \CommentTok{\# @param expectand Scalar function to be applied to the Markov chain}
 \CommentTok{\#                  states.}
 \CommentTok{\# @return A two{-}dimensional array of expectand values with the}
 \CommentTok{\#         first dimension indexing the Markov chains and the}
 \CommentTok{\#         second dimension indexing the sequential states within}
 \CommentTok{\#         each Markov chain.}
-\KeywordTok{def}\NormalTok{ pushforward\_chains(expectand\_vals, expectand):}
+\KeywordTok{def}\NormalTok{ eval\_uni\_expectand\_pushforward(input\_vals, expectand):}
   \CommentTok{"""Evaluate an expectand along a Markov chain"""}
-  \ControlFlowTok{return}\NormalTok{ numpy.vectorize(expectand)(expectand\_vals)}
+  \ControlFlowTok{return}\NormalTok{ numpy.vectorize(expectand)(input\_vals)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
+\CommentTok{\# variables.}
+\CommentTok{\# @param expectand\_vals\_dict A dictionary of two{-}dimensional arrays for}
+\CommentTok{\#                            each expectand.  The first dimension of}
+\CommentTok{\#                            each element indexes the Markov chains and}
+\CommentTok{\#                            the second dimension indexes the sequential}
+\CommentTok{\#                            states within each Markov chain.}
+\CommentTok{\# @param expectand Expectand with arbitrary input space.}
+\CommentTok{\# @param alt\_arg\_names Optional named list of replacements for the}
+\CommentTok{\#                      nominal expectand argument names; when used all}
+\CommentTok{\#                      argument names must be explicitly replaced.}
+\KeywordTok{def}\NormalTok{ eval\_expectand\_pushforward(expectand\_vals\_dict,}
+\NormalTok{                               expectand,}
+\NormalTok{                               alt\_arg\_names}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+  \CommentTok{"""Evaluate an expectand on the values of an arbitrary number}
+\CommentTok{     of input variables."""}
+  \CommentTok{\# Validate inputs}
+\NormalTok{  validate\_dict\_of\_arrays(expectand\_vals\_dict, }\StringTok{\textquotesingle{}expectand\_vals\_dict\textquotesingle{}}\NormalTok{)}
+
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{callable}\NormalTok{(expectand):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\textasciigrave{} is not a \textquotesingle{}}
+                    \StringTok{\textquotesingle{}callable function.\textquotesingle{}}\NormalTok{)}
+
+  \CommentTok{\# Check existence of all expectand arguments}
+\NormalTok{  arg\_count }\OperatorTok{=}\NormalTok{ expectand.\_\_code\_\_.co\_argcount}
+\NormalTok{  var\_names }\OperatorTok{=}\NormalTok{ expectand.\_\_code\_\_.co\_varnames}
+\NormalTok{  nominal\_arg\_names }\OperatorTok{=}\NormalTok{ var\_names[:arg\_count]}
+
+  \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
+\NormalTok{    arg\_names }\OperatorTok{=}\NormalTok{ nominal\_arg\_names}
+  \ControlFlowTok{else}\NormalTok{:}
+    \CommentTok{\# Validate alternate argument names}
+    \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(alt\_arg\_names, }\BuiltInTok{dict}\NormalTok{):}
+      \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}alt\_arg\_names\textasciigrave{} \textquotesingle{}}
+                      \StringTok{\textquotesingle{}is not a dictionary.\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{    alt\_keys }\OperatorTok{=}\NormalTok{ alt\_arg\_names.keys()}
+\NormalTok{    missing\_args }\OperatorTok{=} \BuiltInTok{set}\NormalTok{(nominal\_arg\_names).difference(alt\_keys)}
+
+    \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(missing\_args) }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
+      \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{( }\StringTok{\textquotesingle{}The nominal expectand argument \textquotesingle{}}
+                       \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\StringTok{", "}\SpecialCharTok{.}\NormalTok{join(missing\_args)}\SpecialCharTok{\}}\SpecialStringTok{ does not have \textquotesingle{}}
+                        \StringTok{\textquotesingle{}a replacement in \textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{)}
+    \ControlFlowTok{elif} \BuiltInTok{len}\NormalTok{(missing\_args) }\OperatorTok{\textgreater{}} \DecValTok{1}\NormalTok{:}
+      \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{( }\StringTok{\textquotesingle{}The nominal expectand arguments \textquotesingle{}}
+                       \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\StringTok{", "}\SpecialCharTok{.}\NormalTok{join(missing\_args)}\SpecialCharTok{\}}\SpecialStringTok{ do not have \textquotesingle{}}
+                        \StringTok{\textquotesingle{}replacements in \textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{    arg\_names }\OperatorTok{=}\NormalTok{ [ alt\_arg\_names[nom] }\ControlFlowTok{for}\NormalTok{ nom }\KeywordTok{in}\NormalTok{ nominal\_arg\_names ]}
+
+  \CommentTok{\# Apply expectand to all inputs}
+\NormalTok{  C }\OperatorTok{=} \BuiltInTok{next}\NormalTok{(}\BuiltInTok{iter}\NormalTok{(expectand\_vals\_dict.values())).shape[}\DecValTok{0}\NormalTok{]}
+\NormalTok{  S }\OperatorTok{=} \BuiltInTok{next}\NormalTok{(}\BuiltInTok{iter}\NormalTok{(expectand\_vals\_dict.values())).shape[}\DecValTok{1}\NormalTok{]}
+
+\NormalTok{  pushforward\_vals }\OperatorTok{=}\NormalTok{ numpy.zeros([C, S])}
+  \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
+    \ControlFlowTok{for}\NormalTok{ s }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(S):}
+\NormalTok{      arg\_vals }\OperatorTok{=}\NormalTok{ [ expectand\_vals\_dict[name][c, s]}
+                   \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ arg\_names ]}
+\NormalTok{      pushforward\_vals[c, s] }\OperatorTok{=}\NormalTok{ expectand(}\OperatorTok{*}\NormalTok{arg\_vals)}
+
+  \ControlFlowTok{return}\NormalTok{ pushforward\_vals}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2544,7 +2612,8 @@ estimating the target probabilities in histogram bins.
     \KeywordTok{def}\NormalTok{ bin\_indicator(x):}
       \ControlFlowTok{return} \FloatTok{1.0} \ControlFlowTok{if}\NormalTok{ bins[b] }\OperatorTok{\textless{}=}\NormalTok{ x }\KeywordTok{and}\NormalTok{ x }\OperatorTok{\textless{}}\NormalTok{ bins[b }\OperatorTok{+} \DecValTok{1}\NormalTok{] }\ControlFlowTok{else} \FloatTok{0.0}
     
-\NormalTok{    indicator\_vals }\OperatorTok{=}\NormalTok{ pushforward\_chains(expectand\_vals, bin\_indicator)}
+\NormalTok{    indicator\_vals }\OperatorTok{=}\NormalTok{ eval\_uni\_expectand\_pushforward(expectand\_vals,}
+\NormalTok{                                                    bin\_indicator)}
 \NormalTok{    est }\OperatorTok{=}\NormalTok{ ensemble\_mcmc\_est(indicator\_vals)}
     
     \CommentTok{\# Normalize bin probabilities by bin width to allow}
@@ -2619,6 +2688,7 @@ First we setup our local \texttt{Python} environment.
 \NormalTok{dark}\OperatorTok{=}\StringTok{"\#8F2727"}
 \NormalTok{dark\_highlight}\OperatorTok{=}\StringTok{"\#7C0000"}
 
+\ImportTok{import}\NormalTok{ math}
 \ImportTok{import}\NormalTok{ numpy}
 
 \CommentTok{\# Needed to run through a jupyter kernel}
@@ -3739,6 +3809,29 @@ each other for a more direct comparison.
 
 \includegraphics{pystan3_demo_files/figure-pdf/cell-22-output-1.pdf}
 
+Finally if we want to explore the pushforward posterior distribution of
+other expectands that have not already been evaluated in the
+\texttt{Stan} program then we need to evaluate them ourselves.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def}\NormalTok{ euclidean\_length(x1, x2, x3):}
+  \ControlFlowTok{return}\NormalTok{ math.sqrt(x1}\OperatorTok{**}\DecValTok{2} \OperatorTok{+}\NormalTok{ x2}\OperatorTok{**}\DecValTok{2} \OperatorTok{+}\NormalTok{ x3}\OperatorTok{**}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{pushforward\_samples }\OperatorTok{=} \OperatorTok{\textbackslash{}}
+\NormalTok{  util.eval\_expectand\_pushforward(samples, euclidean\_length,}
+\NormalTok{                                  \{}\StringTok{\textquotesingle{}x1\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{,}
+                                   \StringTok{\textquotesingle{}x2\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{,}
+                                   \StringTok{\textquotesingle{}x3\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{\})}
+
+\NormalTok{util.plot\_expectand\_pushforward(plot.gca(), pushforward\_samples, }\DecValTok{10}\NormalTok{,}
+\NormalTok{                                display\_name}\OperatorTok{=}\StringTok{"Slope Vector Length"}\NormalTok{)}
+\NormalTok{plot.show()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{pystan3_demo_files/figure-pdf/cell-23-output-1.pdf}
+
 \section*{License}\label{license}
 \addcontentsline{toc}{section}{License}
 
@@ -3764,7 +3857,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-04T18:46:26.087065-04:00
+Last updated: 2024-09-04T21:43:44.045382-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

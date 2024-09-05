@@ -2388,6 +2388,8 @@ generating pushforward samples.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
+\CommentTok{\# variables.}
 \CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
@@ -2430,7 +2432,7 @@ generating pushforward samples.
 \NormalTok{    \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (length(missing\_args) }\OperatorTok{\textgreater{}} \DecValTok{1}\NormalTok{) \{}
 \NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}The nominal expectand arguments \textquotesingle{}}\NormalTok{,}
 \NormalTok{                  paste(missing\_args, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{),}
-                  \StringTok{\textquotesingle{} do not have a replacement in \textquotesingle{}}\NormalTok{,}
+                  \StringTok{\textquotesingle{} do not have replacements in \textquotesingle{}}\NormalTok{,}
                   \StringTok{\textquotesingle{}\textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
 \NormalTok{    \}}
 

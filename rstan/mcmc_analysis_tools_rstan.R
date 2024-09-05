@@ -2027,7 +2027,9 @@ eval_uni_expectand_pushforward <- function(input_vals, expectand) {
 }
 
 # Evaluate an expectand on the values of an arbitrary number of input
-# variables.
+# variables.  An ellipses argument in the expectand function is
+# supported by passing a alt_arg_names instance with a '...' element
+# containing a list of variable names.
 # @param expectand_vals_list A named list of two-dimensional arrays for
 #                            each expectand.  The first dimension of
 #                            each element indexes the Markov chains and
@@ -2104,11 +2106,11 @@ eval_expectand_pushforward <- function(expectand_vals_list,
   if (length(missing_args) == 1) {
     stop(paste0('The expectand argument ',
                 paste(missing_args, collapse=", "),
-                ' is not in `expectand_samples`.'))
+                ' is not in `expectand_vals_list`.'))
   } else if (length(missing_args)) {
     stop(paste0('The expectand arguments ',
                 paste(missing_args, collapse=", "),
-                ' are not in `expectand_samples`.'))
+                ' are not in `expectand_vals_list`.'))
   }
 
   # Apply expectand to all inputs

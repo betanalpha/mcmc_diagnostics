@@ -2389,7 +2389,9 @@ generating pushforward samples.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
-\CommentTok{\# variables.}
+\CommentTok{\# variables.  An ellipses argument in the expectand function is}
+\CommentTok{\# supported by passing a alt\_arg\_names instance with a \textquotesingle{}...\textquotesingle{} element}
+\CommentTok{\# containing a list of variable names.}
 \CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
@@ -2466,11 +2468,11 @@ generating pushforward samples.
   \ControlFlowTok{if}\NormalTok{ (length(missing\_args) }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
 \NormalTok{    stop(paste0(}\StringTok{\textquotesingle{}The expectand argument \textquotesingle{}}\NormalTok{,}
 \NormalTok{                paste(missing\_args, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{),}
-                \StringTok{\textquotesingle{} is not in \textasciigrave{}expectand\_samples\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
+                \StringTok{\textquotesingle{} is not in \textasciigrave{}expectand\_vals\_list\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
 \NormalTok{  \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (length(missing\_args)) \{}
 \NormalTok{    stop(paste0(}\StringTok{\textquotesingle{}The expectand arguments \textquotesingle{}}\NormalTok{,}
 \NormalTok{                paste(missing\_args, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{),}
-                \StringTok{\textquotesingle{} are not in \textasciigrave{}expectand\_samples\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
+                \StringTok{\textquotesingle{} are not in \textasciigrave{}expectand\_vals\_list\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
 \NormalTok{  \}}
 
   \CommentTok{\# Apply expectand to all inputs}

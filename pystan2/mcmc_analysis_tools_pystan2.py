@@ -16,10 +16,11 @@ from matplotlib.colors import LinearSegmentedColormap
 import numpy
 import math
 import textwrap
+import inspect
+import re
 
 import pystan
 import pickle
-import re
 
 light = "#DCBCBC"
 light_highlight = "#C79999"
@@ -2023,19 +2024,13 @@ def eval_uni_expectand_pushforward(input_vals, expectand):
   return numpy.vectorize(expectand)(input_vals)
 
 # Evaluate an expectand on the values of an arbitrary number of input
-# variables.
-# @param expectand_vals_dict A dictionary of two-dimensional arrays for
-#                            each expectand.  The first dimension of
-#                            each element indexes the Markov chains and
-#                            the second dimension indexes the sequential
-#                            states within each Markov chain.
-# @param expectand Expectand with arbitrary input space.
-# @param alt_arg_names Optional named list of replacements for the
-#                      nominal expectand argument names; when used all
-#                      argument names must be explicitly replaced.
+# variables.  Variable non-keyword arguments in the expectand function
+# are supported by passing a alt_arg_names instance with a varargs_name
+# element containing a list of variable names.
 def eval_expectand_pushforward(expectand_vals_dict,
                                expectand,
-                               alt_arg_names=None):
+                               alt_arg_names=None,
+                               varargs_name='varargs'):
   """Evaluate an expectand on the values of an arbitrary number
      of input variables."""
   # Validate inputs
@@ -2046,11 +2041,15 @@ def eval_expectand_pushforward(expectand_vals_dict,
                     'callable function.')
 
   # Check existence of all expectand arguments
-  arg_count = expectand.__code__.co_argcount
-  var_names = expectand.__code__.co_varnames
-  nominal_arg_names = var_names[:arg_count]
+  spec = inspect.getfullargspec(expectand)
+  nominal_arg_names = spec.args
+  variable_arg_names = spec.varargs
 
   if alt_arg_names is None:
+    if variable_arg_names is not None:
+      raise ValueError('An expectand with variable non-keyword '
+                       'arguments requires an explicit alt_arg_names '
+                       'argument containing a `varargs_name` key.')
     arg_names = nominal_arg_names
   else:
     # Validate alternate argument names
@@ -2071,6 +2070,32 @@ def eval_expectand_pushforward(expectand_vals_dict,
                         'replacements in `alt_arg_names`.')
 
     arg_names = [ alt_arg_names[nom] for nom in nominal_arg_names ]
+
+    if variable_arg_names is not None:
+      # Validate variable non-keyword arguments replacements
+      if varargs_name not in alt_arg_names.keys():
+        raise ValueError( 'The variable non-keyword argument '
+                         f'{varargs_name} does not have a '
+                          'replacement in `alt_arg_names`.')
+
+      if not (isinstance(alt_arg_names[varargs_name], list)
+              and all([ isinstance(a, str)
+                      for a in alt_arg_names[varargs_name] ])  ):
+        raise TypeError( f'alt_arg_names[{varargs_name}] is '
+                          'not a list of strings.')
+
+      # Append variable non-keyword arguments
+      arg_names += alt_arg_names[varargs_name]
+
+  missing_args = set(arg_names).difference(expectand_vals_dict.keys())
+  if len(missing_args) == 1:
+    raise ValueError( 'The expectand argument '
+                     f'{", ".join(missing_args)} is not in '
+                      '`expectand_vals_dict`.')
+  elif len(missing_args) > 1:
+    raise ValueError( 'The expectand arguments '
+                     f'{", ".join(missing_args)} are not in '
+                      '`expectand_vals_dict`.')
 
   # Apply expectand to all inputs
   C = next(iter(expectand_vals_dict.values())).shape[0]

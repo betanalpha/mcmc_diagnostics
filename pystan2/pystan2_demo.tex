@@ -2370,19 +2370,13 @@ generating pushforward samples.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
-\CommentTok{\# variables.}
-\CommentTok{\# @param expectand\_vals\_dict A dictionary of two{-}dimensional arrays for}
-\CommentTok{\#                            each expectand.  The first dimension of}
-\CommentTok{\#                            each element indexes the Markov chains and}
-\CommentTok{\#                            the second dimension indexes the sequential}
-\CommentTok{\#                            states within each Markov chain.}
-\CommentTok{\# @param expectand Expectand with arbitrary input space.}
-\CommentTok{\# @param alt\_arg\_names Optional named list of replacements for the}
-\CommentTok{\#                      nominal expectand argument names; when used all}
-\CommentTok{\#                      argument names must be explicitly replaced.}
+\CommentTok{\# variables.  Variable non{-}keyword arguments in the expectand function}
+\CommentTok{\# are supported by passing a alt\_arg\_names instance with a varargs\_name}
+\CommentTok{\# element containing a list of variable names.}
 \KeywordTok{def}\NormalTok{ eval\_expectand\_pushforward(expectand\_vals\_dict,}
 \NormalTok{                               expectand,}
-\NormalTok{                               alt\_arg\_names}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+\NormalTok{                               alt\_arg\_names}\OperatorTok{=}\VariableTok{None}\NormalTok{,}
+\NormalTok{                               varargs\_name}\OperatorTok{=}\StringTok{\textquotesingle{}varargs\textquotesingle{}}\NormalTok{):}
   \CommentTok{"""Evaluate an expectand on the values of an arbitrary number}
 \CommentTok{     of input variables."""}
   \CommentTok{\# Validate inputs}
@@ -2393,11 +2387,15 @@ generating pushforward samples.
                     \StringTok{\textquotesingle{}callable function.\textquotesingle{}}\NormalTok{)}
 
   \CommentTok{\# Check existence of all expectand arguments}
-\NormalTok{  arg\_count }\OperatorTok{=}\NormalTok{ expectand.\_\_code\_\_.co\_argcount}
-\NormalTok{  var\_names }\OperatorTok{=}\NormalTok{ expectand.\_\_code\_\_.co\_varnames}
-\NormalTok{  nominal\_arg\_names }\OperatorTok{=}\NormalTok{ var\_names[:arg\_count]}
+\NormalTok{  spec }\OperatorTok{=}\NormalTok{ inspect.getfullargspec(expectand)}
+\NormalTok{  nominal\_arg\_names }\OperatorTok{=}\NormalTok{ spec.args}
+\NormalTok{  variable\_arg\_names }\OperatorTok{=}\NormalTok{ spec.varargs}
 
   \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
+    \ControlFlowTok{if}\NormalTok{ variable\_arg\_names }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
+      \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{(}\StringTok{\textquotesingle{}An expectand with variable non{-}keyword \textquotesingle{}}
+                       \StringTok{\textquotesingle{}arguments requires an explicit alt\_arg\_names \textquotesingle{}}
+                       \StringTok{\textquotesingle{}argument containing a \textasciigrave{}varargs\_name\textasciigrave{} key.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    arg\_names }\OperatorTok{=}\NormalTok{ nominal\_arg\_names}
   \ControlFlowTok{else}\NormalTok{:}
     \CommentTok{\# Validate alternate argument names}
@@ -2418,6 +2416,32 @@ generating pushforward samples.
                         \StringTok{\textquotesingle{}replacements in \textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{)}
 
 \NormalTok{    arg\_names }\OperatorTok{=}\NormalTok{ [ alt\_arg\_names[nom] }\ControlFlowTok{for}\NormalTok{ nom }\KeywordTok{in}\NormalTok{ nominal\_arg\_names ]}
+
+    \ControlFlowTok{if}\NormalTok{ variable\_arg\_names }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
+      \CommentTok{\# Validate variable non{-}keyword arguments replacements}
+      \ControlFlowTok{if}\NormalTok{ varargs\_name }\KeywordTok{not} \KeywordTok{in}\NormalTok{ alt\_arg\_names.keys():}
+        \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{( }\StringTok{\textquotesingle{}The variable non{-}keyword argument \textquotesingle{}}
+                         \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{varargs\_name}\SpecialCharTok{\}}\SpecialStringTok{ does not have a \textquotesingle{}}
+                          \StringTok{\textquotesingle{}replacement in \textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{)}
+
+      \ControlFlowTok{if} \KeywordTok{not}\NormalTok{ (}\BuiltInTok{isinstance}\NormalTok{(alt\_arg\_names[varargs\_name], }\BuiltInTok{list}\NormalTok{)}
+              \KeywordTok{and} \BuiltInTok{all}\NormalTok{([ }\BuiltInTok{isinstance}\NormalTok{(a, }\BuiltInTok{str}\NormalTok{)}
+                      \ControlFlowTok{for}\NormalTok{ a }\KeywordTok{in}\NormalTok{ alt\_arg\_names[varargs\_name] ])  ):}
+        \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{( }\SpecialStringTok{f\textquotesingle{}alt\_arg\_names[}\SpecialCharTok{\{}\NormalTok{varargs\_name}\SpecialCharTok{\}}\SpecialStringTok{] is \textquotesingle{}}
+                          \StringTok{\textquotesingle{}not a list of strings.\textquotesingle{}}\NormalTok{)}
+
+      \CommentTok{\# Append variable non{-}keyword arguments}
+\NormalTok{      arg\_names }\OperatorTok{+=}\NormalTok{ alt\_arg\_names[varargs\_name]}
+
+\NormalTok{  missing\_args }\OperatorTok{=} \BuiltInTok{set}\NormalTok{(arg\_names).difference(expectand\_vals\_dict.keys())}
+  \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(missing\_args) }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
+    \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{( }\StringTok{\textquotesingle{}The expectand argument \textquotesingle{}}
+                     \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\StringTok{", "}\SpecialCharTok{.}\NormalTok{join(missing\_args)}\SpecialCharTok{\}}\SpecialStringTok{ is not in \textquotesingle{}}
+                      \StringTok{\textquotesingle{}\textasciigrave{}expectand\_vals\_dict\textasciigrave{}.\textquotesingle{}}\NormalTok{)}
+  \ControlFlowTok{elif} \BuiltInTok{len}\NormalTok{(missing\_args) }\OperatorTok{\textgreater{}} \DecValTok{1}\NormalTok{:}
+    \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{( }\StringTok{\textquotesingle{}The expectand arguments \textquotesingle{}}
+                     \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\StringTok{", "}\SpecialCharTok{.}\NormalTok{join(missing\_args)}\SpecialCharTok{\}}\SpecialStringTok{ are not in \textquotesingle{}}
+                      \StringTok{\textquotesingle{}\textasciigrave{}expectand\_vals\_dict\textasciigrave{}.\textquotesingle{}}\NormalTok{)}
 
   \CommentTok{\# Apply expectand to all inputs}
 \NormalTok{  C }\OperatorTok{=} \BuiltInTok{next}\NormalTok{(}\BuiltInTok{iter}\NormalTok{(expectand\_vals\_dict.values())).shape[}\DecValTok{0}\NormalTok{]}
@@ -3875,7 +3899,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-04T22:06:13.242030-04:00
+Last updated: 2024-09-05T14:57:36.394903-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

@@ -775,14 +775,14 @@ states themselves can be visualized with pairs plots.
   \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(t)) t }\OperatorTok{\textless{}{-}} \DecValTok{0}
   
 \NormalTok{  transformed\_name }\OperatorTok{\textless{}{-}} \StringTok{""}
-\NormalTok{  transformed\_samples }\OperatorTok{\textless{}{-}} \DecValTok{0}
+\NormalTok{  transformed\_vals }\OperatorTok{\textless{}{-}} \DecValTok{0}
  
   \ControlFlowTok{if}\NormalTok{ (t }\OperatorTok{==} \DecValTok{0}\NormalTok{) \{}
 \NormalTok{    transformed\_name }\OperatorTok{\textless{}{-}}\NormalTok{ name}
 \NormalTok{    transformed\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ c(t(expectand\_vals\_list[[name]]),}
 \NormalTok{                            recursive}\OperatorTok{=}\NormalTok{TRUE)}
 \NormalTok{  \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (t }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
-    \ControlFlowTok{if}\NormalTok{ (}\BuiltInTok{min}\NormalTok{(expectand\_vals[[name]]) }\OperatorTok{\textless{}=} \DecValTok{0}\NormalTok{) \{}
+    \ControlFlowTok{if}\NormalTok{ (}\BuiltInTok{min}\NormalTok{(expectand\_vals\_list[[name]]) }\OperatorTok{\textless{}=} \DecValTok{0}\NormalTok{) \{}
 \NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}Log transform requested for expectand \textquotesingle{}}\NormalTok{,}
 \NormalTok{                  sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%s}\StringTok{ \textquotesingle{}}\NormalTok{, name),}
                   \StringTok{\textquotesingle{}but expectand values are not strictly positive.\textquotesingle{}}\NormalTok{))}
@@ -791,8 +791,8 @@ states themselves can be visualized with pairs plots.
 \NormalTok{    transformed\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ log(c(t(expectand\_vals\_list[[name]]),}
 \NormalTok{                              recursive}\OperatorTok{=}\NormalTok{TRUE))}
 \NormalTok{  \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (t }\OperatorTok{==} \DecValTok{2}\NormalTok{) \{}
-    \ControlFlowTok{if}\NormalTok{ (}\BuiltInTok{min}\NormalTok{(expectand\_vals[[name]]) }\OperatorTok{\textless{}=} \DecValTok{0} \OperatorTok{|}
-        \BuiltInTok{max}\NormalTok{(expectand\_vals[[name]] }\OperatorTok{\textgreater{}=} \DecValTok{1}\NormalTok{)) \{}
+    \ControlFlowTok{if}\NormalTok{ (}\BuiltInTok{min}\NormalTok{(expectand\_vals\_list[[name]]) }\OperatorTok{\textless{}=} \DecValTok{0} \OperatorTok{|}
+        \BuiltInTok{max}\NormalTok{(expectand\_vals\_list[[name]] }\OperatorTok{\textgreater{}=} \DecValTok{1}\NormalTok{)) \{}
 \NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}Logit transform requested for expectand \textquotesingle{}}\NormalTok{,}
 \NormalTok{                  sprintf(}\StringTok{\textquotesingle{}}\SpecialCharTok{\%s}\StringTok{ \textquotesingle{}}\NormalTok{ , name),}
                   \StringTok{\textquotesingle{}but expectand values are not strictly confined \textquotesingle{}}\NormalTok{,}

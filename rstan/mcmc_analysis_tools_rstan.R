@@ -474,14 +474,14 @@ apply_transform <- function(name, expectand_vals_list, transforms) {
   if (is.null(t)) t <- 0
   
   transformed_name <- ""
-  transformed_samples <- 0
+  transformed_vals <- 0
  
   if (t == 0) {
     transformed_name <- name
     transformed_vals <- c(t(expectand_vals_list[[name]]),
                             recursive=TRUE)
   } else if (t == 1) {
-    if (min(expectand_vals[[name]]) <= 0) {
+    if (min(expectand_vals_list[[name]]) <= 0) {
       stop(paste0('Log transform requested for expectand ',
                   sprintf('%s ', name),
                   'but expectand values are not strictly positive.'))
@@ -490,8 +490,8 @@ apply_transform <- function(name, expectand_vals_list, transforms) {
     transformed_vals <- log(c(t(expectand_vals_list[[name]]),
                               recursive=TRUE))
   } else if (t == 2) {
-    if (min(expectand_vals[[name]]) <= 0 |
-        max(expectand_vals[[name]] >= 1)) {
+    if (min(expectand_vals_list[[name]]) <= 0 |
+        max(expectand_vals_list[[name]] >= 1)) {
       stop(paste0('Logit transform requested for expectand ',
                   sprintf('%s ' , name),
                   'but expectand values are not strictly confined ',

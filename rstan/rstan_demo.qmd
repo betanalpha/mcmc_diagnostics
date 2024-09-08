@@ -459,6 +459,10 @@ pushforward samples.
 
 {{< include _includes/eval_uni_expectand_pushforward.qmd >}}
 
+{{< include _includes/elem_names.qmd >}}
+
+{{< include _includes/name_array.qmd >}}
+
 {{< include _includes/eval_expectand_pushforward.qmd >}}
 
 
@@ -850,15 +854,15 @@ other expectands that have not already been evaluated in the `Stan`
 program then we need to evaluate them ourselves.
 
 ```{r}
-euclidean_length <- function(x1, x2, x3) {
-  sqrt(x1**2 + x2**2 + x3**2)
+euclidean_length <- function(x) {
+  sqrt(sum(x**2))
 }
+
+beta_names <- util$name_array('beta', c(data$M))
 
 pushforward_samples <-
   util$eval_expectand_pushforward(samples, euclidean_length,
-                                  list('x1' = 'beta[1]',
-                                       'x2' = 'beta[2]',
-                                       'x3' = 'beta[3]'))
+                                  list('x'=beta_names))
 
 par(mfrow=c(1, 1), mar = c(5, 4, 2, 1))
 util$plot_expectand_pushforward(pushforward_samples, 10,

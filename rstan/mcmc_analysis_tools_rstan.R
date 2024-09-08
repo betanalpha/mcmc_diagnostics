@@ -2026,19 +2026,76 @@ eval_uni_expectand_pushforward <- function(input_vals, expectand) {
   }
 }
 
+# Recursively create vector of element names, including indexing
+# information, with column-major ordering from the specified dimensions.
+# For example `elem_names('x', c(2, 3)))` returns
+# >>  "x[1,1]" "x[2,1]" "x[1,2]" "x[2,2]" "x[1,3]" "x[2,3]"
+#
+# @ param base Base name.
+# @ param dims Vector of array dimensions.
+# @ param current_idxs Dimensions at current level of recursion.
+# @ return Vector of element names in column-major order.
+elem_names <- function(base, dims, current_idxs=c()) {
+  next_dim <- length(dims) - length(current_idxs)
+  if (next_dim == 0) {
+    name <- do.call(paste0, lapply(current_idxs,
+                                   function(idx)
+                                   paste0(as.character(idx), ',')))
+    name <- paste0(base, '[', gsub(',$', '', name), ']')
+    return(name)
+  } else {
+    names <- c()
+    for (d in 1:dims[next_dim]) {
+      names <- c(names, Recall(base, dims, c(d, current_idxs)))
+    }
+    return(names)
+  }
+}
+
+# Create array of element names from the specified dimensions.
+# For example `name_array('x', c(2, 3)))` returns the array
+# >>      [,1]     [,2]     [,3]
+# >> [1,] "x[1,1]" "x[1,2]" "x[1,3]"
+# >> [2,] "x[2,1]" "x[2,2]" "x[2,3]"
+# @ param base Base name.
+# @ param dims Vector of array dimensions.
+# @ return Array of element names with dimensions given by dims.
+name_array <- function(base, dims) {
+  # Validate inputs
+  if ( !is.character(base) ) {
+    stop(paste0('Input variable ', base, ' is not a character.'))
+  }
+
+  if ( !is.vector(dims) | !is.numeric(dims) ) {
+    stop(paste0('Input variable ', dims, ' is not a numeric vector.'))
+  }
+
+  # Create element names and format them into desired array.
+  # Assumes that R arrays are stored in column-major order.
+  names <- elem_names(base, dims)
+  array(names, dims)
+}
+
 # Evaluate an expectand on the values of an arbitrary number of input
-# variables.  An ellipses argument in the expectand function is
-# supported by passing a alt_arg_names instance with a '...' element
-# containing a list of variable names.
+# variables.  Expectand must return a single numeric or logical output.
+#
+# By default expectand argument values are accessed by name
+# in expectand_vals_list.  If a non-null alt_arg_names is provided then
+# the alternate names are used to access values in expectand_vals_list.
+# The elements of alt_arg_names can also be character arrays of
+# arbitrary dimension in which case the individual element values are
+# first accessed then formatted into matching numeric arrays before
+# being passed to the expectand.
+#
 # @param expectand_vals_list A named list of two-dimensional arrays for
 #                            each expectand.  The first dimension of
 #                            each element indexes the Markov chains and
 #                            the second dimension indexes the sequential
 #                            states within each Markov chain.
 # @param expectand Expectand with arbitrary input space.
-# @param alt_arg_names Optional named list of replacements for the
+# @param alt_arg_names Optional named list of alternate names for the
 #                      nominal expectand argument names; when used all
-#                      argument names must be explicitly replaced.
+#                      expectand argument names must be included.
 eval_expectand_pushforward <- function(expectand_vals_list,
                                        expectand,
                                        alt_arg_names=NULL) {
@@ -2050,24 +2107,20 @@ eval_expectand_pushforward <- function(expectand_vals_list,
     stop('Input variable `expectand` is not a function.')
   }
 
-  # Check existence of all expectand arguments
-  nominal_arg_names <- formalArgs(expectand)
-
-  if (is.null(alt_arg_names)) {
-    if ('...' %in% nominal_arg_names) {
-      stop(paste0('An expectand `...` argument requires an ',
-                  'explicit alt_arg_names argument with a ',
-                  '`...` replacement.'))
-    }
-    arg_names <- nominal_arg_names
-  } else {
-    # Validate alternate argument names
+  if (!is.null(alt_arg_names)) {
     if ( !is.list(alt_arg_names) |
           is.null(names(alt_arg_names)) ) {
       stop(paste0('Input variable `alt_arg_names` ',
                   'is not a named list.'))
     }
+  }
 
+  # Check existence of all expectand arguments
+  nominal_arg_names <- formalArgs(expectand)
+
+  if (is.null(alt_arg_names)) {
+    check_arg_names <- nominal_arg_names
+  } else {
     missing_args <- setdiff(nominal_arg_names, names(alt_arg_names))
     if (length(missing_args) == 1) {
       stop(paste0('The nominal expectand argument ',
@@ -2081,28 +2134,12 @@ eval_expectand_pushforward <- function(expectand_vals_list,
                   '`alt_arg_names`.'))
     }
 
-    if ('...' %in% nominal_arg_names) {
-      # Validate ellipses replacement
-      if ( !is.vector(alt_arg_names[['...']])   |
-           !is.character(alt_arg_names[['...']])  ) {
-        stop(paste0('`...` replacement must be a character array.'))
-      }
-
-      # Replace non-ellipses arguments
-      names <- nominal_arg_names[nominal_arg_names != '...']
-      arg_names <- sapply(names, function(name) alt_arg_names[[name]],
-                          USE.NAMES=FALSE)
-
-      # Replace ellipses argument
-      arg_names <- c(arg_names, alt_arg_names[['...']])
-    } else {
-      arg_names <- sapply(nominal_arg_names,
-                          function(name) alt_arg_names[[name]],
-                          USE.NAMES=FALSE)
-    }
+    check_arg_names <- c(sapply(alt_arg_names,
+                                function(alt) as.list(alt)),
+                         recursive=TRUE)
   }
 
-  missing_args <- setdiff(arg_names, names(expectand_vals_list))
+  missing_args <- setdiff(check_arg_names, names(expectand_vals_list))
   if (length(missing_args) == 1) {
     stop(paste0('The expectand argument ',
                 paste(missing_args, collapse=", "),
@@ -2117,12 +2154,29 @@ eval_expectand_pushforward <- function(expectand_vals_list,
   C <- dim(expectand_vals_list[[1]])[1]
   S <- dim(expectand_vals_list[[1]])[2]
   pushforward_vals <- matrix(NA, nrow=C, ncol=S)
+
   for (c in 1:C) {
     for (s in 1:S) {
-      arg_vals <- lapply(arg_names,
-                         function(name)
-                         expectand_vals_list[[name]][c, s])
-      pushforward_vals[c, s] <- do.call(expectand, arg_vals)
+      access_val <- function(name) {
+        expectand_vals_list[[name]][c, s]
+      }
+      if (is.null(alt_arg_names)) {
+        arg_vals <- lapply(nominal_arg_names, access_val)
+      } else {
+        arg_vals <- vector("list", length=length(nominal_arg_names))
+        for (n in seq_along(arg_vals)) {
+          alt_name <- alt_arg_names[[nominal_arg_names[n]]]
+          dims <- dim(alt_name)
+          if (is.null(dims)) {
+            arg_vals[[n]] <- access_val(alt_name)
+          } else {
+            arg_vals[[n]] <- apply(alt_name,
+                                   1:length(dims),
+                                   access_val)
+          }
+        }
+      }
+      pushforward_vals[c, s] <- as.numeric(do.call(expectand, arg_vals))
     }
   }
 

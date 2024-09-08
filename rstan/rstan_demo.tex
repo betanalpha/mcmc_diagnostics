@@ -2388,19 +2388,84 @@ generating pushforward samples.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Recursively create vector of element names, including indexing}
+\CommentTok{\# information, with column{-}major ordering from the specified dimensions.}
+\CommentTok{\# For example \textasciigrave{}elem\_names(\textquotesingle{}x\textquotesingle{}, c(2, 3)))\textasciigrave{} returns}
+\CommentTok{\# \textgreater{}\textgreater{}  "x[1,1]" "x[2,1]" "x[1,2]" "x[2,2]" "x[1,3]" "x[2,3]"}
+\CommentTok{\#}
+\CommentTok{\# @ param base Base name.}
+\CommentTok{\# @ param dims Vector of array dimensions.}
+\CommentTok{\# @ param current\_idxs Dimensions at current level of recursion.}
+\CommentTok{\# @ return Vector of element names in column{-}major order.}
+\NormalTok{elem\_names }\OperatorTok{\textless{}{-}}\NormalTok{ function(base, dims, current\_idxs}\OperatorTok{=}\NormalTok{c()) \{}
+\NormalTok{  next\_dim }\OperatorTok{\textless{}{-}}\NormalTok{ length(dims) }\OperatorTok{{-}}\NormalTok{ length(current\_idxs)}
+  \ControlFlowTok{if}\NormalTok{ (next\_dim }\OperatorTok{==} \DecValTok{0}\NormalTok{) \{}
+\NormalTok{    name }\OperatorTok{\textless{}{-}}\NormalTok{ do.call(paste0, lapply(current\_idxs,}
+\NormalTok{                                   function(idx)}
+\NormalTok{                                   paste0(}\ImportTok{as}\NormalTok{.character(idx), }\StringTok{\textquotesingle{},\textquotesingle{}}\NormalTok{)))}
+\NormalTok{    name }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(base, }\StringTok{\textquotesingle{}[\textquotesingle{}}\NormalTok{, gsub(}\StringTok{\textquotesingle{},$\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}\textquotesingle{}}\NormalTok{, name), }\StringTok{\textquotesingle{}]\textquotesingle{}}\NormalTok{)}
+    \ControlFlowTok{return}\NormalTok{(name)}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{    names }\OperatorTok{\textless{}{-}}\NormalTok{ c()}
+    \ControlFlowTok{for}\NormalTok{ (d }\KeywordTok{in} \DecValTok{1}\NormalTok{:dims[next\_dim]) \{}
+\NormalTok{      names }\OperatorTok{\textless{}{-}}\NormalTok{ c(names, Recall(base, dims, c(d, current\_idxs)))}
+\NormalTok{    \}}
+    \ControlFlowTok{return}\NormalTok{(names)}
+\NormalTok{  \}}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Create array of element names from the specified dimensions.}
+\CommentTok{\# For example \textasciigrave{}name\_array(\textquotesingle{}x\textquotesingle{}, c(2, 3)))\textasciigrave{} returns the array}
+\CommentTok{\# \textgreater{}\textgreater{}      [,1]     [,2]     [,3]}
+\CommentTok{\# \textgreater{}\textgreater{} [1,] "x[1,1]" "x[1,2]" "x[1,3]"}
+\CommentTok{\# \textgreater{}\textgreater{} [2,] "x[2,1]" "x[2,2]" "x[2,3]"}
+\CommentTok{\# @ param base Base name.}
+\CommentTok{\# @ param dims Vector of array dimensions.}
+\CommentTok{\# @ return Array of element names with dimensions given by dims.}
+\NormalTok{name\_array }\OperatorTok{\textless{}{-}}\NormalTok{ function(base, dims) \{}
+  \CommentTok{\# Validate inputs}
+  \ControlFlowTok{if}\NormalTok{ ( }\OperatorTok{!}\KeywordTok{is}\NormalTok{.character(base) ) \{}
+\NormalTok{    stop(paste0(}\StringTok{\textquotesingle{}Input variable \textquotesingle{}}\NormalTok{, base, }\StringTok{\textquotesingle{} is not a character.\textquotesingle{}}\NormalTok{))}
+\NormalTok{  \}}
+
+  \ControlFlowTok{if}\NormalTok{ ( }\OperatorTok{!}\KeywordTok{is}\NormalTok{.vector(dims) }\OperatorTok{|} \OperatorTok{!}\KeywordTok{is}\NormalTok{.numeric(dims) ) \{}
+\NormalTok{    stop(paste0(}\StringTok{\textquotesingle{}Input variable \textquotesingle{}}\NormalTok{, dims, }\StringTok{\textquotesingle{} is not a numeric vector.\textquotesingle{}}\NormalTok{))}
+\NormalTok{  \}}
+
+  \CommentTok{\# Create element names and format them into desired array.}
+  \CommentTok{\# Assumes that R arrays are stored in column{-}major order.}
+\NormalTok{  names }\OperatorTok{\textless{}{-}}\NormalTok{ elem\_names(base, dims)}
+\NormalTok{  array(names, dims)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
-\CommentTok{\# variables.  An ellipses argument in the expectand function is}
-\CommentTok{\# supported by passing a alt\_arg\_names instance with a \textquotesingle{}...\textquotesingle{} element}
-\CommentTok{\# containing a list of variable names.}
+\CommentTok{\# variables.  Expectand must return a single numeric or logical output.}
+\CommentTok{\#}
+\CommentTok{\# By default expectand argument values are accessed by name}
+\CommentTok{\# in expectand\_vals\_list.  If a non{-}null alt\_arg\_names is provided then}
+\CommentTok{\# the alternate names are used to access values in expectand\_vals\_list.}
+\CommentTok{\# The elements of alt\_arg\_names can also be character arrays of}
+\CommentTok{\# arbitrary dimension in which case the individual element values are}
+\CommentTok{\# first accessed then formatted into matching numeric arrays before}
+\CommentTok{\# being passed to the expectand.}
+\CommentTok{\#}
 \CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
 \CommentTok{\#                            the second dimension indexes the sequential}
 \CommentTok{\#                            states within each Markov chain.}
 \CommentTok{\# @param expectand Expectand with arbitrary input space.}
-\CommentTok{\# @param alt\_arg\_names Optional named list of replacements for the}
+\CommentTok{\# @param alt\_arg\_names Optional named list of alternate names for the}
 \CommentTok{\#                      nominal expectand argument names; when used all}
-\CommentTok{\#                      argument names must be explicitly replaced.}
+\CommentTok{\#                      expectand argument names must be included.}
 \NormalTok{eval\_expectand\_pushforward }\OperatorTok{\textless{}{-}}\NormalTok{ function(expectand\_vals\_list,}
 \NormalTok{                                       expectand,}
 \NormalTok{                                       alt\_arg\_names}\OperatorTok{=}\NormalTok{NULL) \{}
@@ -2412,24 +2477,20 @@ generating pushforward samples.
 \NormalTok{    stop(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\textasciigrave{} is not a function.\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
 
-  \CommentTok{\# Check existence of all expectand arguments}
-\NormalTok{  nominal\_arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ formalArgs(expectand)}
-
-  \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(alt\_arg\_names)) \{}
-    \ControlFlowTok{if}\NormalTok{ (}\StringTok{\textquotesingle{}...\textquotesingle{}} \OperatorTok{\%}\KeywordTok{in}\OperatorTok{\%}\NormalTok{ nominal\_arg\_names) \{}
-\NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}An expectand \textasciigrave{}...\textasciigrave{} argument requires an \textquotesingle{}}\NormalTok{,}
-                  \StringTok{\textquotesingle{}explicit alt\_arg\_names argument with a \textquotesingle{}}\NormalTok{,}
-                  \StringTok{\textquotesingle{}\textasciigrave{}...\textasciigrave{} replacement.\textquotesingle{}}\NormalTok{))}
-\NormalTok{    \}}
-\NormalTok{    arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ nominal\_arg\_names}
-\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
-    \CommentTok{\# Validate alternate argument names}
+  \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\KeywordTok{is}\NormalTok{.null(alt\_arg\_names)) \{}
     \ControlFlowTok{if}\NormalTok{ ( }\OperatorTok{!}\KeywordTok{is}\NormalTok{.}\BuiltInTok{list}\NormalTok{(alt\_arg\_names) }\OperatorTok{|}
           \KeywordTok{is}\NormalTok{.null(names(alt\_arg\_names)) ) \{}
 \NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}alt\_arg\_names\textasciigrave{} \textquotesingle{}}\NormalTok{,}
                   \StringTok{\textquotesingle{}is not a named list.\textquotesingle{}}\NormalTok{))}
 \NormalTok{    \}}
+\NormalTok{  \}}
 
+  \CommentTok{\# Check existence of all expectand arguments}
+\NormalTok{  nominal\_arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ formalArgs(expectand)}
+
+  \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(alt\_arg\_names)) \{}
+\NormalTok{    check\_arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ nominal\_arg\_names}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
 \NormalTok{    missing\_args }\OperatorTok{\textless{}{-}}\NormalTok{ setdiff(nominal\_arg\_names, names(alt\_arg\_names))}
     \ControlFlowTok{if}\NormalTok{ (length(missing\_args) }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
 \NormalTok{      stop(paste0(}\StringTok{\textquotesingle{}The nominal expectand argument \textquotesingle{}}\NormalTok{,}
@@ -2443,28 +2504,12 @@ generating pushforward samples.
                   \StringTok{\textquotesingle{}\textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{))}
 \NormalTok{    \}}
 
-    \ControlFlowTok{if}\NormalTok{ (}\StringTok{\textquotesingle{}...\textquotesingle{}} \OperatorTok{\%}\KeywordTok{in}\OperatorTok{\%}\NormalTok{ nominal\_arg\_names) \{}
-      \CommentTok{\# Validate ellipses replacement}
-      \ControlFlowTok{if}\NormalTok{ ( }\OperatorTok{!}\KeywordTok{is}\NormalTok{.vector(alt\_arg\_names[[}\StringTok{\textquotesingle{}...\textquotesingle{}}\NormalTok{]])   }\OperatorTok{|}
-           \OperatorTok{!}\KeywordTok{is}\NormalTok{.character(alt\_arg\_names[[}\StringTok{\textquotesingle{}...\textquotesingle{}}\NormalTok{]])  ) \{}
-\NormalTok{        stop(paste0(}\StringTok{\textquotesingle{}\textasciigrave{}...\textasciigrave{} replacement must be a character array.\textquotesingle{}}\NormalTok{))}
-\NormalTok{      \}}
-
-      \CommentTok{\# Replace non{-}ellipses arguments}
-\NormalTok{      names }\OperatorTok{\textless{}{-}}\NormalTok{ nominal\_arg\_names[nominal\_arg\_names }\OperatorTok{!=} \StringTok{\textquotesingle{}...\textquotesingle{}}\NormalTok{]}
-\NormalTok{      arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(names, function(name) alt\_arg\_names[[name]],}
-\NormalTok{                          USE.NAMES}\OperatorTok{=}\NormalTok{FALSE)}
-
-      \CommentTok{\# Replace ellipses argument}
-\NormalTok{      arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ c(arg\_names, alt\_arg\_names[[}\StringTok{\textquotesingle{}...\textquotesingle{}}\NormalTok{]])}
-\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
-\NormalTok{      arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(nominal\_arg\_names,}
-\NormalTok{                          function(name) alt\_arg\_names[[name]],}
-\NormalTok{                          USE.NAMES}\OperatorTok{=}\NormalTok{FALSE)}
-\NormalTok{    \}}
+\NormalTok{    check\_arg\_names }\OperatorTok{\textless{}{-}}\NormalTok{ c(sapply(alt\_arg\_names,}
+\NormalTok{                                function(alt) }\ImportTok{as}\NormalTok{.}\BuiltInTok{list}\NormalTok{(alt)),}
+\NormalTok{                         recursive}\OperatorTok{=}\NormalTok{TRUE)}
 \NormalTok{  \}}
 
-\NormalTok{  missing\_args }\OperatorTok{\textless{}{-}}\NormalTok{ setdiff(arg\_names, names(expectand\_vals\_list))}
+\NormalTok{  missing\_args }\OperatorTok{\textless{}{-}}\NormalTok{ setdiff(check\_arg\_names, names(expectand\_vals\_list))}
   \ControlFlowTok{if}\NormalTok{ (length(missing\_args) }\OperatorTok{==} \DecValTok{1}\NormalTok{) \{}
 \NormalTok{    stop(paste0(}\StringTok{\textquotesingle{}The expectand argument \textquotesingle{}}\NormalTok{,}
 \NormalTok{                paste(missing\_args, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{),}
@@ -2479,12 +2524,29 @@ generating pushforward samples.
 \NormalTok{  C }\OperatorTok{\textless{}{-}}\NormalTok{ dim(expectand\_vals\_list[[}\DecValTok{1}\NormalTok{]])[}\DecValTok{1}\NormalTok{]}
 \NormalTok{  S }\OperatorTok{\textless{}{-}}\NormalTok{ dim(expectand\_vals\_list[[}\DecValTok{1}\NormalTok{]])[}\DecValTok{2}\NormalTok{]}
 \NormalTok{  pushforward\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ matrix(NA, nrow}\OperatorTok{=}\NormalTok{C, ncol}\OperatorTok{=}\NormalTok{S)}
+
   \ControlFlowTok{for}\NormalTok{ (c }\KeywordTok{in} \DecValTok{1}\NormalTok{:C) \{}
     \ControlFlowTok{for}\NormalTok{ (s }\KeywordTok{in} \DecValTok{1}\NormalTok{:S) \{}
-\NormalTok{      arg\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ lapply(arg\_names,}
-\NormalTok{                         function(name)}
-\NormalTok{                         expectand\_vals\_list[[name]][c, s])}
-\NormalTok{      pushforward\_vals[c, s] }\OperatorTok{\textless{}{-}}\NormalTok{ do.call(expectand, arg\_vals)}
+\NormalTok{      access\_val }\OperatorTok{\textless{}{-}}\NormalTok{ function(name) \{}
+\NormalTok{        expectand\_vals\_list[[name]][c, s]}
+\NormalTok{      \}}
+      \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(alt\_arg\_names)) \{}
+\NormalTok{        arg\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ lapply(nominal\_arg\_names, access\_val)}
+\NormalTok{      \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{        arg\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ vector(}\StringTok{"list"}\NormalTok{, length}\OperatorTok{=}\NormalTok{length(nominal\_arg\_names))}
+        \ControlFlowTok{for}\NormalTok{ (n }\KeywordTok{in}\NormalTok{ seq\_along(arg\_vals)) \{}
+\NormalTok{          alt\_name }\OperatorTok{\textless{}{-}}\NormalTok{ alt\_arg\_names[[nominal\_arg\_names[n]]]}
+\NormalTok{          dims }\OperatorTok{\textless{}{-}}\NormalTok{ dim(alt\_name)}
+          \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(dims)) \{}
+\NormalTok{            arg\_vals[[n]] }\OperatorTok{\textless{}{-}}\NormalTok{ access\_val(alt\_name)}
+\NormalTok{          \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{            arg\_vals[[n]] }\OperatorTok{\textless{}{-}} \BuiltInTok{apply}\NormalTok{(alt\_name,}
+                                   \DecValTok{1}\NormalTok{:length(dims),}
+\NormalTok{                                   access\_val)}
+\NormalTok{          \}}
+\NormalTok{        \}}
+\NormalTok{      \}}
+\NormalTok{      pushforward\_vals[c, s] }\OperatorTok{\textless{}{-}} \ImportTok{as}\NormalTok{.numeric(do.call(expectand, arg\_vals))}
 \NormalTok{    \}}
 \NormalTok{  \}}
 
@@ -3945,15 +4007,15 @@ other expectands that have not already been evaluated in the
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{euclidean\_length }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x1, x2, x3) \{}
-  \FunctionTok{sqrt}\NormalTok{(x1}\SpecialCharTok{**}\DecValTok{2} \SpecialCharTok{+}\NormalTok{ x2}\SpecialCharTok{**}\DecValTok{2} \SpecialCharTok{+}\NormalTok{ x3}\SpecialCharTok{**}\DecValTok{2}\NormalTok{)}
+\NormalTok{euclidean\_length }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x) \{}
+  \FunctionTok{sqrt}\NormalTok{(}\FunctionTok{sum}\NormalTok{(x}\SpecialCharTok{**}\DecValTok{2}\NormalTok{))}
 \NormalTok{\}}
+
+\NormalTok{beta\_names }\OtherTok{\textless{}{-}}\NormalTok{ util}\SpecialCharTok{$}\FunctionTok{name\_array}\NormalTok{(}\StringTok{\textquotesingle{}beta\textquotesingle{}}\NormalTok{, }\FunctionTok{c}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{M))}
 
 \NormalTok{pushforward\_samples }\OtherTok{\textless{}{-}}
 \NormalTok{  util}\SpecialCharTok{$}\FunctionTok{eval\_expectand\_pushforward}\NormalTok{(samples, euclidean\_length,}
-                                  \FunctionTok{list}\NormalTok{(}\StringTok{\textquotesingle{}x1\textquotesingle{}} \OtherTok{=} \StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{,}
-                                       \StringTok{\textquotesingle{}x2\textquotesingle{}} \OtherTok{=} \StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{,}
-                                       \StringTok{\textquotesingle{}x3\textquotesingle{}} \OtherTok{=} \StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{))}
+                                  \FunctionTok{list}\NormalTok{(}\StringTok{\textquotesingle{}x\textquotesingle{}}\OtherTok{=}\NormalTok{beta\_names))}
 
 \FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{), }\AttributeTok{mar =} \FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
 \NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_expectand\_pushforward}\NormalTok{(pushforward\_samples, }\DecValTok{10}\NormalTok{,}

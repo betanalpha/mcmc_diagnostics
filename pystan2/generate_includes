@@ -16,8 +16,8 @@ function_names=('compile_model' 'extract_expectand_vals' 'extract_hmc_diagnostic
                 'check_all_expectand_diagnostics' 'summarize_expectand_diagnostics'
                 'filter_expectands' 'compute_rhos' 'plot_empirical_correlogram'
                 'plot_pairs_by_chain' 'eval_uni_expectand_pushforward'
-                'eval_expectand_pushforward' 'mcmc_est'
-                'ensemble_mcmc_est' 'ensemble_mcmc_quantile_est'
+                'name_nested_list' 'name_array' 'eval_expectand_pushforward'
+                'mcmc_est' 'ensemble_mcmc_est' 'ensemble_mcmc_quantile_est'
                 'plot_expectand_pushforward')
  
 for name in ${function_names[@]}; do

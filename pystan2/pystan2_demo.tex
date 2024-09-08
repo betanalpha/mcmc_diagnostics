@@ -2369,14 +2369,78 @@ generating pushforward samples.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Create a nested list of element names, including indexing information,}
+\CommentTok{\# from the specified dimensions.  For example \textasciigrave{}name\_array(\textquotesingle{}x\textquotesingle{}, [2, 3]))\textasciigrave{}}
+\CommentTok{\# returns the nested list}
+\CommentTok{\# \textgreater{}\textgreater{} [[\textquotesingle{}x[1,1]\textquotesingle{}, \textquotesingle{}x[1,2]\textquotesingle{}, \textquotesingle{}x[1,3]\textquotesingle{}],}
+\CommentTok{\# \textgreater{}\textgreater{}  [\textquotesingle{}x[2,1]\textquotesingle{}, \textquotesingle{}x[2,2]\textquotesingle{}, \textquotesingle{}x[2,3]\textquotesingle{}]]}
+\CommentTok{\# @ param base Base name.}
+\CommentTok{\# @ param dims List of array dimensions.}
+\CommentTok{\# @ param current\_idxs Dimensions at current level of recursion.}
+\CommentTok{\# @ return Array of element names with dimensions given by dims.}
+\KeywordTok{def}\NormalTok{ name\_nested\_list(base, dims, current\_idxs}\OperatorTok{=}\NormalTok{[]):}
+\NormalTok{  next\_dim }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(current\_idxs)}
+  \ControlFlowTok{if}\NormalTok{ next\_dim }\OperatorTok{==} \BuiltInTok{len}\NormalTok{(dims):}
+\NormalTok{    str\_idxs }\OperatorTok{=} \StringTok{\textquotesingle{},\textquotesingle{}}\NormalTok{.join([ }\BuiltInTok{str}\NormalTok{(idx }\OperatorTok{+} \DecValTok{1}\NormalTok{) }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ current\_idxs ])}
+    \ControlFlowTok{return} \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{base}\SpecialCharTok{\}}\SpecialStringTok{[}\SpecialCharTok{\{}\NormalTok{str\_idxs}\SpecialCharTok{\}}\SpecialStringTok{]\textquotesingle{}}
+  \ControlFlowTok{else}\NormalTok{:}
+    \ControlFlowTok{return}\NormalTok{ [ name\_nested\_list(base, dims, current\_idxs }\OperatorTok{+}\NormalTok{ [d])}
+             \ControlFlowTok{for}\NormalTok{ d }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(dims[next\_dim]) ]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Create a numpy array of element names from the specified dimensions.}
+\CommentTok{\# For example \textasciigrave{}name\_array(\textquotesingle{}x\textquotesingle{}, [2, 3]))\textasciigrave{} returns the array}
+\CommentTok{\# \textgreater{}\textgreater{} array([[\textquotesingle{}x[1,1]\textquotesingle{}, \textquotesingle{}x[1,2]\textquotesingle{}, \textquotesingle{}x[1,3]\textquotesingle{}],}
+\CommentTok{\# \textgreater{}\textgreater{}        [\textquotesingle{}x[2,1]\textquotesingle{}, \textquotesingle{}x[2,2]\textquotesingle{}, \textquotesingle{}x[2,3]\textquotesingle{}]], dtype=\textquotesingle{}\textless{}U6\textquotesingle{})}
+\CommentTok{\# @ param base Base name.}
+\CommentTok{\# @ param dims Vector of array dimensions.}
+\CommentTok{\# @ return Array of element names with dimensions given by dims.}
+\KeywordTok{def}\NormalTok{ name\_array(base, dims):}
+  \CommentTok{\# Validate inputs}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(base, }\BuiltInTok{str}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Input variable }\SpecialCharTok{\{}\NormalTok{base}\SpecialCharTok{\}}\SpecialStringTok{ is not a string.\textquotesingle{}}\NormalTok{)}
+
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(dims, }\BuiltInTok{list}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Input variable }\SpecialCharTok{\{}\NormalTok{dims}\SpecialCharTok{\}}\SpecialStringTok{ is not a list.\textquotesingle{}}\NormalTok{)}
+
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{all}\NormalTok{([ }\BuiltInTok{isinstance}\NormalTok{(d, }\BuiltInTok{int}\NormalTok{) }\ControlFlowTok{for}\NormalTok{ d }\KeywordTok{in}\NormalTok{ dims ]):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}The elements of input variable }\SpecialCharTok{\{}\NormalTok{dims}\SpecialCharTok{\}}\SpecialStringTok{ \textquotesingle{}}
+                      \StringTok{\textquotesingle{}are not all integers.\textquotesingle{}}\NormalTok{)}
+
+  \CommentTok{\# Create element names and format them into desired array.}
+  \ControlFlowTok{return}\NormalTok{ numpy.array(name\_nested\_list(base, dims))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
-\CommentTok{\# variables.  Variable non{-}keyword arguments in the expectand function}
-\CommentTok{\# are supported by passing a alt\_arg\_names instance with a varargs\_name}
-\CommentTok{\# element containing a list of variable names.}
+\CommentTok{\# variables.  Expectand must return a single float, int, or logical}
+\CommentTok{\# output.}
+\CommentTok{\#}
+\CommentTok{\# By default expectand argument values are accessed by name}
+\CommentTok{\# in expectand\_vals\_dict.  If a non{-}null alt\_arg\_names is provided then}
+\CommentTok{\# the alternate names are used to access values in expectand\_vals\_dict.}
+\CommentTok{\# The elements of alt\_arg\_names can also be string arrays of arbitrary}
+\CommentTok{\# dimension in which case the individual element values are first}
+\CommentTok{\# accessed then formatted into matching numeric arrays before being}
+\CommentTok{\# passed to the expectand.}
+\CommentTok{\#}
+\CommentTok{\# @param expectand\_vals\_dict A dictionary of two{-}dimensional arrays for}
+\CommentTok{\#                            each expectand.  The first dimension of}
+\CommentTok{\#                            each element indexes the Markov chains and}
+\CommentTok{\#                            the second dimension indexes the sequential}
+\CommentTok{\#                            states within each Markov chain.}
+\CommentTok{\# @param expectand Expectand with arbitrary input space.}
+\CommentTok{\# @param alt\_arg\_names Optional named list of alternate names for the}
+\CommentTok{\#                      nominal expectand argument names; when used all}
+\CommentTok{\#                      expectand argument names must be included.}
 \KeywordTok{def}\NormalTok{ eval\_expectand\_pushforward(expectand\_vals\_dict,}
 \NormalTok{                               expectand,}
-\NormalTok{                               alt\_arg\_names}\OperatorTok{=}\VariableTok{None}\NormalTok{,}
-\NormalTok{                               varargs\_name}\OperatorTok{=}\StringTok{\textquotesingle{}varargs\textquotesingle{}}\NormalTok{):}
+\NormalTok{                               alt\_arg\_names}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
   \CommentTok{"""Evaluate an expectand on the values of an arbitrary number}
 \CommentTok{     of input variables."""}
   \CommentTok{\# Validate inputs}
@@ -2386,23 +2450,18 @@ generating pushforward samples.
     \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\textasciigrave{} is not a \textquotesingle{}}
                     \StringTok{\textquotesingle{}callable function.\textquotesingle{}}\NormalTok{)}
 
-  \CommentTok{\# Check existence of all expectand arguments}
-\NormalTok{  spec }\OperatorTok{=}\NormalTok{ inspect.getfullargspec(expectand)}
-\NormalTok{  nominal\_arg\_names }\OperatorTok{=}\NormalTok{ spec.args}
-\NormalTok{  variable\_arg\_names }\OperatorTok{=}\NormalTok{ spec.varargs}
-
-  \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
-    \ControlFlowTok{if}\NormalTok{ variable\_arg\_names }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
-      \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{(}\StringTok{\textquotesingle{}An expectand with variable non{-}keyword \textquotesingle{}}
-                       \StringTok{\textquotesingle{}arguments requires an explicit alt\_arg\_names \textquotesingle{}}
-                       \StringTok{\textquotesingle{}argument containing a \textasciigrave{}varargs\_name\textasciigrave{} key.\textquotesingle{}}\NormalTok{)}
-\NormalTok{    arg\_names }\OperatorTok{=}\NormalTok{ nominal\_arg\_names}
-  \ControlFlowTok{else}\NormalTok{:}
-    \CommentTok{\# Validate alternate argument names}
+  \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
     \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(alt\_arg\_names, }\BuiltInTok{dict}\NormalTok{):}
       \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}alt\_arg\_names\textasciigrave{} \textquotesingle{}}
                       \StringTok{\textquotesingle{}is not a dictionary.\textquotesingle{}}\NormalTok{)}
 
+  \CommentTok{\# Check existence of all expectand arguments}
+\NormalTok{  spec }\OperatorTok{=}\NormalTok{ inspect.getfullargspec(expectand)}
+\NormalTok{  nominal\_arg\_names }\OperatorTok{=}\NormalTok{ spec.args}
+
+  \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
+\NormalTok{    check\_arg\_names }\OperatorTok{=}\NormalTok{ nominal\_arg\_names}
+  \ControlFlowTok{else}\NormalTok{:}
 \NormalTok{    alt\_keys }\OperatorTok{=}\NormalTok{ alt\_arg\_names.keys()}
 \NormalTok{    missing\_args }\OperatorTok{=} \BuiltInTok{set}\NormalTok{(nominal\_arg\_names).difference(alt\_keys)}
 
@@ -2415,25 +2474,15 @@ generating pushforward samples.
                        \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\StringTok{", "}\SpecialCharTok{.}\NormalTok{join(missing\_args)}\SpecialCharTok{\}}\SpecialStringTok{ do not have \textquotesingle{}}
                         \StringTok{\textquotesingle{}replacements in \textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{)}
 
-\NormalTok{    arg\_names }\OperatorTok{=}\NormalTok{ [ alt\_arg\_names[nom] }\ControlFlowTok{for}\NormalTok{ nom }\KeywordTok{in}\NormalTok{ nominal\_arg\_names ]}
+\NormalTok{    arglistlist }\OperatorTok{=}\NormalTok{ [ v.flatten().tolist()}
+                    \ControlFlowTok{if} \BuiltInTok{isinstance}\NormalTok{(v, numpy.ndarray)}
+                    \ControlFlowTok{else}\NormalTok{ [v]}
+                    \ControlFlowTok{for}\NormalTok{ k, v }\KeywordTok{in}\NormalTok{ alt\_arg\_names.items() ]}
+\NormalTok{    check\_arg\_names }\OperatorTok{=}\NormalTok{ [ arg }\ControlFlowTok{for}\NormalTok{ arglist }\KeywordTok{in}\NormalTok{ arglistlist}
+                        \ControlFlowTok{for}\NormalTok{ arg }\KeywordTok{in}\NormalTok{ arglist ]}
 
-    \ControlFlowTok{if}\NormalTok{ variable\_arg\_names }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
-      \CommentTok{\# Validate variable non{-}keyword arguments replacements}
-      \ControlFlowTok{if}\NormalTok{ varargs\_name }\KeywordTok{not} \KeywordTok{in}\NormalTok{ alt\_arg\_names.keys():}
-        \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{( }\StringTok{\textquotesingle{}The variable non{-}keyword argument \textquotesingle{}}
-                         \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{varargs\_name}\SpecialCharTok{\}}\SpecialStringTok{ does not have a \textquotesingle{}}
-                          \StringTok{\textquotesingle{}replacement in \textasciigrave{}alt\_arg\_names\textasciigrave{}.\textquotesingle{}}\NormalTok{)}
-
-      \ControlFlowTok{if} \KeywordTok{not}\NormalTok{ (}\BuiltInTok{isinstance}\NormalTok{(alt\_arg\_names[varargs\_name], }\BuiltInTok{list}\NormalTok{)}
-              \KeywordTok{and} \BuiltInTok{all}\NormalTok{([ }\BuiltInTok{isinstance}\NormalTok{(a, }\BuiltInTok{str}\NormalTok{)}
-                      \ControlFlowTok{for}\NormalTok{ a }\KeywordTok{in}\NormalTok{ alt\_arg\_names[varargs\_name] ])  ):}
-        \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{( }\SpecialStringTok{f\textquotesingle{}alt\_arg\_names[}\SpecialCharTok{\{}\NormalTok{varargs\_name}\SpecialCharTok{\}}\SpecialStringTok{] is \textquotesingle{}}
-                          \StringTok{\textquotesingle{}not a list of strings.\textquotesingle{}}\NormalTok{)}
-
-      \CommentTok{\# Append variable non{-}keyword arguments}
-\NormalTok{      arg\_names }\OperatorTok{+=}\NormalTok{ alt\_arg\_names[varargs\_name]}
-
-\NormalTok{  missing\_args }\OperatorTok{=} \BuiltInTok{set}\NormalTok{(arg\_names).difference(expectand\_vals\_dict.keys())}
+\NormalTok{  missing\_args }\OperatorTok{=} \OperatorTok{\textbackslash{}}
+    \BuiltInTok{set}\NormalTok{(check\_arg\_names).difference(expectand\_vals\_dict.keys())}
   \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(missing\_args) }\OperatorTok{==} \DecValTok{1}\NormalTok{:}
     \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{( }\StringTok{\textquotesingle{}The expectand argument \textquotesingle{}}
                      \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\StringTok{", "}\SpecialCharTok{.}\NormalTok{join(missing\_args)}\SpecialCharTok{\}}\SpecialStringTok{ is not in \textquotesingle{}}
@@ -2450,8 +2499,18 @@ generating pushforward samples.
 \NormalTok{  pushforward\_vals }\OperatorTok{=}\NormalTok{ numpy.zeros([C, S])}
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
     \ControlFlowTok{for}\NormalTok{ s }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(S):}
-\NormalTok{      arg\_vals }\OperatorTok{=}\NormalTok{ [ expectand\_vals\_dict[name][c, s]}
-                   \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ arg\_names ]}
+      \KeywordTok{def}\NormalTok{ access\_val(name):}
+        \ControlFlowTok{return}\NormalTok{ expectand\_vals\_dict[name][c, s]}
+
+      \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
+\NormalTok{        arg\_vals }\OperatorTok{=}\NormalTok{ [ access\_val(name)}
+                     \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ nominal\_arg\_names ]}
+      \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{        arg\_vals }\OperatorTok{=}\NormalTok{ [ numpy.vectorize(access\_val)(alt\_arg\_names[name])}
+                     \ControlFlowTok{if} \BuiltInTok{isinstance}\NormalTok{(alt\_arg\_names[name], numpy.ndarray)}
+                     \ControlFlowTok{else}\NormalTok{ access\_val(alt\_arg\_names[name])}
+                     \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ nominal\_arg\_names ]}
+
 \NormalTok{      pushforward\_vals[c, s] }\OperatorTok{=}\NormalTok{ expectand(}\OperatorTok{*}\NormalTok{arg\_vals)}
 
   \ControlFlowTok{return}\NormalTok{ pushforward\_vals}
@@ -3857,14 +3916,14 @@ other expectands that have not already been evaluated in the
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{def}\NormalTok{ euclidean\_length(x1, x2, x3):}
-  \ControlFlowTok{return}\NormalTok{ math.sqrt(x1}\OperatorTok{**}\DecValTok{2} \OperatorTok{+}\NormalTok{ x2}\OperatorTok{**}\DecValTok{2} \OperatorTok{+}\NormalTok{ x3}\OperatorTok{**}\DecValTok{2}\NormalTok{)}
+\KeywordTok{def}\NormalTok{ euclidean\_length(x):}
+  \ControlFlowTok{return}\NormalTok{ math.sqrt(numpy.dot(x, x))}
+
+\NormalTok{beta\_names }\OperatorTok{=}\NormalTok{ util.name\_array(}\StringTok{\textquotesingle{}beta\textquotesingle{}}\NormalTok{, [data[}\StringTok{\textquotesingle{}M\textquotesingle{}}\NormalTok{]])}
 
 \NormalTok{pushforward\_samples }\OperatorTok{=} \OperatorTok{\textbackslash{}}
 \NormalTok{  util.eval\_expectand\_pushforward(samples, euclidean\_length,}
-\NormalTok{                                  \{}\StringTok{\textquotesingle{}x1\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}beta[1]\textquotesingle{}}\NormalTok{,}
-                                   \StringTok{\textquotesingle{}x2\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{,}
-                                   \StringTok{\textquotesingle{}x3\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}beta[3]\textquotesingle{}}\NormalTok{\})}
+\NormalTok{                                  \{}\StringTok{\textquotesingle{}x\textquotesingle{}}\NormalTok{: beta\_names\})}
 
 \NormalTok{util.plot\_expectand\_pushforward(plot.gca(), pushforward\_samples, }\DecValTok{10}\NormalTok{,}
 \NormalTok{                                display\_name}\OperatorTok{=}\StringTok{"Slope Vector Length"}\NormalTok{)}
@@ -3899,7 +3958,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-05T14:57:36.394903-04:00
+Last updated: 2024-09-07T20:26:21.851386-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

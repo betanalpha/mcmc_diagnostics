@@ -2624,7 +2624,7 @@ not reported here.
 \CommentTok{\# @return The ensemble Markov chain Monte Carlo quantile estimate.}
 \KeywordTok{def}\NormalTok{ ensemble\_mcmc\_quantile\_est(expectand\_vals, probs):}
   \CommentTok{\# Validate inputs}
-\NormalTok{  util.validate\_array(expectand\_vals, }\StringTok{\textquotesingle{}expectand\_vals\textquotesingle{}}\NormalTok{)}
+\NormalTok{  validate\_array(expectand\_vals, }\StringTok{\textquotesingle{}expectand\_vals\textquotesingle{}}\NormalTok{)}
 
   \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(probs, }\BuiltInTok{list}\NormalTok{):}
     \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{((}\StringTok{\textquotesingle{}Input variable \textasciigrave{}probs\textasciigrave{} is not a list.\textquotesingle{}}\NormalTok{))}
@@ -3958,7 +3958,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-07T20:26:21.851386-04:00
+Last updated: 2024-09-08T12:52:08.452363-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

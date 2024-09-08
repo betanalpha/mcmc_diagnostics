@@ -2229,7 +2229,7 @@ def ensemble_mcmc_est(expectand_vals):
 # @return The ensemble Markov chain Monte Carlo quantile estimate.
 def ensemble_mcmc_quantile_est(expectand_vals, probs):
   # Validate inputs
-  util.validate_array(expectand_vals, 'expectand_vals')
+  validate_array(expectand_vals, 'expectand_vals')
 
   if not isinstance(probs, list):
     raise TypeError(('Input variable `probs` is not a list.'))

@@ -2022,14 +2022,70 @@ def eval_uni_expectand_pushforward(input_vals, expectand):
   """Evaluate an expectand along a Markov chain"""
   return numpy.vectorize(expectand)(input_vals)
 
+# Create a nested list of element names, including indexing information,
+# from the specified dimensions.  For example `name_array('x', [2, 3]))`
+# returns the nested list
+# >> [['x[1,1]', 'x[1,2]', 'x[1,3]'],
+# >>  ['x[2,1]', 'x[2,2]', 'x[2,3]']]
+# @ param base Base name.
+# @ param dims List of array dimensions.
+# @ param current_idxs Dimensions at current level of recursion.
+# @ return Array of element names with dimensions given by dims.
+def name_nested_list(base, dims, current_idxs=[]):
+  next_dim = len(current_idxs)
+  if next_dim == len(dims):
+    str_idxs = ','.join([ str(idx + 1) for idx in current_idxs ])
+    return f'{base}[{str_idxs}]'
+  else:
+    return [ name_nested_list(base, dims, current_idxs + [d])
+             for d in range(dims[next_dim]) ]
+
+# Create a numpy array of element names from the specified dimensions.
+# For example `name_array('x', [2, 3]))` returns the array
+# >> array([['x[1,1]', 'x[1,2]', 'x[1,3]'],
+# >>        ['x[2,1]', 'x[2,2]', 'x[2,3]']], dtype='<U6')
+# @ param base Base name.
+# @ param dims Vector of array dimensions.
+# @ return Array of element names with dimensions given by dims.
+def name_array(base, dims):
+  # Validate inputs
+  if not isinstance(base, str):
+    raise TypeError(f'Input variable {base} is not a string.')
+
+  if not isinstance(dims, list):
+    raise TypeError(f'Input variable {dims} is not a list.')
+
+  if not all([ isinstance(d, int) for d in dims ]):
+    raise TypeError(f'The elements of input variable {dims} '
+                      'are not all integers.')
+
+  # Create element names and format them into desired array.
+  return numpy.array(name_nested_list(base, dims))
+
 # Evaluate an expectand on the values of an arbitrary number of input
-# variables.  Variable non-keyword arguments in the expectand function
-# are supported by passing a alt_arg_names instance with a varargs_name
-# element containing a list of variable names.
+# variables.  Expectand must return a single float, int, or logical
+# output.
+#
+# By default expectand argument values are accessed by name
+# in expectand_vals_dict.  If a non-null alt_arg_names is provided then
+# the alternate names are used to access values in expectand_vals_dict.
+# The elements of alt_arg_names can also be string arrays of arbitrary
+# dimension in which case the individual element values are first
+# accessed then formatted into matching numeric arrays before being
+# passed to the expectand.
+#
+# @param expectand_vals_dict A dictionary of two-dimensional arrays for
+#                            each expectand.  The first dimension of
+#                            each element indexes the Markov chains and
+#                            the second dimension indexes the sequential
+#                            states within each Markov chain.
+# @param expectand Expectand with arbitrary input space.
+# @param alt_arg_names Optional named list of alternate names for the
+#                      nominal expectand argument names; when used all
+#                      expectand argument names must be included.
 def eval_expectand_pushforward(expectand_vals_dict,
                                expectand,
-                               alt_arg_names=None,
-                               varargs_name='varargs'):
+                               alt_arg_names=None):
   """Evaluate an expectand on the values of an arbitrary number
      of input variables."""
   # Validate inputs
@@ -2039,23 +2095,18 @@ def eval_expectand_pushforward(expectand_vals_dict,
     raise TypeError('Input variable `expectand` is not a '
                     'callable function.')
 
-  # Check existence of all expectand arguments
-  spec = inspect.getfullargspec(expectand)
-  nominal_arg_names = spec.args
-  variable_arg_names = spec.varargs
-
-  if alt_arg_names is None:
-    if variable_arg_names is not None:
-      raise ValueError('An expectand with variable non-keyword '
-                       'arguments requires an explicit alt_arg_names '
-                       'argument containing a `varargs_name` key.')
-    arg_names = nominal_arg_names
-  else:
-    # Validate alternate argument names
+  if alt_arg_names is not None:
     if not isinstance(alt_arg_names, dict):
       raise TypeError('Input variable `alt_arg_names` '
                       'is not a dictionary.')
 
+  # Check existence of all expectand arguments
+  spec = inspect.getfullargspec(expectand)
+  nominal_arg_names = spec.args
+
+  if alt_arg_names is None:
+    check_arg_names = nominal_arg_names
+  else:
     alt_keys = alt_arg_names.keys()
     missing_args = set(nominal_arg_names).difference(alt_keys)
 
@@ -2068,25 +2119,15 @@ def eval_expectand_pushforward(expectand_vals_dict,
                        f'{", ".join(missing_args)} do not have '
                         'replacements in `alt_arg_names`.')
 
-    arg_names = [ alt_arg_names[nom] for nom in nominal_arg_names ]
+    arglistlist = [ v.flatten().tolist()
+                    if isinstance(v, numpy.ndarray)
+                    else [v]
+                    for k, v in alt_arg_names.items() ]
+    check_arg_names = [ arg for arglist in arglistlist
+                        for arg in arglist ]
 
-    if variable_arg_names is not None:
-      # Validate variable non-keyword arguments replacements
-      if varargs_name not in alt_arg_names.keys():
-        raise ValueError( 'The variable non-keyword argument '
-                         f'{varargs_name} does not have a '
-                          'replacement in `alt_arg_names`.')
-
-      if not (isinstance(alt_arg_names[varargs_name], list)
-              and all([ isinstance(a, str)
-                      for a in alt_arg_names[varargs_name] ])  ):
-        raise TypeError( f'alt_arg_names[{varargs_name}] is '
-                          'not a list of strings.')
-
-      # Append variable non-keyword arguments
-      arg_names += alt_arg_names[varargs_name]
-
-  missing_args = set(arg_names).difference(expectand_vals_dict.keys())
+  missing_args = \
+    set(check_arg_names).difference(expectand_vals_dict.keys())
   if len(missing_args) == 1:
     raise ValueError( 'The expectand argument '
                      f'{", ".join(missing_args)} is not in '
@@ -2103,8 +2144,18 @@ def eval_expectand_pushforward(expectand_vals_dict,
   pushforward_vals = numpy.zeros([C, S])
   for c in range(C):
     for s in range(S):
-      arg_vals = [ expectand_vals_dict[name][c, s]
-                   for name in arg_names ]
+      def access_val(name):
+        return expectand_vals_dict[name][c, s]
+
+      if alt_arg_names is None:
+        arg_vals = [ access_val(name)
+                     for name in nominal_arg_names ]
+      else:
+        arg_vals = [ numpy.vectorize(access_val)(alt_arg_names[name])
+                     if isinstance(alt_arg_names[name], numpy.ndarray)
+                     else access_val(alt_arg_names[name])
+                     for name in nominal_arg_names ]
+
       pushforward_vals[c, s] = expectand(*arg_vals)
 
   return pushforward_vals

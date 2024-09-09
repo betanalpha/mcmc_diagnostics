@@ -2334,7 +2334,8 @@ implicit_subset_prob <- function(expectand_vals_list,
     if (!(unique_vals == 0 | unique_vals == 1))
       valid_outputs = FALSE
   } else if (length(unique_vals) == 2) {
-    if (!Reduce("&", unique_vals == c(0, 1)))
+    if ( !(  Reduce("&", unique_vals == c(0, 1))
+           | Reduce("&", unique_vals == c(1, 0))) )
       valid_outputs = FALSE
   } else {
     valid_outputs = FALSE

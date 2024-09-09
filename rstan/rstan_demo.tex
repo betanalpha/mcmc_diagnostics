@@ -2707,13 +2707,19 @@ into a dedicated function.
     \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\NormalTok{(unique\_vals }\OperatorTok{==} \DecValTok{0} \OperatorTok{|}\NormalTok{ unique\_vals }\OperatorTok{==} \DecValTok{1}\NormalTok{))}
 \NormalTok{      valid\_outputs }\OperatorTok{=}\NormalTok{ FALSE}
 \NormalTok{  \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (length(unique\_vals) }\OperatorTok{==} \DecValTok{2}\NormalTok{) \{}
-    \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\NormalTok{Reduce(}\StringTok{"\&"}\NormalTok{, unique\_vals }\OperatorTok{==}\NormalTok{ c(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)))}
+    \ControlFlowTok{if}\NormalTok{ ( }\OperatorTok{!}\NormalTok{(  Reduce(}\StringTok{"\&"}\NormalTok{, unique\_vals }\OperatorTok{==}\NormalTok{ c(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+           \OperatorTok{|}\NormalTok{ Reduce(}\StringTok{"\&"}\NormalTok{, unique\_vals }\OperatorTok{==}\NormalTok{ c(}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))) )}
 \NormalTok{      valid\_outputs }\OperatorTok{=}\NormalTok{ FALSE}
 \NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
 \NormalTok{    valid\_outputs }\OperatorTok{=}\NormalTok{ FALSE}
 \NormalTok{  \}}
   \ControlFlowTok{if}\NormalTok{(}\OperatorTok{!}\NormalTok{valid\_outputs)}
 \NormalTok{    stop(paste0(}\StringTok{\textquotesingle{}The function \textasciigrave{}indicator\textasciigrave{} must return only \textquotesingle{}}\NormalTok{,}
+                \StringTok{\textquotesingle{}logical or 0/1 numeric outputs.\textquotesingle{}}\NormalTok{))}
+
+  \CommentTok{\# Return probability as expectation value of indicator function}
+\NormalTok{  ensemble\_mcmc\_est(indicator\_samples)[}\DecValTok{1}\NormalTok{:}\DecValTok{2}\NormalTok{]}
+\NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2741,11 +2747,6 @@ not reported here.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
-  \CommentTok{\# Return probability as expectation value of indicator function}
-\NormalTok{  ensemble\_mcmc\_est(indicator\_samples)[}\DecValTok{1}\NormalTok{:}\DecValTok{2}\NormalTok{]}
-\NormalTok{\}}
-
 \CommentTok{\# Estimate expectand pushforward quantiles from a Markov chain ensemble.}
 \CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
@@ -2767,6 +2768,11 @@ not reported here.
 
 \NormalTok{  C }\OperatorTok{\textless{}{-}}\NormalTok{ dim(expectand\_vals)[}\DecValTok{1}\NormalTok{]}
   \ControlFlowTok{for}\NormalTok{ (c }\KeywordTok{in} \DecValTok{1}\NormalTok{:C) \{}
+\NormalTok{    q }\OperatorTok{\textless{}{-}}\NormalTok{ q }\OperatorTok{+}\NormalTok{ quantile(expectand\_vals[c,], probs}\OperatorTok{=}\NormalTok{probs) }\OperatorTok{/}\NormalTok{ C}
+\NormalTok{  \}}
+
+  \ControlFlowTok{return}\NormalTok{(q)}
+\NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2775,11 +2781,6 @@ estimating the target probabilities in histogram bins.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{  \}}
-
-  \ControlFlowTok{return}\NormalTok{(q)}
-\NormalTok{\}}
-
 \CommentTok{\# Visualize pushforward distribution along a given expectand as a}
 \CommentTok{\# sequence of bin probabilities weighted by bin widths that approximates}
 \CommentTok{\# the pushforward probability density function.  Markov chain Monte}
@@ -2903,6 +2904,11 @@ estimating the target probabilities in histogram bins.
 \NormalTok{  \}}
 
   \CommentTok{\# Plot baseline if applicable}
+  \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\KeywordTok{is}\NormalTok{.null(baseline)) \{}
+\NormalTok{    abline(v}\OperatorTok{=}\NormalTok{baseline, col}\OperatorTok{=}\StringTok{"white"}\NormalTok{, lty}\OperatorTok{=}\DecValTok{1}\NormalTok{, lwd}\OperatorTok{=}\DecValTok{4}\NormalTok{)}
+\NormalTok{    abline(v}\OperatorTok{=}\NormalTok{baseline, col}\OperatorTok{=}\NormalTok{baseline\_col, lty}\OperatorTok{=}\DecValTok{1}\NormalTok{, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+\NormalTok{  \}}
+\NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
 

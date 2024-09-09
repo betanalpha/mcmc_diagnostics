@@ -2076,8 +2076,9 @@ name_array <- function(base, dims) {
   array(names, dims)
 }
 
-# Evaluate an expectand on the values of an arbitrary number of input
-# variables.  Expectand must return a single numeric or logical output.
+# Evaluate a list of expectands on the values of an arbitrary number of
+# input variables.  Expectands must all return a scalar numeric or
+# logical output.
 #
 # By default expectand argument values are accessed by name
 # in expectand_vals_list.  If a non-null alt_arg_names is provided then
@@ -2087,24 +2088,32 @@ name_array <- function(base, dims) {
 # first accessed then formatted into matching numeric arrays before
 # being passed to the expectand.
 #
-# @param expectand_vals_list A named list of two-dimensional arrays for
-#                            each expectand.  The first dimension of
-#                            each element indexes the Markov chains and
-#                            the second dimension indexes the sequential
-#                            states within each Markov chain.
-# @param expectand Expectand with arbitrary input space.
+# @param expectand_vals_list A named list of two-dimensional arrays.
+#                            The first dimension of each element indexes
+#                            the Markov chains and the second dimension
+#                            indexes the sequential states within each
+#                            Markov chain.
+# @param expectand_list List of functions with the same arguments.
 # @param alt_arg_names Optional named list of alternate names for the
 #                      nominal expectand argument names; when used all
 #                      expectand argument names must be included.
-eval_expectand_pushforward <- function(expectand_vals_list,
-                                       expectand,
-                                       alt_arg_names=NULL) {
+# @return A list of two-dimensional arrays, one for each element of
+#         expectand_list with the same names as expectand_list.
+eval_expectand_pushforwards <- function(expectand_vals_list,
+                                        expectand_list,
+                                        alt_arg_names=NULL) {
   # Validate inputs
   validate_named_list_of_arrays(expectand_vals_list,
                                 'expectand_vals_list')
 
-  if(!is.function(expectand)) {
-    stop('Input variable `expectand` is not a function.')
+  if (!is.list(expectand_list)) {
+    stop(paste0('Input variable `expectand_list` is not a list.'))
+  }
+
+
+  if (!Reduce("&", sapply(expectand_list, is.function))) {
+    stop(paste0('The elements of input variable `expectand_list` ',
+                'are not all functions.'))
   }
 
   if (!is.null(alt_arg_names)) {
@@ -2115,9 +2124,25 @@ eval_expectand_pushforward <- function(expectand_vals_list,
     }
   }
 
-  # Check existence of all expectand arguments
-  nominal_arg_names <- formalArgs(expectand)
+  # Check consistent of expectand arguments
+  nominal_arg_names <- formalArgs(expectand_list[[1]])
 
+  compare_args <- function(e) {
+    Reduce("&", formalArgs(e) == nominal_arg_names)
+  }
+  arg_consistency <- Reduce("&", sapply(expectand_list, compare_args))
+  if(!arg_consistency) {
+    stop(paste0('The arguments of the functions in `expectand_list` ',
+                'are not consistent with each other.'))
+  }
+
+  # Ensure that all argument replacements are arrays
+  alt_arg_names_array = list()
+  for (name in names(alt_arg_names)) {
+    alt_arg_names_array[[name]] <- as.array(alt_arg_names[[name]])
+  }
+
+  # Check existence of all expectand arguments
   if (is.null(alt_arg_names)) {
     check_arg_names <- nominal_arg_names
   } else {
@@ -2153,34 +2178,67 @@ eval_expectand_pushforward <- function(expectand_vals_list,
   # Apply expectand to all inputs
   C <- dim(expectand_vals_list[[1]])[1]
   S <- dim(expectand_vals_list[[1]])[2]
-  pushforward_vals <- matrix(NA, nrow=C, ncol=S)
+  pushforward_vals <- lapply(expectand_list,
+                             function(e) matrix(NA, nrow=C, ncol=S))
+
+  if (!is.null(alt_arg_names))
+    alt_names <- lapply(nominal_arg_names,
+                        function(name) alt_arg_names_array[[name]])
+  access_val <- function(name) {
+    expectand_vals_list[[name]][c, s]
+  }
 
   for (c in 1:C) {
     for (s in 1:S) {
-      access_val <- function(name) {
-        expectand_vals_list[[name]][c, s]
-      }
       if (is.null(alt_arg_names)) {
         arg_vals <- lapply(nominal_arg_names, access_val)
       } else {
-        arg_vals <- vector("list", length=length(nominal_arg_names))
+        arg_vals <- vector("list", length=length(alt_names))
         for (n in seq_along(arg_vals)) {
-          alt_name <- alt_arg_names[[nominal_arg_names[n]]]
-          dims <- dim(alt_name)
-          if (is.null(dims)) {
-            arg_vals[[n]] <- access_val(alt_name)
-          } else {
-            arg_vals[[n]] <- apply(alt_name,
-                                   1:length(dims),
-                                   access_val)
-          }
+          arg_vals[[n]] <- apply(alt_names[[n]],
+                                 seq_along(dim(alt_names[[n]])),
+                                 access_val)
         }
       }
-      pushforward_vals[c, s] <- as.numeric(do.call(expectand, arg_vals))
+      for (i in seq_along(pushforward_vals)) {
+        pushforward_vals[[i]][c, s] <-
+          as.numeric(do.call(expectand_list[[i]], arg_vals))
+      }
     }
   }
 
   return(pushforward_vals)
+}
+
+# Evaluate an expectand on the values of an arbitrary number of input
+# variables.  Expectand must return a scalar numeric or logical output.
+#
+# By default expectand argument values are accessed by name
+# in expectand_vals_list.  If a non-null alt_arg_names is provided then
+# the alternate names are used to access values in expectand_vals_list.
+# The elements of alt_arg_names can also be character arrays of
+# arbitrary dimension in which case the individual element values are
+# first accessed then formatted into matching numeric arrays before
+# being passed to the expectand.
+#
+# @param expectand_vals_list A named list of two-dimensional arrays.
+#                            The first dimension of each element indexes
+#                            the Markov chains and the second dimension
+#                            indexes the sequential states within each
+#                            Markov chain.
+# @param expectand Function with arbitrary number of scalar and array
+#                  input arguments.
+# @param alt_arg_names Optional named list of alternate names for the
+#                      nominal expectand argument names; when used all
+#                      expectand argument names must be included.
+# @return A two-dimensional array.
+eval_expectand_pushforward <- function(expectand_vals_list,
+                                       expectand,
+                                       alt_arg_names=NULL) {
+  pushforward_vals <- eval_expectand_pushforwards(expectand_vals_list,
+                                                  list(expectand),
+                                                  alt_arg_names)
+  pushforward_vals[[1]]
 }
 
 # Estimate expectand expectation value from a single Markov chain.
@@ -2245,6 +2303,48 @@ ensemble_mcmc_est <- function(expectand_vals) {
   var <- sum(vars) / total_ess
   
   c(mean, sqrt(var / total_ess), total_ess)
+}
+
+
+# Estimate the probability allocated to a subset implicitly defined by
+# an indicator function.
+# @param expectand_vals_list A named list of two-dimensional arrays.
+#                            The first dimension of each element indexes
+#                            the Markov chains and the second dimension
+#                            indexes the sequential states within each
+#                            Markov chain.
+# @param indicator Function with logical or 0/1 numeric outputs.
+# @param alt_arg_names Optional named list of alternate names for the
+#                      nominal expectand argument names; when used all
+#                      expectand argument names must be included.
+# @return The probability estimate and its standard error.
+implicit_subset_prob <- function(expectand_vals_list,
+                                 indicator,
+                                 alt_arg_names) {
+  # Evaluate indicator function
+  indicator_samples <- eval_expectand_pushforward(expectand_vals_list,
+                                                  indicator,
+                                                  alt_arg_names)
+
+  # Verify outputs
+  unique_vals <- unique(c(indicator_samples, recursive=TRUE))
+
+  valid_outputs = TRUE
+  if (length(unique_vals) == 1) {
+    if (!(unique_vals == 0 | unique_vals == 1))
+      valid_outputs = FALSE
+  } else if (length(unique_vals) == 2) {
+    if (!Reduce("&", unique_vals == c(0, 1)))
+      valid_outputs = FALSE
+  } else {
+    valid_outputs = FALSE
+  }
+  if(!valid_outputs)
+    stop(paste0('The function `indicator` must return only ',
+                'logical or 0/1 numeric outputs.'))
+
+  # Return probability as expectation value of indicator function
+  ensemble_mcmc_est(indicator_samples)[1:2]
 }
 
 # Estimate expectand pushforward quantiles from a Markov chain ensemble.

@@ -2345,7 +2345,8 @@ value estimates and their standard errors.
 
 When interested in expectands that have not already been computed we
 will need to evaluate the existing samples on these new functions,
-generating pushforward samples.
+generating pushforward samples. This is particularly straightforward for
+functions with a single input variable.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2367,27 +2368,8 @@ generating pushforward samples.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Create a nested list of element names, including indexing information,}
-\CommentTok{\# from the specified dimensions.  For example \textasciigrave{}name\_array(\textquotesingle{}x\textquotesingle{}, [2, 3]))\textasciigrave{}}
-\CommentTok{\# returns the nested list}
-\CommentTok{\# \textgreater{}\textgreater{} [[\textquotesingle{}x[1,1]\textquotesingle{}, \textquotesingle{}x[1,2]\textquotesingle{}, \textquotesingle{}x[1,3]\textquotesingle{}],}
-\CommentTok{\# \textgreater{}\textgreater{}  [\textquotesingle{}x[2,1]\textquotesingle{}, \textquotesingle{}x[2,2]\textquotesingle{}, \textquotesingle{}x[2,3]\textquotesingle{}]]}
-\CommentTok{\# @ param base Base name.}
-\CommentTok{\# @ param dims List of array dimensions.}
-\CommentTok{\# @ param current\_idxs Dimensions at current level of recursion.}
-\CommentTok{\# @ return Array of element names with dimensions given by dims.}
-\KeywordTok{def}\NormalTok{ name\_nested\_list(base, dims, current\_idxs}\OperatorTok{=}\NormalTok{[]):}
-\NormalTok{  next\_dim }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(current\_idxs)}
-  \ControlFlowTok{if}\NormalTok{ next\_dim }\OperatorTok{==} \BuiltInTok{len}\NormalTok{(dims):}
-\NormalTok{    str\_idxs }\OperatorTok{=} \StringTok{\textquotesingle{},\textquotesingle{}}\NormalTok{.join([ }\BuiltInTok{str}\NormalTok{(idx }\OperatorTok{+} \DecValTok{1}\NormalTok{) }\ControlFlowTok{for}\NormalTok{ idx }\KeywordTok{in}\NormalTok{ current\_idxs ])}
-    \ControlFlowTok{return} \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{base}\SpecialCharTok{\}}\SpecialStringTok{[}\SpecialCharTok{\{}\NormalTok{str\_idxs}\SpecialCharTok{\}}\SpecialStringTok{]\textquotesingle{}}
-  \ControlFlowTok{else}\NormalTok{:}
-    \ControlFlowTok{return}\NormalTok{ [ name\_nested\_list(base, dims, current\_idxs }\OperatorTok{+}\NormalTok{ [d])}
-             \ControlFlowTok{for}\NormalTok{ d }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(dims[next\_dim]) ]}
-\end{Highlighting}
-\end{Shaded}
+Pushing samples forward along more complicated functions is a bit
+trickier to implement.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2417,38 +2399,44 @@ generating pushforward samples.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
-\CommentTok{\# variables.  Expectand must return a single float, int, or logical}
-\CommentTok{\# output.}
+\CommentTok{\# Evaluate a dictionary of expectands on the values of an arbitrary}
+\CommentTok{\# number of input variables.  Expectands must all return a float,}
+\CommentTok{\# integer, or logical output.}
 \CommentTok{\#}
 \CommentTok{\# By default expectand argument values are accessed by name}
 \CommentTok{\# in expectand\_vals\_dict.  If a non{-}null alt\_arg\_names is provided then}
 \CommentTok{\# the alternate names are used to access values in expectand\_vals\_dict.}
-\CommentTok{\# The elements of alt\_arg\_names can also be string arrays of arbitrary}
+\CommentTok{\# The elements of alt\_arg\_names can also be numpy arrays of arbitrary}
 \CommentTok{\# dimension in which case the individual element values are first}
-\CommentTok{\# accessed then formatted into matching numeric arrays before being}
+\CommentTok{\# accessed then formatted into matching numpy arrays before being}
 \CommentTok{\# passed to the expectand.}
 \CommentTok{\#}
-\CommentTok{\# @param expectand\_vals\_dict A dictionary of two{-}dimensional arrays for}
-\CommentTok{\#                            each expectand.  The first dimension of}
-\CommentTok{\#                            each element indexes the Markov chains and}
-\CommentTok{\#                            the second dimension indexes the sequential}
-\CommentTok{\#                            states within each Markov chain.}
-\CommentTok{\# @param expectand Expectand with arbitrary input space.}
-\CommentTok{\# @param alt\_arg\_names Optional named list of alternate names for the}
+\CommentTok{\# @param expectand\_vals\_dict A dictionary of two{-}dimensional arrays.}
+\CommentTok{\#                            The first dimension of each element indexes}
+\CommentTok{\#                            the Markov chains and the second dimension}
+\CommentTok{\#                            indexes the sequential states within each}
+\CommentTok{\#                            Markov chain.}
+\CommentTok{\# @param expectand\_dict List of functions with the same arguments.}
+\CommentTok{\# @param alt\_arg\_names Optional dictionary of alternate names for the}
 \CommentTok{\#                      nominal expectand argument names; when used all}
 \CommentTok{\#                      expectand argument names must be included.}
-\KeywordTok{def}\NormalTok{ eval\_expectand\_pushforward(expectand\_vals\_dict,}
-\NormalTok{                               expectand,}
-\NormalTok{                               alt\_arg\_names}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
-  \CommentTok{"""Evaluate an expectand on the values of an arbitrary number}
-\CommentTok{     of input variables."""}
+\CommentTok{\# @return A list of two{-}dimensional arrays, one for each element of}
+\CommentTok{\#         expectand\_list with the same keys as expectand\_dict.}
+\KeywordTok{def}\NormalTok{ eval\_expectand\_pushforwards(expectand\_vals\_dict,}
+\NormalTok{                                expectand\_dict,}
+\NormalTok{                                alt\_arg\_names}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+  \CommentTok{"""Evaluate a collection of expectands on the values of an arbitrary}
+\CommentTok{     number of input variables."""}
   \CommentTok{\# Validate inputs}
 \NormalTok{  validate\_dict\_of\_arrays(expectand\_vals\_dict, }\StringTok{\textquotesingle{}expectand\_vals\_dict\textquotesingle{}}\NormalTok{)}
 
-  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{callable}\NormalTok{(expectand):}
-    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\textasciigrave{} is not a \textquotesingle{}}
-                    \StringTok{\textquotesingle{}callable function.\textquotesingle{}}\NormalTok{)}
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(expectand\_dict, }\BuiltInTok{dict}\NormalTok{):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}Input variable \textasciigrave{}expectand\_dict\textasciigrave{} is \textquotesingle{}}
+                    \StringTok{\textquotesingle{}not a dictionary.\textquotesingle{}}\NormalTok{)}
+
+  \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{all}\NormalTok{([ }\BuiltInTok{callable}\NormalTok{(v) }\ControlFlowTok{for}\NormalTok{ k, v }\KeywordTok{in}\NormalTok{ expectand\_dict.items() ]):}
+    \ControlFlowTok{raise} \PreprocessorTok{TypeError}\NormalTok{(}\StringTok{\textquotesingle{}The elements of input variable \textasciigrave{}expectand\_dict\textasciigrave{} \textquotesingle{}}
+                    \StringTok{\textquotesingle{}are not all functions.\textquotesingle{}}\NormalTok{)}
 
   \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
     \ControlFlowTok{if} \KeywordTok{not} \BuiltInTok{isinstance}\NormalTok{(alt\_arg\_names, }\BuiltInTok{dict}\NormalTok{):}
@@ -2456,9 +2444,29 @@ generating pushforward samples.
                       \StringTok{\textquotesingle{}is not a dictionary.\textquotesingle{}}\NormalTok{)}
 
   \CommentTok{\# Check existence of all expectand arguments}
-\NormalTok{  spec }\OperatorTok{=}\NormalTok{ inspect.getfullargspec(expectand)}
-\NormalTok{  nominal\_arg\_names }\OperatorTok{=}\NormalTok{ spec.args}
+  \KeywordTok{def}\NormalTok{ compare\_args(e):}
+    \ControlFlowTok{return}\NormalTok{ (   }\BuiltInTok{set}\NormalTok{(inspect.getfullargspec(e).args)}
+            \OperatorTok{==} \BuiltInTok{set}\NormalTok{(nominal\_arg\_names)              )}
 
+\NormalTok{  nominal\_arg\_names }\OperatorTok{=}\NormalTok{ []}
+\NormalTok{  arg\_consistency }\OperatorTok{=} \VariableTok{True}
+  \ControlFlowTok{for}\NormalTok{ e }\KeywordTok{in}\NormalTok{ expectand\_dict.values():}
+    \ControlFlowTok{if} \KeywordTok{not}\NormalTok{ nominal\_arg\_names:}
+\NormalTok{      nominal\_arg\_names }\OperatorTok{=}\NormalTok{ inspect.getfullargspec(e).args}
+    \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{      arg\_consistency }\OperatorTok{\&=}\NormalTok{ compare\_args(e)}
+
+  \ControlFlowTok{if} \KeywordTok{not}\NormalTok{ arg\_consistency:}
+    \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{(}\StringTok{\textquotesingle{}The arguments of the functions in \textquotesingle{}}
+                     \StringTok{\textquotesingle{}\textasciigrave{}expectand\_list\textasciigrave{} are not consistent \textquotesingle{}}
+                     \StringTok{\textquotesingle{}with each other.\textquotesingle{}}\NormalTok{)}
+
+  \CommentTok{\# Ensure that all argument replacements are arrays}
+  \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
+\NormalTok{    alt\_arg\_names\_array }\OperatorTok{=}\NormalTok{ \{ k: numpy.array(v)}
+                            \ControlFlowTok{for}\NormalTok{ k, v }\KeywordTok{in}\NormalTok{ alt\_arg\_names.items() \}}
+
+  \CommentTok{\# Check existence of all expectand arguments}
   \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
 \NormalTok{    check\_arg\_names }\OperatorTok{=}\NormalTok{ nominal\_arg\_names}
   \ControlFlowTok{else}\NormalTok{:}
@@ -2496,24 +2504,64 @@ generating pushforward samples.
 \NormalTok{  C }\OperatorTok{=} \BuiltInTok{next}\NormalTok{(}\BuiltInTok{iter}\NormalTok{(expectand\_vals\_dict.values())).shape[}\DecValTok{0}\NormalTok{]}
 \NormalTok{  S }\OperatorTok{=} \BuiltInTok{next}\NormalTok{(}\BuiltInTok{iter}\NormalTok{(expectand\_vals\_dict.values())).shape[}\DecValTok{1}\NormalTok{]}
 
-\NormalTok{  pushforward\_vals }\OperatorTok{=}\NormalTok{ numpy.zeros([C, S])}
+\NormalTok{  pushforward\_vals }\OperatorTok{=}\NormalTok{ \{ k: numpy.zeros([C, S])}
+                       \ControlFlowTok{for}\NormalTok{ k }\KeywordTok{in}\NormalTok{ expectand\_dict.keys() \}}
+
+  \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
+\NormalTok{    alt\_names }\OperatorTok{=}\NormalTok{ [ alt\_arg\_names[name]}
+                  \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ nominal\_arg\_names ]}
+
+  \KeywordTok{def}\NormalTok{ access\_val(name):}
+    \ControlFlowTok{return}\NormalTok{ expectand\_vals\_dict[name][c, s]}
+
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
     \ControlFlowTok{for}\NormalTok{ s }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(S):}
-      \KeywordTok{def}\NormalTok{ access\_val(name):}
-        \ControlFlowTok{return}\NormalTok{ expectand\_vals\_dict[name][c, s]}
-
       \ControlFlowTok{if}\NormalTok{ alt\_arg\_names }\KeywordTok{is} \VariableTok{None}\NormalTok{:}
 \NormalTok{        arg\_vals }\OperatorTok{=}\NormalTok{ [ access\_val(name)}
                      \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ nominal\_arg\_names ]}
       \ControlFlowTok{else}\NormalTok{:}
-\NormalTok{        arg\_vals }\OperatorTok{=}\NormalTok{ [ numpy.vectorize(access\_val)(alt\_arg\_names[name])}
-                     \ControlFlowTok{if} \BuiltInTok{isinstance}\NormalTok{(alt\_arg\_names[name], numpy.ndarray)}
-                     \ControlFlowTok{else}\NormalTok{ access\_val(alt\_arg\_names[name])}
-                     \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ nominal\_arg\_names ]}
+\NormalTok{        arg\_vals }\OperatorTok{=}\NormalTok{ [ numpy.vectorize(access\_val)(name)}
+                     \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ alt\_names ]}
 
-\NormalTok{      pushforward\_vals[c, s] }\OperatorTok{=}\NormalTok{ expectand(}\OperatorTok{*}\NormalTok{arg\_vals)}
+      \ControlFlowTok{for}\NormalTok{ n, e }\KeywordTok{in}\NormalTok{ expectand\_dict.items():}
+\NormalTok{        pushforward\_vals[n][c, s] }\OperatorTok{=}\NormalTok{ e(}\OperatorTok{*}\NormalTok{arg\_vals)}
 
   \ControlFlowTok{return}\NormalTok{ pushforward\_vals}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
+\CommentTok{\# variables.  Expectands must all return a float, integer, or logical}
+\CommentTok{\# output.}
+\CommentTok{\#}
+\CommentTok{\# By default expectand argument values are accessed by name}
+\CommentTok{\# in expectand\_vals\_dict.  If a non{-}null alt\_arg\_names is provided then}
+\CommentTok{\# the alternate names are used to access values in expectand\_vals\_dict.}
+\CommentTok{\# The elements of alt\_arg\_names can also be numpy arrays of arbitrary}
+\CommentTok{\# dimension in which case the individual element values are first}
+\CommentTok{\# accessed then formatted into matching numpy arrays before being}
+\CommentTok{\# passed to the expectand.}
+\CommentTok{\#}
+\CommentTok{\# @param expectand\_vals\_dict A dictionary of two{-}dimensional arrays.}
+\CommentTok{\#                            The first dimension of each element indexes}
+\CommentTok{\#                            the Markov chains and the second dimension}
+\CommentTok{\#                            indexes the sequential states within each}
+\CommentTok{\#                            Markov chain.}
+\CommentTok{\# @param expectand Functions with arbitrary number of scalar and array}
+\CommentTok{\#                  input arguments.}
+\CommentTok{\# @param alt\_arg\_names Optional dictionary of alternate names for the}
+\CommentTok{\#                      nominal expectand argument names; when used all}
+\CommentTok{\#                      expectand argument names must be included.}
+\CommentTok{\# @return A two{-}dimensional array.}
+\KeywordTok{def}\NormalTok{ eval\_expectand\_pushforward(expectand\_vals\_dict,}
+\NormalTok{                               expectand,}
+\NormalTok{                               alt\_arg\_names}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+\NormalTok{  pushforward\_vals }\OperatorTok{=}\NormalTok{ eval\_expectand\_pushforwards(expectand\_vals\_dict,}
+\NormalTok{                                                 \{ }\StringTok{\textquotesingle{}e\textquotesingle{}}\NormalTok{: expectand \},}
+\NormalTok{                                                 alt\_arg\_names)}
+  \ControlFlowTok{return}\NormalTok{ pushforward\_vals[}\StringTok{\textquotesingle{}e\textquotesingle{}}\NormalTok{]}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2588,6 +2636,50 @@ ensemble of Markov chains.
 \NormalTok{  var }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{(}\BuiltInTok{vars}\NormalTok{) }\OperatorTok{/}\NormalTok{ total\_ess}
 
   \ControlFlowTok{return}\NormalTok{ [mean, math.sqrt(var }\OperatorTok{/}\NormalTok{ total\_ess), total\_ess]}
+\end{Highlighting}
+\end{Shaded}
+
+A particularly common probabilistic calculation is estimating the
+probability allocated to subsets that are defined only implicitly by an
+indicator function. In practice we can estimate this probability by
+pushing samples forward along the indicator function and then
+constructing the Markov chain Monte Carlo expectation value estimator.
+These two steps occur together so often that it's helpful to wrap them
+into a dedicated function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Estimate the probability allocated to a subset implicitly defined by}
+\CommentTok{\# an indicator function.}
+\CommentTok{\# @param expectand\_vals\_dict A dictionary of two{-}dimensional arrays.}
+\CommentTok{\#                            The first dimension of each element indexes}
+\CommentTok{\#                            the Markov chains and the second dimension}
+\CommentTok{\#                            indexes the sequential states within each}
+\CommentTok{\#                            Markov chain.}
+\CommentTok{\# @param indicator Function with logical or 0/1 numeric outputs.}
+\CommentTok{\# @param alt\_arg\_names Optional dictionary of alternate names for the}
+\CommentTok{\#                      nominal expectand argument names; when used all}
+\CommentTok{\#                      expectand argument names must be included.}
+\CommentTok{\# @return The probability estimate and its standard error.}
+\KeywordTok{def}\NormalTok{ implicit\_subset\_prob(expectand\_vals\_dict,}
+\NormalTok{                         indicator,}
+\NormalTok{                         alt\_arg\_names):}
+  \CommentTok{\# Evaluate indicator function}
+\NormalTok{  indicator\_samples }\OperatorTok{=}\NormalTok{ eval\_expectand\_pushforward(expectand\_vals\_dict,}
+\NormalTok{                                                 indicator,}
+\NormalTok{                                                 alt\_arg\_names)}
+
+  \CommentTok{\# Verify outputs}
+\NormalTok{  unique\_vals }\OperatorTok{=} \BuiltInTok{set}\NormalTok{(indicator\_samples.flatten())}
+
+  \ControlFlowTok{if} \KeywordTok{not}\NormalTok{ (  unique\_vals }\OperatorTok{==} \BuiltInTok{set}\NormalTok{([}\DecValTok{0}\NormalTok{])}
+          \OperatorTok{|}\NormalTok{ unique\_vals }\OperatorTok{==} \BuiltInTok{set}\NormalTok{([}\DecValTok{1}\NormalTok{])}
+          \OperatorTok{|}\NormalTok{ unique\_vals }\OperatorTok{==} \BuiltInTok{set}\NormalTok{([}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{])):}
+    \ControlFlowTok{raise} \PreprocessorTok{ValueError}\NormalTok{(}\StringTok{\textquotesingle{}The function \textasciigrave{}indicator\textasciigrave{} must return only \textquotesingle{}}
+                     \StringTok{\textquotesingle{}logical or 0/1 numeric outputs.\textquotesingle{}}\NormalTok{)}
+
+  \CommentTok{\# Return probability as expectation value of indicator function}
+  \ControlFlowTok{return}\NormalTok{ ensemble\_mcmc\_est(indicator\_samples)[}\DecValTok{0}\NormalTok{:}\DecValTok{2}\NormalTok{]}
 \end{Highlighting}
 \end{Shaded}
 
@@ -3933,6 +4025,24 @@ other expectands that have not already been evaluated in the
 
 \includegraphics{pystan2_demo_files/figure-pdf/cell-24-output-1.pdf}
 
+Calculating the probability allocated to implicitly-defined subsets
+proceeds similarly.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pi\_est }\OperatorTok{=}\NormalTok{ util.implicit\_subset\_prob(samples,}
+                                   \KeywordTok{lambda}\NormalTok{ x: x }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{,}
+\NormalTok{                                   \{}\StringTok{\textquotesingle{}x\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}beta[2]\textquotesingle{}}\NormalTok{\})}
+
+\BuiltInTok{print}\NormalTok{( }\StringTok{\textquotesingle{}Posterior probability that beta[2] is greater than zero \textquotesingle{}}
+      \SpecialStringTok{f\textquotesingle{}= }\SpecialCharTok{\{}\NormalTok{pi\_est[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{:.2\}}\SpecialStringTok{ +/{-} }\SpecialCharTok{\{}\DecValTok{2} \OperatorTok{*}\NormalTok{ pi\_est[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{:.2\}}\SpecialStringTok{.\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+Posterior probability that beta[2] is greater than zero = 0.053 +/- 0.021.
+\end{verbatim}
+
 \section*{License}\label{license}
 \addcontentsline{toc}{section}{License}
 
@@ -3958,7 +4068,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-08T12:52:08.452363-04:00
+Last updated: 2024-09-10T16:45:30.064890-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

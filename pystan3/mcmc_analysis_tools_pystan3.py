@@ -2031,7 +2031,9 @@ def eval_uni_expectand_pushforward(input_vals, expectand):
 # @ param dims List of array dimensions.
 # @ param current_idxs Dimensions at current level of recursion.
 # @ return Array of element names with dimensions given by dims.
-def name_nested_list(base, dims, current_idxs=[]):
+def name_nested_list(base, dims, current_idxs=None):
+  if current_idxs is None:
+    current_idxs = []
   next_dim = len(current_idxs)
   if next_dim == len(dims):
     str_idxs = ','.join([ str(idx + 1) for idx in current_idxs ])
@@ -2062,38 +2064,44 @@ def name_array(base, dims):
   # Create element names and format them into desired array.
   return numpy.array(name_nested_list(base, dims))
 
-# Evaluate an expectand on the values of an arbitrary number of input
-# variables.  Expectand must return a single float, int, or logical
-# output.
+# Evaluate a dictionary of expectands on the values of an arbitrary
+# number of input variables.  Expectands must all return a float,
+# integer, or logical output.
 #
 # By default expectand argument values are accessed by name
 # in expectand_vals_dict.  If a non-null alt_arg_names is provided then
 # the alternate names are used to access values in expectand_vals_dict.
-# The elements of alt_arg_names can also be string arrays of arbitrary
+# The elements of alt_arg_names can also be numpy arrays of arbitrary
 # dimension in which case the individual element values are first
-# accessed then formatted into matching numeric arrays before being
+# accessed then formatted into matching numpy arrays before being
 # passed to the expectand.
 #
-# @param expectand_vals_dict A dictionary of two-dimensional arrays for
-#                            each expectand.  The first dimension of
-#                            each element indexes the Markov chains and
-#                            the second dimension indexes the sequential
-#                            states within each Markov chain.
-# @param expectand Expectand with arbitrary input space.
-# @param alt_arg_names Optional named list of alternate names for the
+# @param expectand_vals_dict A dictionary of two-dimensional arrays.
+#                            The first dimension of each element indexes
+#                            the Markov chains and the second dimension
+#                            indexes the sequential states within each
+#                            Markov chain.
+# @param expectand_dict List of functions with the same arguments.
+# @param alt_arg_names Optional dictionary of alternate names for the
 #                      nominal expectand argument names; when used all
 #                      expectand argument names must be included.
-def eval_expectand_pushforward(expectand_vals_dict,
-                               expectand,
-                               alt_arg_names=None):
-  """Evaluate an expectand on the values of an arbitrary number
-     of input variables."""
+# @return A list of two-dimensional arrays, one for each element of
+#         expectand_list with the same keys as expectand_dict.
+def eval_expectand_pushforwards(expectand_vals_dict,
+                                expectand_dict,
+                                alt_arg_names=None):
+  """Evaluate a collection of expectands on the values of an arbitrary
+     number of input variables."""
   # Validate inputs
   validate_dict_of_arrays(expectand_vals_dict, 'expectand_vals_dict')
 
-  if not callable(expectand):
-    raise TypeError('Input variable `expectand` is not a '
-                    'callable function.')
+  if not isinstance(expectand_dict, dict):
+    raise TypeError('Input variable `expectand_dict` is '
+                    'not a dictionary.')
+
+  if not all([ callable(v) for k, v in expectand_dict.items() ]):
+    raise TypeError('The elements of input variable `expectand_dict` '
+                    'are not all functions.')
 
   if alt_arg_names is not None:
     if not isinstance(alt_arg_names, dict):
@@ -2101,9 +2109,29 @@ def eval_expectand_pushforward(expectand_vals_dict,
                       'is not a dictionary.')
 
   # Check existence of all expectand arguments
-  spec = inspect.getfullargspec(expectand)
-  nominal_arg_names = spec.args
+  def compare_args(e):
+    return (   set(inspect.getfullargspec(e).args)
+            == set(nominal_arg_names)              )
 
+  nominal_arg_names = []
+  arg_consistency = True
+  for e in expectand_dict.values():
+    if not nominal_arg_names:
+      nominal_arg_names = inspect.getfullargspec(e).args
+    else:
+      arg_consistency &= compare_args(e)
+
+  if not arg_consistency:
+    raise ValueError('The arguments of the functions in '
+                     '`expectand_list` are not consistent '
+                     'with each other.')
+
+  # Ensure that all argument replacements are arrays
+  if alt_arg_names is not None:
+    alt_arg_names_array = { k: numpy.array(v)
+                            for k, v in alt_arg_names.items() }
+
+  # Check existence of all expectand arguments
   if alt_arg_names is None:
     check_arg_names = nominal_arg_names
   else:
@@ -2141,24 +2169,60 @@ def eval_expectand_pushforward(expectand_vals_dict,
   C = next(iter(expectand_vals_dict.values())).shape[0]
   S = next(iter(expectand_vals_dict.values())).shape[1]
 
-  pushforward_vals = numpy.zeros([C, S])
+  pushforward_vals = { k: numpy.zeros([C, S])
+                       for k in expectand_dict.keys() }
+
+  if alt_arg_names is not None:
+    alt_names = [ alt_arg_names[name]
+                  for name in nominal_arg_names ]
+
+  def access_val(name):
+    return expectand_vals_dict[name][c, s]
+
   for c in range(C):
     for s in range(S):
-      def access_val(name):
-        return expectand_vals_dict[name][c, s]
-
       if alt_arg_names is None:
         arg_vals = [ access_val(name)
                      for name in nominal_arg_names ]
       else:
-        arg_vals = [ numpy.vectorize(access_val)(alt_arg_names[name])
-                     if isinstance(alt_arg_names[name], numpy.ndarray)
-                     else access_val(alt_arg_names[name])
-                     for name in nominal_arg_names ]
+        arg_vals = [ numpy.vectorize(access_val)(name)
+                     for name in alt_names ]
 
-      pushforward_vals[c, s] = expectand(*arg_vals)
+      for n, e in expectand_dict.items():
+        pushforward_vals[n][c, s] = e(*arg_vals)
 
   return pushforward_vals
+
+# Evaluate an expectand on the values of an arbitrary number of input
+# variables.  Expectands must all return a float, integer, or logical
+# output.
+#
+# By default expectand argument values are accessed by name
+# in expectand_vals_dict.  If a non-null alt_arg_names is provided then
+# the alternate names are used to access values in expectand_vals_dict.
+# The elements of alt_arg_names can also be numpy arrays of arbitrary
+# dimension in which case the individual element values are first
+# accessed then formatted into matching numpy arrays before being
+# passed to the expectand.
+#
+# @param expectand_vals_dict A dictionary of two-dimensional arrays.
+#                            The first dimension of each element indexes
+#                            the Markov chains and the second dimension
+#                            indexes the sequential states within each
+#                            Markov chain.
+# @param expectand Functions with arbitrary number of scalar and array
+#                  input arguments.
+# @param alt_arg_names Optional dictionary of alternate names for the
+#                      nominal expectand argument names; when used all
+#                      expectand argument names must be included.
+# @return A two-dimensional array.
+def eval_expectand_pushforward(expectand_vals_dict,
+                               expectand,
+                               alt_arg_names=None):
+  pushforward_vals = eval_expectand_pushforwards(expectand_vals_dict,
+                                                 { 'e': expectand },
+                                                 alt_arg_names)
+  return pushforward_vals['e']
 
 # Estimate expectand expectation value from a single Markov chain.
 # @param vals A one-dimensional array of sequential expectand values.
@@ -2219,6 +2283,38 @@ def ensemble_mcmc_est(expectand_vals):
   var = sum(vars) / total_ess
 
   return [mean, math.sqrt(var / total_ess), total_ess]
+
+# Estimate the probability allocated to a subset implicitly defined by
+# an indicator function.
+# @param expectand_vals_dict A dictionary of two-dimensional arrays.
+#                            The first dimension of each element indexes
+#                            the Markov chains and the second dimension
+#                            indexes the sequential states within each
+#                            Markov chain.
+# @param indicator Function with logical or 0/1 numeric outputs.
+# @param alt_arg_names Optional dictionary of alternate names for the
+#                      nominal expectand argument names; when used all
+#                      expectand argument names must be included.
+# @return The probability estimate and its standard error.
+def implicit_subset_prob(expectand_vals_dict,
+                         indicator,
+                         alt_arg_names):
+  # Evaluate indicator function
+  indicator_samples = eval_expectand_pushforward(expectand_vals_dict,
+                                                 indicator,
+                                                 alt_arg_names)
+
+  # Verify outputs
+  unique_vals = set(indicator_samples.flatten())
+
+  if not (  unique_vals == set([0])
+          | unique_vals == set([1])
+          | unique_vals == set([0, 1])):
+    raise ValueError('The function `indicator` must return only '
+                     'logical or 0/1 numeric outputs.')
+
+  # Return probability as expectation value of indicator function
+  return ensemble_mcmc_est(indicator_samples)[0:2]
 
 # Estimate expectand pushforward quantiles from a Markov chain ensemble.
 # @param expectand_vals A two-dimensional array of expectand values with

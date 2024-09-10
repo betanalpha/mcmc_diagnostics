@@ -400,13 +400,17 @@ their standard errors.
 
 When interested in expectands that have not already been computed we will
 need to evaluate the existing samples on these new functions, generating
-pushforward samples.
+pushforward samples.  This is particularly straightforward for functions
+with a single input variable.
 
 {{< include _includes/eval_uni_expectand_pushforward.qmd >}}
 
-{{< include _includes/name_nested_list.qmd >}}
+Pushing samples forward along more complicated functions is a bit trickier
+to implement.
 
 {{< include _includes/name_array.qmd >}}
+
+{{< include _includes/eval_expectand_pushforwards.qmd >}}
 
 {{< include _includes/eval_expectand_pushforward.qmd >}}
 
@@ -420,6 +424,15 @@ single Markov chain or an entire ensemble of Markov chains.
 
 {{< include _includes/ensemble_mcmc_est.qmd >}}
 
+A particularly common probabilistic calculation is estimating the
+probability allocated to subsets that are defined only implicitly by an
+indicator function.  In practice we can estimate this probability by
+pushing samples forward along the indicator function and then constructing
+the Markov chain Monte Carlo expectation value estimator.  These two steps
+occur together so often that it's helpful to wrap them into a dedicated
+function.
+
+{{< include _includes/implicit_subset_prob.qmd >}}
 
 We can also use realized Markov chains to estimate quantiles of the pushforward
 distribution along an expectand.  Within a single Markov chain ordering the
@@ -823,6 +836,18 @@ pushforward_samples = \
 util.plot_expectand_pushforward(plot.gca(), pushforward_samples, 10,
                                 display_name="Slope Vector Length")
 plot.show()
+```
+
+Calculating the probability allocated to implicitly-defined subsets
+proceeds similarly.
+
+```{python}
+pi_est = util.implicit_subset_prob(samples,
+                                   lambda x: x > 0,
+                                   {'x': 'beta[2]'})
+
+print( 'Posterior probability that beta[2] is greater than zero '
+      f'= {pi_est[0]:.2} +/- {2 * pi_est[1]:.2}.')
 ```
 
 # License {-}

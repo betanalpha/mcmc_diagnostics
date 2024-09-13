@@ -4262,8 +4262,8 @@ m &lt; \frac{1}{\xi}.
 <span id="cb21-1176"><a href="#cb21-1176" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-1177"><a href="#cb21-1177" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> c <span class="kw">in</span> <span class="bu">range</span>(C):</span>
 <span id="cb21-1178"><a href="#cb21-1178" aria-hidden="true" tabindex="-1"></a>    tau_hat <span class="op">=</span> compute_tau_hat(expectand_vals[c,:])</span>
-<span id="cb21-1179"><a href="#cb21-1179" aria-hidden="true" tabindex="-1"></a>    inc_tau_hat_per <span class="op">=</span> tau_hat <span class="op">/</span> S</span>
-<span id="cb21-1180"><a href="#cb21-1180" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tau_hat_per <span class="op">&gt;</span> <span class="dv">5</span>:</span>
+<span id="cb21-1179"><a href="#cb21-1179" aria-hidden="true" tabindex="-1"></a>    inc_tau_hat <span class="op">=</span> tau_hat <span class="op">/</span> S</span>
+<span id="cb21-1180"><a href="#cb21-1180" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> inc_tau_hat <span class="op">&gt;</span> <span class="dv">5</span>:</span>
 <span id="cb21-1181"><a href="#cb21-1181" aria-hidden="true" tabindex="-1"></a>      <span class="bu">print</span>(<span class="ss">f&#39;Chain </span><span class="sc">{</span>c <span class="op">+</span> <span class="dv">1</span><span class="sc">}</span><span class="ss">: The incremental empirical integrated &#39;</span></span>
 <span id="cb21-1182"><a href="#cb21-1182" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f&#39;autocorrelation time </span><span class="sc">{</span>inc_tau_hat <span class="sc">:.3f}</span><span class="ss"> is too large.&#39;</span>)</span>
 <span id="cb21-1183"><a href="#cb21-1183" aria-hidden="true" tabindex="-1"></a>      no_warning <span class="op">=</span> <span class="va">False</span></span>
@@ -5405,7 +5405,7 @@ p
 <h1 data-number="5"><span class="header-section-number">5</span> Demonstration</h1>
 <p>Now let’s put all of these analysis tools to use with an <code>PyStan</code> fit object.</p>
 <p>First we setup our local <code>Python</code> environment.</p>
-<div id="fafcb663" class="cell" data-execution_count="1">
+<div id="8d57f512" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plot</span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>plot.show()</span>
@@ -5430,7 +5430,7 @@ p
 <span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> stan</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next we source all of these diagnostics into a local namespace to avoid any conflicts with other functions.</p>
-<div id="593a64b1" class="cell" data-execution_count="2">
+<div id="47656c1c" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> mcmc_analysis_tools_pystan3 <span class="im">as</span> util</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Then we can simulate some binary data from a logistic regression model.</p>
@@ -5470,7 +5470,7 @@ p
 <span id="cb41-30"><a href="#cb41-30" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb41-31"><a href="#cb41-31" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="82ea6464" class="cell" data-message="false" data-execution_count="3">
+<div id="b5b3b865" class="cell" data-message="false" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">&#39;stan_programs/simu_logistic_reg.stan&#39;</span>, <span class="st">&#39;r&#39;</span>) <span class="im">as</span> <span class="bu">file</span>:</span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  stan_program <span class="op">=</span> <span class="bu">file</span>.read()</span>
 <span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> stan.build(stan_program, random_seed<span class="op">=</span><span class="dv">4838282</span>)</span>
@@ -5535,7 +5535,7 @@ p
 <span id="cb44-36"><a href="#cb44-36" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Because of this awkward constraint we have to carefully initialize our Markov chains to satisfy the <code>alpha + deltaX * beta &gt; 0</code> constraint.</p>
-<div id="e34a32be" class="cell" data-execution_count="4">
+<div id="6fc2d82e" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>numpy.random.seed(seed<span class="op">=</span><span class="dv">48383499</span>)</span>
 <span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -5546,7 +5546,7 @@ p
 <span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>  alpha <span class="op">=</span> stats.norm.rvs(<span class="fl">0.5</span>, <span class="fl">0.1</span>, size<span class="op">=</span><span class="dv">1</span>)[<span class="dv">0</span>]</span>
 <span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>  interval_inits[c] <span class="op">=</span> <span class="bu">dict</span>(alpha <span class="op">=</span> alpha, beta <span class="op">=</span> beta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="1471e615" class="cell" data-message="false" data-execution_count="5">
+<div id="f5bd8193" class="cell" data-message="false" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">&#39;stan_programs/bernoulli_linear.stan&#39;</span>, <span class="st">&#39;r&#39;</span>) <span class="im">as</span> <span class="bu">file</span>:</span>
 <span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  stan_program <span class="op">=</span> <span class="bu">file</span>.read()</span>
 <span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> stan.build(stan_program, random_seed<span class="op">=</span><span class="dv">8438338</span>, data<span class="op">=</span>data)</span>
@@ -5557,7 +5557,7 @@ p
 </div>
 <p>Stan is able to run to completion, but just how useful are the Markov chains that it generates?</p>
 <p>Let’s start with the Hamiltonian Monte Carlo diagnostics.</p>
-<div id="6c63baa0" class="cell" data-execution_count="6">
+<div id="ea422d30" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>diagnostics <span class="op">=</span> util.extract_hmc_diagnostics(fit)</span>
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>util.check_all_hmc_diagnostics(diagnostics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -5585,7 +5585,7 @@ due to discontinuous or imprecise gradients.
 </div>
 <p>Almost every transition across the four Markov chains resulted in a divergence. This is due to the discontinuity in the linear probability model as the sudden jump from a finite to a negative infinite target density results in unstable numerical trajectories.</p>
 <p>We also see the one of the Markov chains wasn’t quite able to hit the step size adaptation target. To see why let’s dig into the adapted configuration of the Hamiltonian Markov transition.</p>
-<div id="3665bd0d" class="cell" data-execution_count="7">
+<div id="5af62606" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>util.plot_inv_metric(fit, <span class="dv">75</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
@@ -5597,7 +5597,7 @@ due to discontinuous or imprecise gradients.
 </div>
 <p>The problematic third Markov chain also exhibits the least variation in its inverse metric elements, which in this case is probably an artifact of its warmup phase spending too much time close to a constraint boundary. Inverse metric elements that cannot adapt to each parameter can frustrate numerical integration which can then frustrate the integrator step size adaptation.</p>
 <p>The step size in the third Markov chain is slightly larger than the others which explains the lower average proxy acceptance statistic. We can also see that the first Markov chain has a much smaller step size than the other which results in an overly conservative average proxy acceptance statistic.</p>
-<div id="099128fa" class="cell" data-execution_count="8">
+<div id="e2e11aee" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>util.display_stepsizes(diagnostics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Chain 1: Integrator Step Size = 7.59e-02
@@ -5606,7 +5606,7 @@ Chain 3: Integrator Step Size = 4.31e-02
 Chain 4: Integrator Step Size = 5.33e-03</code></pre>
 </div>
 </div>
-<div id="ff000df5" class="cell" data-execution_count="9">
+<div id="f8c5df0f" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>util.display_ave_accept_proxy(diagnostics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Chain 1: Average proxy acceptance statistic = 0.566
@@ -5616,7 +5616,7 @@ Chain 4: Average proxy acceptance statistic = 0.957</code></pre>
 </div>
 </div>
 <p>The different inverse metric results in different Hamiltonian dynamics. In this case the dynamics driving the third Markov chain are not able to explore as far as those in the other chains.</p>
-<div id="79f593bb" class="cell" data-execution_count="10">
+<div id="91f5afa5" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>util.plot_num_leapfrogs_by_chain(diagnostics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
@@ -5627,7 +5627,7 @@ Chain 4: Average proxy acceptance statistic = 0.957</code></pre>
 </div>
 </div>
 <p>Finally because nearly every transition is divergent we can’t extract much information from the divergent-labeled pairs plots.</p>
-<div id="301c3817" class="cell" data-execution_count="11">
+<div id="fcda6dbf" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> util.extract_expectand_vals(fit)</span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>names <span class="op">=</span> [<span class="st">&#39;alpha&#39;</span>]</span>
@@ -5645,7 +5645,7 @@ Chain 4: Average proxy acceptance statistic = 0.957</code></pre>
 For example plot of <code>beta[2]</code> against <code>beta[1]</code> is not inconsistent with a boundary defined by <span class="math display">
 \beta_{1} + \beta_{2} = \mathrm{constant}.
 </span></p>
-<div id="29cecb22" class="cell" data-execution_count="12">
+<div id="f58573ff" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>util.plot_div_pairs(names, names, samples, diagnostics, plot_mode<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
@@ -5657,7 +5657,7 @@ For example plot of <code>beta[2]</code> against <code>beta[1]</code> is not inc
 </div>
 <p>Having examined the Hamiltonian Monte Carlo diagnostics let’s now look through the expectand specific diagnostics. By default we’ll look at the parameter projection functions as well as all of the expectands defined in the <code>generated quantities</code> block.</p>
 <p>Because of the Hamiltonian Monte Carlo diagnostic failures let’s start by looking at the expectand diagnostics summary instead of the full details.</p>
-<div id="f1ad35db" class="cell" data-execution_count="13">
+<div id="fa375aba" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>util.summarize_expectand_diagnostics(samples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The expectands alpha, beta[1], beta[2], beta[3], p[1000], p[100],
@@ -6208,7 +6208,7 @@ Monte Carlo estimators.
 </div>
 </div>
 <p>That is a lot of diagnostic failures. To avoid overwhelming ourselves with too many detailed diagnostic messages let’s focus on the four parameter expectands.</p>
-<div id="5358672b" class="cell" data-execution_count="14">
+<div id="8aca1d10" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>base_samples <span class="op">=</span> util.filter_expectands(samples, [<span class="st">&#39;alpha&#39;</span>, <span class="st">&#39;beta&#39;</span>], <span class="va">True</span>)</span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>util.check_all_expectand_diagnostics(base_samples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -6251,7 +6251,7 @@ Monte Carlo estimators.
 </div>
 <p>All four parameter expectands exhibit split <span class="math inline">\hat{R}</span> warnings and low empirical effective sample size warnings. The question is whether or not the split <span class="math inline">\hat{R}</span> warnings indicate quasistationarity or just insufficient exploration.</p>
 <p>Motivated by the small effective sample size estimates let’s look at the empirical correlograms for each parameter expectand.</p>
-<div id="da06e1f8" class="cell" data-execution_count="15">
+<div id="6d64c731" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>f, axarr <span class="op">=</span> plot.subplots(<span class="dv">2</span>, <span class="dv">2</span>, layout<span class="op">=</span><span class="st">&quot;constrained&quot;</span>)</span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>util.plot_empirical_correlogram(axarr[<span class="dv">0</span>, <span class="dv">0</span>], samples[<span class="st">&#39;alpha&#39;</span>], </span>
@@ -6274,7 +6274,7 @@ Monte Carlo estimators.
 </div>
 <p>Regardless of whether or not these Markov chains are stationary they are extremely autocorrelated. Even assuming stationarity we wouldn’t start to forget the beginning of each Markov chain until we’ve worked through a quarter of the total length, leaving only about four independent samples across each chain.</p>
 <p>This is consistent with the constraint violations breaking the coherent, gradient-driven exploration of Hamiltonian Monte Carlo so that the Markov chains devolve into diffuse random walks. Indeed looking at the chain-separated pairs plots we see the spatial color continuity characteristic of a random walk.</p>
-<div id="59539f61" class="cell" data-execution_count="16">
+<div id="edb52918" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>util.plot_pairs_by_chain(samples[<span class="st">&#39;alpha&#39;</span>], <span class="st">&#39;alpha&#39;</span>, </span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>                         samples[<span class="st">&#39;beta[1]&#39;</span>], <span class="st">&#39;beta[1]&#39;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
@@ -6286,7 +6286,7 @@ Monte Carlo estimators.
 </div>
 </div>
 <p>To more quantitatively blame the large split <span class="math inline">\hat{R}</span>s on these strong autocorrelations we can plot the split <span class="math inline">\hat{R}</span> from each expectand against the corresponding empirical effective sample size. Specifically for each expectand we plot split <span class="math inline">\hat{R}</span> against we use the smallest empirical effective sample size of the four Markov chains.</p>
-<div id="4b20c871" class="cell" data-execution_count="17">
+<div id="f79e6108" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>rhats <span class="op">=</span> util.compute_split_rhats(samples)</span>
 <span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>min_ess_hats <span class="op">=</span> util.compute_min_ess_hats(samples)</span>
 <span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -6310,7 +6310,7 @@ Monte Carlo estimators.
 <p>Every expectand with a large split <span class="math inline">\hat{R}</span>s also exhibits a particularly small minimum empirical effective sample size, confirming that the latter are due to our Markov chains not containing enough information.</p>
 <p>If we are sloppy, ignore these diagnostics, and assume that all of our Markov chain Monte Carlo estimators are accurate then we are quickly mislead about the actual behavior of the posterior distribution. One way to guard against this sloppiness is to always accompany a Markov chain Monte Carlo estimator with an estimated error. Even if that error is inaccurate it can sometimes communicate underlying problems.</p>
 <p>For example let’s look at a pushforward histogram for each parameter with light gray bands visualizing twice the standard error around the bin probability estimates in dark red.</p>
-<div id="a8128918" class="cell" data-execution_count="18">
+<div id="db7d2fd8" class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>f, axarr <span class="op">=</span> plot.subplots(<span class="dv">2</span>, <span class="dv">2</span>, layout<span class="op">=</span><span class="st">&quot;constrained&quot;</span>)</span>
 <span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>util.plot_expectand_pushforward(axarr[<span class="dv">0</span>, <span class="dv">0</span>], samples[<span class="st">&#39;alpha&#39;</span>], </span>
@@ -6333,7 +6333,7 @@ Monte Carlo estimators.
 </div>
 <p>If we look at the central estimates alone we might convince ourselves of all kinds of interesting structure. For example potential multi-modality in <code>alpha</code> and <code>beta[2]</code> and platykurticity in <code>beta[1]</code> and <code>beta[3]</code>. These structures, however, are all within the scope of the relatively large standard error bands which suggests that they are all consistent with estimator noise.</p>
 <p>Reducing the number of bins decreases the relative standard errors but at the same time many of the visual artifacts recede.</p>
-<div id="a8551449" class="cell" data-execution_count="19">
+<div id="06d84802" class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>f, axarr <span class="op">=</span> plot.subplots(<span class="dv">2</span>, <span class="dv">2</span>, layout<span class="op">=</span><span class="st">&quot;constrained&quot;</span>)</span>
 <span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>util.plot_expectand_pushforward(axarr[<span class="dv">0</span>, <span class="dv">0</span>], samples[<span class="st">&#39;alpha&#39;</span>], </span>
@@ -6356,7 +6356,7 @@ Monte Carlo estimators.
 </div>
 <p>When the bin indicator functions enjoy Markov chain Monte Carlo central limit theorems these standard error bands allow us to discriminate between meaningful structure and accidental artifacts regardless of the histogram binning. Even if central limit theorems don’t hold the error bands provide one more way that we can potentially diagnose untrustworthy computation.</p>
 <p>The <code>plot_expectand_pushforward</code> can also overlay a baseline value for comparison, for example when comparing posterior inferences to the ground truth in simulation studies.</p>
-<div id="f6f8692b" class="cell" data-execution_count="20">
+<div id="a5f6863a" class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>util.plot_expectand_pushforward(plot.gca(), samples[<span class="st">&#39;alpha&#39;</span>],</span>
 <span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>                                <span class="dv">10</span>, display_name<span class="op">=</span><span class="st">&quot;alpha&quot;</span>,</span>
 <span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>                                baseline<span class="op">=</span><span class="fl">0.5</span>,</span>
@@ -6371,7 +6371,7 @@ Monte Carlo estimators.
 </div>
 </div>
 <p>Moreover the expectand pushforward histograms can be plotted on top of each other for a more direct comparison.</p>
-<div id="5f8469aa" class="cell" data-execution_count="21">
+<div id="8903c401" class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>util.plot_expectand_pushforward(plot.gca(), samples[<span class="st">&#39;beta[1]&#39;</span>],</span>
 <span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>                                <span class="dv">50</span>, flim<span class="op">=</span>[<span class="op">-</span><span class="fl">0.15</span>, <span class="fl">0.4</span>],</span>
 <span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>                                ylim<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">60</span>],</span>
@@ -6405,7 +6405,7 @@ Monte Carlo estimators.
 </div>
 </div>
 <p>Finally if we want to explore the pushforward posterior distribution of other expectands that have not already been evaluated in the <code>Stan</code> program then we need to evaluate them ourselves.</p>
-<div id="d593239e" class="cell" data-execution_count="22">
+<div id="b1e26f27" class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> euclidean_length(x):</span>
 <span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> math.sqrt(numpy.dot(x, x))</span>
 <span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -6427,7 +6427,7 @@ Monte Carlo estimators.
 </div>
 </div>
 <p>Calculating the probability allocated to implicitly-defined subsets proceeds similarly.</p>
-<div id="4cae1614" class="cell" data-execution_count="23">
+<div id="24181aa8" class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>pi_est <span class="op">=</span> util.implicit_subset_prob(samples,</span>
 <span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>                                   <span class="kw">lambda</span> x: x <span class="op">&gt;</span> <span class="dv">0</span>,</span>
 <span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>                                   {<span class="st">&#39;x&#39;</span>: <span class="st">&#39;beta[2]&#39;</span>})</span>
@@ -6448,11 +6448,11 @@ Monte Carlo estimators.
 </section>
 <section id="original-computing-environment" class="level1 unnumbered">
 <h1 class="unnumbered">Original Computing Environment</h1>
-<div id="312eab57" class="cell" data-execution_count="24">
+<div id="7c5d4eba" class="cell" data-execution_count="24">
 <div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> watermark <span class="im">import</span> watermark</span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(watermark())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Last updated: 2024-09-10T16:38:01.111596-04:00
+<pre><code>Last updated: 2024-09-13T15:39:20.658476-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6
@@ -6468,7 +6468,7 @@ Architecture: 64bit
 </code></pre>
 </div>
 </div>
-<div id="5de3b6fa" class="cell" data-execution_count="25">
+<div id="76f784ef" class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(watermark(packages<span class="op">=</span><span class="st">&quot;matplotlib,numpy,stan,scipy&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>matplotlib: 3.8.0

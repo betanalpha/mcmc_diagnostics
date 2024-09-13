@@ -1548,8 +1548,8 @@ time cannot be larger than five, \[
 
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
 \NormalTok{    tau\_hat }\OperatorTok{=}\NormalTok{ compute\_tau\_hat(expectand\_vals[c,:])}
-\NormalTok{    inc\_tau\_hat\_per }\OperatorTok{=}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
-    \ControlFlowTok{if}\NormalTok{ tau\_hat\_per }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{:}
+\NormalTok{    inc\_tau\_hat }\OperatorTok{=}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
+    \ControlFlowTok{if}\NormalTok{ inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{:}
       \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: The incremental empirical integrated \textquotesingle{}}
             \SpecialStringTok{f\textquotesingle{}autocorrelation time }\SpecialCharTok{\{}\NormalTok{inc\_tau\_hat }\SpecialCharTok{:.3f\}}\SpecialStringTok{ is too large.\textquotesingle{}}\NormalTok{)}
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
@@ -4049,7 +4049,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-10T16:39:37.453523-04:00
+Last updated: 2024-09-13T15:41:15.396481-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

@@ -2184,8 +2184,10 @@ eval_expectand_pushforwards <- function(expectand_vals_list,
   if (!is.null(alt_arg_names))
     alt_names <- lapply(nominal_arg_names,
                         function(name) alt_arg_names_array[[name]])
+
+  expectand_vals_env <- as.environment(expectand_vals_list)
   access_val <- function(name) {
-    expectand_vals_list[[name]][c, s]
+    expectand_vals_env[[name]][c, s]
   }
 
   for (c in 1:C) {

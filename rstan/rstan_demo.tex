@@ -2528,8 +2528,10 @@ trickier to implement.
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\KeywordTok{is}\NormalTok{.null(alt\_arg\_names))}
 \NormalTok{    alt\_names }\OperatorTok{\textless{}{-}}\NormalTok{ lapply(nominal\_arg\_names,}
 \NormalTok{                        function(name) alt\_arg\_names\_array[[name]])}
+
+\NormalTok{  expectand\_vals\_env }\OperatorTok{\textless{}{-}} \ImportTok{as}\NormalTok{.environment(expectand\_vals\_list)}
 \NormalTok{  access\_val }\OperatorTok{\textless{}{-}}\NormalTok{ function(name) \{}
-\NormalTok{    expectand\_vals\_list[[name]][c, s]}
+\NormalTok{    expectand\_vals\_env[[name]][c, s]}
 \NormalTok{  \}}
 
   \ControlFlowTok{for}\NormalTok{ (c }\KeywordTok{in} \DecValTok{1}\NormalTok{:C) \{}

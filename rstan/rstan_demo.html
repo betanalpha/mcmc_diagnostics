@@ -5131,166 +5131,168 @@ m &lt; \frac{1}{\xi}.
 <span id="cb33-2184"><a href="#cb33-2184" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.null(alt_arg_names))</span>
 <span id="cb33-2185"><a href="#cb33-2185" aria-hidden="true" tabindex="-1"></a>    alt_names <span class="op">&lt;-</span> lapply(nominal_arg_names,</span>
 <span id="cb33-2186"><a href="#cb33-2186" aria-hidden="true" tabindex="-1"></a>                        function(name) alt_arg_names_array[[name]])</span>
-<span id="cb33-2187"><a href="#cb33-2187" aria-hidden="true" tabindex="-1"></a>  access_val <span class="op">&lt;-</span> function(name) {</span>
-<span id="cb33-2188"><a href="#cb33-2188" aria-hidden="true" tabindex="-1"></a>    expectand_vals_list[[name]][c, s]</span>
-<span id="cb33-2189"><a href="#cb33-2189" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb33-2190"><a href="#cb33-2190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-2191"><a href="#cb33-2191" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (c <span class="kw">in</span> <span class="dv">1</span>:C) {</span>
-<span id="cb33-2192"><a href="#cb33-2192" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (s <span class="kw">in</span> <span class="dv">1</span>:S) {</span>
-<span id="cb33-2193"><a href="#cb33-2193" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="kw">is</span>.null(alt_arg_names)) {</span>
-<span id="cb33-2194"><a href="#cb33-2194" aria-hidden="true" tabindex="-1"></a>        arg_vals <span class="op">&lt;-</span> lapply(nominal_arg_names, access_val)</span>
-<span id="cb33-2195"><a href="#cb33-2195" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
-<span id="cb33-2196"><a href="#cb33-2196" aria-hidden="true" tabindex="-1"></a>        arg_vals <span class="op">&lt;-</span> vector(<span class="st">&quot;list&quot;</span>, length<span class="op">=</span>length(alt_names))</span>
-<span id="cb33-2197"><a href="#cb33-2197" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (n <span class="kw">in</span> seq_along(arg_vals)) {</span>
-<span id="cb33-2198"><a href="#cb33-2198" aria-hidden="true" tabindex="-1"></a>          arg_vals[[n]] <span class="op">&lt;-</span> <span class="bu">apply</span>(alt_names[[n]],</span>
-<span id="cb33-2199"><a href="#cb33-2199" aria-hidden="true" tabindex="-1"></a>                                 seq_along(dim(alt_names[[n]])),</span>
-<span id="cb33-2200"><a href="#cb33-2200" aria-hidden="true" tabindex="-1"></a>                                 access_val)</span>
-<span id="cb33-2201"><a href="#cb33-2201" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb33-2202"><a href="#cb33-2202" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb33-2203"><a href="#cb33-2203" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (i <span class="kw">in</span> seq_along(pushforward_vals)) {</span>
-<span id="cb33-2204"><a href="#cb33-2204" aria-hidden="true" tabindex="-1"></a>        pushforward_vals[[i]][c, s] <span class="op">&lt;-</span></span>
-<span id="cb33-2205"><a href="#cb33-2205" aria-hidden="true" tabindex="-1"></a>          <span class="im">as</span>.numeric(do.call(expectand_list[[i]], arg_vals))</span>
-<span id="cb33-2206"><a href="#cb33-2206" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb33-2207"><a href="#cb33-2207" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb33-2208"><a href="#cb33-2208" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb33-2209"><a href="#cb33-2209" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-2210"><a href="#cb33-2210" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(pushforward_vals)</span>
-<span id="cb33-2211"><a href="#cb33-2211" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb34" data-startfrom="2213"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2212;"><span id="cb34-2213"><a href="#cb34-2213" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate an expectand on the values of an arbitrary number of input</span></span>
-<span id="cb34-2214"><a href="#cb34-2214" aria-hidden="true" tabindex="-1"></a><span class="co"># variables.  Expectand must return a scalar numeric or logical output.</span></span>
-<span id="cb34-2215"><a href="#cb34-2215" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb34-2216"><a href="#cb34-2216" aria-hidden="true" tabindex="-1"></a><span class="co"># By default expectand argument values are accessed by name</span></span>
-<span id="cb34-2217"><a href="#cb34-2217" aria-hidden="true" tabindex="-1"></a><span class="co"># in expectand_vals_list.  If a non-null alt_arg_names is provided then</span></span>
-<span id="cb34-2218"><a href="#cb34-2218" aria-hidden="true" tabindex="-1"></a><span class="co"># the alternate names are used to access values in expectand_vals_list.</span></span>
-<span id="cb34-2219"><a href="#cb34-2219" aria-hidden="true" tabindex="-1"></a><span class="co"># The elements of alt_arg_names can also be character arrays of</span></span>
-<span id="cb34-2220"><a href="#cb34-2220" aria-hidden="true" tabindex="-1"></a><span class="co"># arbitrary dimension in which case the individual element values are</span></span>
-<span id="cb34-2221"><a href="#cb34-2221" aria-hidden="true" tabindex="-1"></a><span class="co"># first accessed then formatted into matching numeric arrays before</span></span>
-<span id="cb34-2222"><a href="#cb34-2222" aria-hidden="true" tabindex="-1"></a><span class="co"># being passed to the expectand.</span></span>
-<span id="cb34-2223"><a href="#cb34-2223" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb34-2224"><a href="#cb34-2224" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays.</span></span>
-<span id="cb34-2225"><a href="#cb34-2225" aria-hidden="true" tabindex="-1"></a><span class="co">#                            The first dimension of each element indexes</span></span>
-<span id="cb34-2226"><a href="#cb34-2226" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the Markov chains and the second dimension</span></span>
-<span id="cb34-2227"><a href="#cb34-2227" aria-hidden="true" tabindex="-1"></a><span class="co">#                            indexes the sequential states within each</span></span>
-<span id="cb34-2228"><a href="#cb34-2228" aria-hidden="true" tabindex="-1"></a><span class="co">#                            Markov chain.</span></span>
-<span id="cb34-2229"><a href="#cb34-2229" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand Function with arbitrary number of scalar and array</span></span>
-<span id="cb34-2230"><a href="#cb34-2230" aria-hidden="true" tabindex="-1"></a><span class="co">#                  input arguments.</span></span>
-<span id="cb34-2231"><a href="#cb34-2231" aria-hidden="true" tabindex="-1"></a><span class="co"># @param alt_arg_names Optional named list of alternate names for the</span></span>
-<span id="cb34-2232"><a href="#cb34-2232" aria-hidden="true" tabindex="-1"></a><span class="co">#                      nominal expectand argument names; when used all</span></span>
-<span id="cb34-2233"><a href="#cb34-2233" aria-hidden="true" tabindex="-1"></a><span class="co">#                      expectand argument names must be included.</span></span>
-<span id="cb34-2234"><a href="#cb34-2234" aria-hidden="true" tabindex="-1"></a><span class="co"># @return A two-dimensional array.</span></span>
-<span id="cb34-2235"><a href="#cb34-2235" aria-hidden="true" tabindex="-1"></a>eval_expectand_pushforward <span class="op">&lt;-</span> function(expectand_vals_list,</span>
-<span id="cb34-2236"><a href="#cb34-2236" aria-hidden="true" tabindex="-1"></a>                                       expectand,</span>
-<span id="cb34-2237"><a href="#cb34-2237" aria-hidden="true" tabindex="-1"></a>                                       alt_arg_names<span class="op">=</span>NULL) {</span>
-<span id="cb34-2238"><a href="#cb34-2238" aria-hidden="true" tabindex="-1"></a>  pushforward_vals <span class="op">&lt;-</span> eval_expectand_pushforwards(expectand_vals_list,</span>
-<span id="cb34-2239"><a href="#cb34-2239" aria-hidden="true" tabindex="-1"></a>                                                  <span class="bu">list</span>(expectand),</span>
-<span id="cb34-2240"><a href="#cb34-2240" aria-hidden="true" tabindex="-1"></a>                                                  alt_arg_names)</span>
-<span id="cb34-2241"><a href="#cb34-2241" aria-hidden="true" tabindex="-1"></a>  pushforward_vals[[<span class="dv">1</span>]]</span>
-<span id="cb34-2242"><a href="#cb34-2242" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb33-2187"><a href="#cb33-2187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-2188"><a href="#cb33-2188" aria-hidden="true" tabindex="-1"></a>  expectand_vals_env <span class="op">&lt;-</span> <span class="im">as</span>.environment(expectand_vals_list)</span>
+<span id="cb33-2189"><a href="#cb33-2189" aria-hidden="true" tabindex="-1"></a>  access_val <span class="op">&lt;-</span> function(name) {</span>
+<span id="cb33-2190"><a href="#cb33-2190" aria-hidden="true" tabindex="-1"></a>    expectand_vals_env[[name]][c, s]</span>
+<span id="cb33-2191"><a href="#cb33-2191" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb33-2192"><a href="#cb33-2192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-2193"><a href="#cb33-2193" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (c <span class="kw">in</span> <span class="dv">1</span>:C) {</span>
+<span id="cb33-2194"><a href="#cb33-2194" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (s <span class="kw">in</span> <span class="dv">1</span>:S) {</span>
+<span id="cb33-2195"><a href="#cb33-2195" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="kw">is</span>.null(alt_arg_names)) {</span>
+<span id="cb33-2196"><a href="#cb33-2196" aria-hidden="true" tabindex="-1"></a>        arg_vals <span class="op">&lt;-</span> lapply(nominal_arg_names, access_val)</span>
+<span id="cb33-2197"><a href="#cb33-2197" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb33-2198"><a href="#cb33-2198" aria-hidden="true" tabindex="-1"></a>        arg_vals <span class="op">&lt;-</span> vector(<span class="st">&quot;list&quot;</span>, length<span class="op">=</span>length(alt_names))</span>
+<span id="cb33-2199"><a href="#cb33-2199" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (n <span class="kw">in</span> seq_along(arg_vals)) {</span>
+<span id="cb33-2200"><a href="#cb33-2200" aria-hidden="true" tabindex="-1"></a>          arg_vals[[n]] <span class="op">&lt;-</span> <span class="bu">apply</span>(alt_names[[n]],</span>
+<span id="cb33-2201"><a href="#cb33-2201" aria-hidden="true" tabindex="-1"></a>                                 seq_along(dim(alt_names[[n]])),</span>
+<span id="cb33-2202"><a href="#cb33-2202" aria-hidden="true" tabindex="-1"></a>                                 access_val)</span>
+<span id="cb33-2203"><a href="#cb33-2203" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb33-2204"><a href="#cb33-2204" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb33-2205"><a href="#cb33-2205" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (i <span class="kw">in</span> seq_along(pushforward_vals)) {</span>
+<span id="cb33-2206"><a href="#cb33-2206" aria-hidden="true" tabindex="-1"></a>        pushforward_vals[[i]][c, s] <span class="op">&lt;-</span></span>
+<span id="cb33-2207"><a href="#cb33-2207" aria-hidden="true" tabindex="-1"></a>          <span class="im">as</span>.numeric(do.call(expectand_list[[i]], arg_vals))</span>
+<span id="cb33-2208"><a href="#cb33-2208" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb33-2209"><a href="#cb33-2209" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb33-2210"><a href="#cb33-2210" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb33-2211"><a href="#cb33-2211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-2212"><a href="#cb33-2212" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(pushforward_vals)</span>
+<span id="cb33-2213"><a href="#cb33-2213" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb34" data-startfrom="2215"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2214;"><span id="cb34-2215"><a href="#cb34-2215" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate an expectand on the values of an arbitrary number of input</span></span>
+<span id="cb34-2216"><a href="#cb34-2216" aria-hidden="true" tabindex="-1"></a><span class="co"># variables.  Expectand must return a scalar numeric or logical output.</span></span>
+<span id="cb34-2217"><a href="#cb34-2217" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb34-2218"><a href="#cb34-2218" aria-hidden="true" tabindex="-1"></a><span class="co"># By default expectand argument values are accessed by name</span></span>
+<span id="cb34-2219"><a href="#cb34-2219" aria-hidden="true" tabindex="-1"></a><span class="co"># in expectand_vals_list.  If a non-null alt_arg_names is provided then</span></span>
+<span id="cb34-2220"><a href="#cb34-2220" aria-hidden="true" tabindex="-1"></a><span class="co"># the alternate names are used to access values in expectand_vals_list.</span></span>
+<span id="cb34-2221"><a href="#cb34-2221" aria-hidden="true" tabindex="-1"></a><span class="co"># The elements of alt_arg_names can also be character arrays of</span></span>
+<span id="cb34-2222"><a href="#cb34-2222" aria-hidden="true" tabindex="-1"></a><span class="co"># arbitrary dimension in which case the individual element values are</span></span>
+<span id="cb34-2223"><a href="#cb34-2223" aria-hidden="true" tabindex="-1"></a><span class="co"># first accessed then formatted into matching numeric arrays before</span></span>
+<span id="cb34-2224"><a href="#cb34-2224" aria-hidden="true" tabindex="-1"></a><span class="co"># being passed to the expectand.</span></span>
+<span id="cb34-2225"><a href="#cb34-2225" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb34-2226"><a href="#cb34-2226" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays.</span></span>
+<span id="cb34-2227"><a href="#cb34-2227" aria-hidden="true" tabindex="-1"></a><span class="co">#                            The first dimension of each element indexes</span></span>
+<span id="cb34-2228"><a href="#cb34-2228" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the Markov chains and the second dimension</span></span>
+<span id="cb34-2229"><a href="#cb34-2229" aria-hidden="true" tabindex="-1"></a><span class="co">#                            indexes the sequential states within each</span></span>
+<span id="cb34-2230"><a href="#cb34-2230" aria-hidden="true" tabindex="-1"></a><span class="co">#                            Markov chain.</span></span>
+<span id="cb34-2231"><a href="#cb34-2231" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand Function with arbitrary number of scalar and array</span></span>
+<span id="cb34-2232"><a href="#cb34-2232" aria-hidden="true" tabindex="-1"></a><span class="co">#                  input arguments.</span></span>
+<span id="cb34-2233"><a href="#cb34-2233" aria-hidden="true" tabindex="-1"></a><span class="co"># @param alt_arg_names Optional named list of alternate names for the</span></span>
+<span id="cb34-2234"><a href="#cb34-2234" aria-hidden="true" tabindex="-1"></a><span class="co">#                      nominal expectand argument names; when used all</span></span>
+<span id="cb34-2235"><a href="#cb34-2235" aria-hidden="true" tabindex="-1"></a><span class="co">#                      expectand argument names must be included.</span></span>
+<span id="cb34-2236"><a href="#cb34-2236" aria-hidden="true" tabindex="-1"></a><span class="co"># @return A two-dimensional array.</span></span>
+<span id="cb34-2237"><a href="#cb34-2237" aria-hidden="true" tabindex="-1"></a>eval_expectand_pushforward <span class="op">&lt;-</span> function(expectand_vals_list,</span>
+<span id="cb34-2238"><a href="#cb34-2238" aria-hidden="true" tabindex="-1"></a>                                       expectand,</span>
+<span id="cb34-2239"><a href="#cb34-2239" aria-hidden="true" tabindex="-1"></a>                                       alt_arg_names<span class="op">=</span>NULL) {</span>
+<span id="cb34-2240"><a href="#cb34-2240" aria-hidden="true" tabindex="-1"></a>  pushforward_vals <span class="op">&lt;-</span> eval_expectand_pushforwards(expectand_vals_list,</span>
+<span id="cb34-2241"><a href="#cb34-2241" aria-hidden="true" tabindex="-1"></a>                                                  <span class="bu">list</span>(expectand),</span>
+<span id="cb34-2242"><a href="#cb34-2242" aria-hidden="true" tabindex="-1"></a>                                                  alt_arg_names)</span>
+<span id="cb34-2243"><a href="#cb34-2243" aria-hidden="true" tabindex="-1"></a>  pushforward_vals[[<span class="dv">1</span>]]</span>
+<span id="cb34-2244"><a href="#cb34-2244" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Regardless of whether the expectand samples were generated by <code>Stan</code> or if we had to derive them ourselves the Markov chain Monte Carlo estimation is the same. In particular we can estimate expectation values using either a single Markov chain or an entire ensemble of Markov chains.</p>
-<div class="sourceCode" id="cb35" data-startfrom="2244"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2243;"><span id="cb35-2244"><a href="#cb35-2244" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand expectation value from a single Markov chain.</span></span>
-<span id="cb35-2245"><a href="#cb35-2245" aria-hidden="true" tabindex="-1"></a><span class="co"># @param vals A one-dimensional array of sequential expectand values.</span></span>
-<span id="cb35-2246"><a href="#cb35-2246" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The Markov chain Monte Carlo estimate, its estimated standard </span></span>
-<span id="cb35-2247"><a href="#cb35-2247" aria-hidden="true" tabindex="-1"></a><span class="co">#         error, and empirical effective sample size.</span></span>
-<span id="cb35-2248"><a href="#cb35-2248" aria-hidden="true" tabindex="-1"></a>mcmc_est <span class="op">&lt;-</span> function(vals) {</span>
-<span id="cb35-2249"><a href="#cb35-2249" aria-hidden="true" tabindex="-1"></a>  S <span class="op">&lt;-</span> length(vals)</span>
-<span id="cb35-2250"><a href="#cb35-2250" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (S <span class="op">==</span> <span class="dv">1</span>) {</span>
-<span id="cb35-2251"><a href="#cb35-2251" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span>(c(vals[<span class="dv">1</span>], <span class="dv">0</span>, NaN))</span>
-<span id="cb35-2252"><a href="#cb35-2252" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb35-2253"><a href="#cb35-2253" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-2254"><a href="#cb35-2254" aria-hidden="true" tabindex="-1"></a>  summary <span class="op">&lt;-</span> welford_summary(vals)</span>
+<div class="sourceCode" id="cb35" data-startfrom="2246"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2245;"><span id="cb35-2246"><a href="#cb35-2246" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand expectation value from a single Markov chain.</span></span>
+<span id="cb35-2247"><a href="#cb35-2247" aria-hidden="true" tabindex="-1"></a><span class="co"># @param vals A one-dimensional array of sequential expectand values.</span></span>
+<span id="cb35-2248"><a href="#cb35-2248" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The Markov chain Monte Carlo estimate, its estimated standard </span></span>
+<span id="cb35-2249"><a href="#cb35-2249" aria-hidden="true" tabindex="-1"></a><span class="co">#         error, and empirical effective sample size.</span></span>
+<span id="cb35-2250"><a href="#cb35-2250" aria-hidden="true" tabindex="-1"></a>mcmc_est <span class="op">&lt;-</span> function(vals) {</span>
+<span id="cb35-2251"><a href="#cb35-2251" aria-hidden="true" tabindex="-1"></a>  S <span class="op">&lt;-</span> length(vals)</span>
+<span id="cb35-2252"><a href="#cb35-2252" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (S <span class="op">==</span> <span class="dv">1</span>) {</span>
+<span id="cb35-2253"><a href="#cb35-2253" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span>(c(vals[<span class="dv">1</span>], <span class="dv">0</span>, NaN))</span>
+<span id="cb35-2254"><a href="#cb35-2254" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb35-2255"><a href="#cb35-2255" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-2256"><a href="#cb35-2256" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (summary[<span class="dv">2</span>] <span class="op">==</span> <span class="dv">0</span>) {</span>
-<span id="cb35-2257"><a href="#cb35-2257" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span>(c(summary[<span class="dv">1</span>], <span class="dv">0</span>, NaN))</span>
-<span id="cb35-2258"><a href="#cb35-2258" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb35-2259"><a href="#cb35-2259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-2260"><a href="#cb35-2260" aria-hidden="true" tabindex="-1"></a>  tau_hat <span class="op">&lt;-</span> compute_tau_hat(vals)</span>
-<span id="cb35-2261"><a href="#cb35-2261" aria-hidden="true" tabindex="-1"></a>  ess_hat <span class="op">&lt;-</span> S <span class="op">/</span> tau_hat</span>
-<span id="cb35-2262"><a href="#cb35-2262" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(c(summary[<span class="dv">1</span>], sqrt(summary[<span class="dv">2</span>] <span class="op">/</span> ess_hat), ess_hat))</span>
-<span id="cb35-2263"><a href="#cb35-2263" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb36" data-startfrom="2265"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2264;"><span id="cb36-2265"><a href="#cb36-2265" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand expectation value from a Markov chain ensemble.</span></span>
-<span id="cb36-2266"><a href="#cb36-2266" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
-<span id="cb36-2267"><a href="#cb36-2267" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
-<span id="cb36-2268"><a href="#cb36-2268" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
-<span id="cb36-2269"><a href="#cb36-2269" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
-<span id="cb36-2270"><a href="#cb36-2270" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The ensemble Markov chain Monte Carlo estimate, its estimated</span></span>
-<span id="cb36-2271"><a href="#cb36-2271" aria-hidden="true" tabindex="-1"></a><span class="co">#         standard error, and empirical effective sample size.</span></span>
-<span id="cb36-2272"><a href="#cb36-2272" aria-hidden="true" tabindex="-1"></a>ensemble_mcmc_est <span class="op">&lt;-</span> function(expectand_vals) {</span>
-<span id="cb36-2273"><a href="#cb36-2273" aria-hidden="true" tabindex="-1"></a>  validate_array(expectand_vals, <span class="st">&#39;expectand_vals&#39;</span>)</span>
-<span id="cb36-2274"><a href="#cb36-2274" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb36-2275"><a href="#cb36-2275" aria-hidden="true" tabindex="-1"></a>  C <span class="op">&lt;-</span> dim(expectand_vals)[<span class="dv">1</span>]</span>
-<span id="cb36-2276"><a href="#cb36-2276" aria-hidden="true" tabindex="-1"></a>  chain_ests <span class="op">&lt;-</span> lapply(<span class="dv">1</span>:C, function(c) mcmc_est(expectand_vals[c,]))</span>
-<span id="cb36-2277"><a href="#cb36-2277" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb36-2278"><a href="#cb36-2278" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Total effective sample size</span></span>
-<span id="cb36-2279"><a href="#cb36-2279" aria-hidden="true" tabindex="-1"></a>  total_ess <span class="op">&lt;-</span> <span class="bu">sum</span>(sapply(chain_ests, function(est) est[<span class="dv">3</span>]))</span>
-<span id="cb36-2280"><a href="#cb36-2280" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb36-2281"><a href="#cb36-2281" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="kw">is</span>.nan(total_ess)) {</span>
-<span id="cb36-2282"><a href="#cb36-2282" aria-hidden="true" tabindex="-1"></a>    m <span class="op">&lt;-</span> mean(sapply(chain_ests, function(est) est[<span class="dv">1</span>]))</span>
-<span id="cb36-2283"><a href="#cb36-2283" aria-hidden="true" tabindex="-1"></a>    se <span class="op">&lt;-</span> mean(sapply(chain_ests, function(est) est[<span class="dv">2</span>]))</span>
-<span id="cb36-2284"><a href="#cb36-2284" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (c(m, se, NaN))</span>
-<span id="cb36-2285"><a href="#cb36-2285" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb36-2286"><a href="#cb36-2286" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb36-2287"><a href="#cb36-2287" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Ensemble average weighted by effective sample size</span></span>
-<span id="cb36-2288"><a href="#cb36-2288" aria-hidden="true" tabindex="-1"></a>  mean <span class="op">&lt;-</span> <span class="bu">sum</span>(sapply(chain_ests,</span>
-<span id="cb36-2289"><a href="#cb36-2289" aria-hidden="true" tabindex="-1"></a>                     function(est) est[<span class="dv">3</span>] <span class="op">*</span> est[<span class="dv">1</span>])) <span class="op">/</span> total_ess</span>
-<span id="cb36-2290"><a href="#cb36-2290" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb36-2291"><a href="#cb36-2291" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Ensemble variance weighed by effective sample size</span></span>
-<span id="cb36-2292"><a href="#cb36-2292" aria-hidden="true" tabindex="-1"></a>  <span class="co"># including correction for the fact that individual Markov chain</span></span>
-<span id="cb36-2293"><a href="#cb36-2293" aria-hidden="true" tabindex="-1"></a>  <span class="co"># variances are defined relative to the individual mean estimators</span></span>
-<span id="cb36-2294"><a href="#cb36-2294" aria-hidden="true" tabindex="-1"></a>  <span class="co"># and not the ensemble mean estimator</span></span>
-<span id="cb36-2295"><a href="#cb36-2295" aria-hidden="true" tabindex="-1"></a>  <span class="bu">vars</span> <span class="op">&lt;-</span> rep(<span class="dv">0</span>, C)</span>
-<span id="cb36-2296"><a href="#cb36-2296" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb36-2297"><a href="#cb36-2297" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (c <span class="kw">in</span> <span class="dv">1</span>:C) {</span>
-<span id="cb36-2298"><a href="#cb36-2298" aria-hidden="true" tabindex="-1"></a>    est <span class="op">&lt;-</span> chain_ests[[c]]</span>
-<span id="cb36-2299"><a href="#cb36-2299" aria-hidden="true" tabindex="-1"></a>    chain_var <span class="op">&lt;-</span> est[<span class="dv">3</span>] <span class="op">*</span> est[<span class="dv">2</span>]<span class="op">**</span><span class="dv">2</span></span>
-<span id="cb36-2300"><a href="#cb36-2300" aria-hidden="true" tabindex="-1"></a>    var_update <span class="op">&lt;-</span> (est[<span class="dv">1</span>] <span class="op">-</span> mean)<span class="op">**</span><span class="dv">2</span></span>
-<span id="cb36-2301"><a href="#cb36-2301" aria-hidden="true" tabindex="-1"></a>    <span class="bu">vars</span>[c] <span class="op">&lt;-</span> est[<span class="dv">3</span>] <span class="op">*</span> (var_update <span class="op">+</span> chain_var)</span>
-<span id="cb36-2302"><a href="#cb36-2302" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb36-2303"><a href="#cb36-2303" aria-hidden="true" tabindex="-1"></a>  var <span class="op">&lt;-</span> <span class="bu">sum</span>(<span class="bu">vars</span>) <span class="op">/</span> total_ess</span>
-<span id="cb36-2304"><a href="#cb36-2304" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb36-2305"><a href="#cb36-2305" aria-hidden="true" tabindex="-1"></a>  c(mean, sqrt(var <span class="op">/</span> total_ess), total_ess)</span>
-<span id="cb36-2306"><a href="#cb36-2306" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb35-2256"><a href="#cb35-2256" aria-hidden="true" tabindex="-1"></a>  summary <span class="op">&lt;-</span> welford_summary(vals)</span>
+<span id="cb35-2257"><a href="#cb35-2257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-2258"><a href="#cb35-2258" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (summary[<span class="dv">2</span>] <span class="op">==</span> <span class="dv">0</span>) {</span>
+<span id="cb35-2259"><a href="#cb35-2259" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span>(c(summary[<span class="dv">1</span>], <span class="dv">0</span>, NaN))</span>
+<span id="cb35-2260"><a href="#cb35-2260" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb35-2261"><a href="#cb35-2261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-2262"><a href="#cb35-2262" aria-hidden="true" tabindex="-1"></a>  tau_hat <span class="op">&lt;-</span> compute_tau_hat(vals)</span>
+<span id="cb35-2263"><a href="#cb35-2263" aria-hidden="true" tabindex="-1"></a>  ess_hat <span class="op">&lt;-</span> S <span class="op">/</span> tau_hat</span>
+<span id="cb35-2264"><a href="#cb35-2264" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(c(summary[<span class="dv">1</span>], sqrt(summary[<span class="dv">2</span>] <span class="op">/</span> ess_hat), ess_hat))</span>
+<span id="cb35-2265"><a href="#cb35-2265" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb36" data-startfrom="2267"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2266;"><span id="cb36-2267"><a href="#cb36-2267" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand expectation value from a Markov chain ensemble.</span></span>
+<span id="cb36-2268"><a href="#cb36-2268" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
+<span id="cb36-2269"><a href="#cb36-2269" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
+<span id="cb36-2270"><a href="#cb36-2270" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
+<span id="cb36-2271"><a href="#cb36-2271" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
+<span id="cb36-2272"><a href="#cb36-2272" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The ensemble Markov chain Monte Carlo estimate, its estimated</span></span>
+<span id="cb36-2273"><a href="#cb36-2273" aria-hidden="true" tabindex="-1"></a><span class="co">#         standard error, and empirical effective sample size.</span></span>
+<span id="cb36-2274"><a href="#cb36-2274" aria-hidden="true" tabindex="-1"></a>ensemble_mcmc_est <span class="op">&lt;-</span> function(expectand_vals) {</span>
+<span id="cb36-2275"><a href="#cb36-2275" aria-hidden="true" tabindex="-1"></a>  validate_array(expectand_vals, <span class="st">&#39;expectand_vals&#39;</span>)</span>
+<span id="cb36-2276"><a href="#cb36-2276" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb36-2277"><a href="#cb36-2277" aria-hidden="true" tabindex="-1"></a>  C <span class="op">&lt;-</span> dim(expectand_vals)[<span class="dv">1</span>]</span>
+<span id="cb36-2278"><a href="#cb36-2278" aria-hidden="true" tabindex="-1"></a>  chain_ests <span class="op">&lt;-</span> lapply(<span class="dv">1</span>:C, function(c) mcmc_est(expectand_vals[c,]))</span>
+<span id="cb36-2279"><a href="#cb36-2279" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb36-2280"><a href="#cb36-2280" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Total effective sample size</span></span>
+<span id="cb36-2281"><a href="#cb36-2281" aria-hidden="true" tabindex="-1"></a>  total_ess <span class="op">&lt;-</span> <span class="bu">sum</span>(sapply(chain_ests, function(est) est[<span class="dv">3</span>]))</span>
+<span id="cb36-2282"><a href="#cb36-2282" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb36-2283"><a href="#cb36-2283" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="kw">is</span>.nan(total_ess)) {</span>
+<span id="cb36-2284"><a href="#cb36-2284" aria-hidden="true" tabindex="-1"></a>    m <span class="op">&lt;-</span> mean(sapply(chain_ests, function(est) est[<span class="dv">1</span>]))</span>
+<span id="cb36-2285"><a href="#cb36-2285" aria-hidden="true" tabindex="-1"></a>    se <span class="op">&lt;-</span> mean(sapply(chain_ests, function(est) est[<span class="dv">2</span>]))</span>
+<span id="cb36-2286"><a href="#cb36-2286" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (c(m, se, NaN))</span>
+<span id="cb36-2287"><a href="#cb36-2287" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb36-2288"><a href="#cb36-2288" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb36-2289"><a href="#cb36-2289" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Ensemble average weighted by effective sample size</span></span>
+<span id="cb36-2290"><a href="#cb36-2290" aria-hidden="true" tabindex="-1"></a>  mean <span class="op">&lt;-</span> <span class="bu">sum</span>(sapply(chain_ests,</span>
+<span id="cb36-2291"><a href="#cb36-2291" aria-hidden="true" tabindex="-1"></a>                     function(est) est[<span class="dv">3</span>] <span class="op">*</span> est[<span class="dv">1</span>])) <span class="op">/</span> total_ess</span>
+<span id="cb36-2292"><a href="#cb36-2292" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb36-2293"><a href="#cb36-2293" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Ensemble variance weighed by effective sample size</span></span>
+<span id="cb36-2294"><a href="#cb36-2294" aria-hidden="true" tabindex="-1"></a>  <span class="co"># including correction for the fact that individual Markov chain</span></span>
+<span id="cb36-2295"><a href="#cb36-2295" aria-hidden="true" tabindex="-1"></a>  <span class="co"># variances are defined relative to the individual mean estimators</span></span>
+<span id="cb36-2296"><a href="#cb36-2296" aria-hidden="true" tabindex="-1"></a>  <span class="co"># and not the ensemble mean estimator</span></span>
+<span id="cb36-2297"><a href="#cb36-2297" aria-hidden="true" tabindex="-1"></a>  <span class="bu">vars</span> <span class="op">&lt;-</span> rep(<span class="dv">0</span>, C)</span>
+<span id="cb36-2298"><a href="#cb36-2298" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb36-2299"><a href="#cb36-2299" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (c <span class="kw">in</span> <span class="dv">1</span>:C) {</span>
+<span id="cb36-2300"><a href="#cb36-2300" aria-hidden="true" tabindex="-1"></a>    est <span class="op">&lt;-</span> chain_ests[[c]]</span>
+<span id="cb36-2301"><a href="#cb36-2301" aria-hidden="true" tabindex="-1"></a>    chain_var <span class="op">&lt;-</span> est[<span class="dv">3</span>] <span class="op">*</span> est[<span class="dv">2</span>]<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb36-2302"><a href="#cb36-2302" aria-hidden="true" tabindex="-1"></a>    var_update <span class="op">&lt;-</span> (est[<span class="dv">1</span>] <span class="op">-</span> mean)<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb36-2303"><a href="#cb36-2303" aria-hidden="true" tabindex="-1"></a>    <span class="bu">vars</span>[c] <span class="op">&lt;-</span> est[<span class="dv">3</span>] <span class="op">*</span> (var_update <span class="op">+</span> chain_var)</span>
+<span id="cb36-2304"><a href="#cb36-2304" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb36-2305"><a href="#cb36-2305" aria-hidden="true" tabindex="-1"></a>  var <span class="op">&lt;-</span> <span class="bu">sum</span>(<span class="bu">vars</span>) <span class="op">/</span> total_ess</span>
+<span id="cb36-2306"><a href="#cb36-2306" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb36-2307"><a href="#cb36-2307" aria-hidden="true" tabindex="-1"></a>  c(mean, sqrt(var <span class="op">/</span> total_ess), total_ess)</span>
+<span id="cb36-2308"><a href="#cb36-2308" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>A particularly common probabilistic calculation is estimating the probability allocated to subsets that are defined only implicitly by an indicator function. In practice we can estimate this probability by pushing samples forward along the indicator function and then constructing the Markov chain Monte Carlo expectation value estimator. These two steps occur together so often that it’s helpful to wrap them into a dedicated function.</p>
-<div class="sourceCode" id="cb37" data-startfrom="2309"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2308;"><span id="cb37-2309"><a href="#cb37-2309" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate the probability allocated to a subset implicitly defined by</span></span>
-<span id="cb37-2310"><a href="#cb37-2310" aria-hidden="true" tabindex="-1"></a><span class="co"># an indicator function.</span></span>
-<span id="cb37-2311"><a href="#cb37-2311" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays.</span></span>
-<span id="cb37-2312"><a href="#cb37-2312" aria-hidden="true" tabindex="-1"></a><span class="co">#                            The first dimension of each element indexes</span></span>
-<span id="cb37-2313"><a href="#cb37-2313" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the Markov chains and the second dimension</span></span>
-<span id="cb37-2314"><a href="#cb37-2314" aria-hidden="true" tabindex="-1"></a><span class="co">#                            indexes the sequential states within each</span></span>
-<span id="cb37-2315"><a href="#cb37-2315" aria-hidden="true" tabindex="-1"></a><span class="co">#                            Markov chain.</span></span>
-<span id="cb37-2316"><a href="#cb37-2316" aria-hidden="true" tabindex="-1"></a><span class="co"># @param indicator Function with logical or 0/1 numeric outputs.</span></span>
-<span id="cb37-2317"><a href="#cb37-2317" aria-hidden="true" tabindex="-1"></a><span class="co"># @param alt_arg_names Optional named list of alternate names for the</span></span>
-<span id="cb37-2318"><a href="#cb37-2318" aria-hidden="true" tabindex="-1"></a><span class="co">#                      nominal expectand argument names; when used all</span></span>
-<span id="cb37-2319"><a href="#cb37-2319" aria-hidden="true" tabindex="-1"></a><span class="co">#                      expectand argument names must be included.</span></span>
-<span id="cb37-2320"><a href="#cb37-2320" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The probability estimate and its standard error.</span></span>
-<span id="cb37-2321"><a href="#cb37-2321" aria-hidden="true" tabindex="-1"></a>implicit_subset_prob <span class="op">&lt;-</span> function(expectand_vals_list,</span>
-<span id="cb37-2322"><a href="#cb37-2322" aria-hidden="true" tabindex="-1"></a>                                 indicator,</span>
-<span id="cb37-2323"><a href="#cb37-2323" aria-hidden="true" tabindex="-1"></a>                                 alt_arg_names) {</span>
-<span id="cb37-2324"><a href="#cb37-2324" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Evaluate indicator function</span></span>
-<span id="cb37-2325"><a href="#cb37-2325" aria-hidden="true" tabindex="-1"></a>  indicator_samples <span class="op">&lt;-</span> eval_expectand_pushforward(expectand_vals_list,</span>
-<span id="cb37-2326"><a href="#cb37-2326" aria-hidden="true" tabindex="-1"></a>                                                  indicator,</span>
-<span id="cb37-2327"><a href="#cb37-2327" aria-hidden="true" tabindex="-1"></a>                                                  alt_arg_names)</span>
-<span id="cb37-2328"><a href="#cb37-2328" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-2329"><a href="#cb37-2329" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Verify outputs</span></span>
-<span id="cb37-2330"><a href="#cb37-2330" aria-hidden="true" tabindex="-1"></a>  unique_vals <span class="op">&lt;-</span> unique(c(indicator_samples, recursive<span class="op">=</span>TRUE))</span>
-<span id="cb37-2331"><a href="#cb37-2331" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-2332"><a href="#cb37-2332" aria-hidden="true" tabindex="-1"></a>  valid_outputs <span class="op">=</span> TRUE</span>
-<span id="cb37-2333"><a href="#cb37-2333" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (length(unique_vals) <span class="op">==</span> <span class="dv">1</span>) {</span>
-<span id="cb37-2334"><a href="#cb37-2334" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>(unique_vals <span class="op">==</span> <span class="dv">0</span> <span class="op">|</span> unique_vals <span class="op">==</span> <span class="dv">1</span>))</span>
-<span id="cb37-2335"><a href="#cb37-2335" aria-hidden="true" tabindex="-1"></a>      valid_outputs <span class="op">=</span> FALSE</span>
-<span id="cb37-2336"><a href="#cb37-2336" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (length(unique_vals) <span class="op">==</span> <span class="dv">2</span>) {</span>
-<span id="cb37-2337"><a href="#cb37-2337" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ( <span class="op">!</span>(  Reduce(<span class="st">&quot;&amp;&quot;</span>, unique_vals <span class="op">==</span> c(<span class="dv">0</span>, <span class="dv">1</span>))</span>
-<span id="cb37-2338"><a href="#cb37-2338" aria-hidden="true" tabindex="-1"></a>           <span class="op">|</span> Reduce(<span class="st">&quot;&amp;&quot;</span>, unique_vals <span class="op">==</span> c(<span class="dv">1</span>, <span class="dv">0</span>))) )</span>
-<span id="cb37-2339"><a href="#cb37-2339" aria-hidden="true" tabindex="-1"></a>      valid_outputs <span class="op">=</span> FALSE</span>
-<span id="cb37-2340"><a href="#cb37-2340" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb37-2341"><a href="#cb37-2341" aria-hidden="true" tabindex="-1"></a>    valid_outputs <span class="op">=</span> FALSE</span>
-<span id="cb37-2342"><a href="#cb37-2342" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb37-2343"><a href="#cb37-2343" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="op">!</span>valid_outputs)</span>
-<span id="cb37-2344"><a href="#cb37-2344" aria-hidden="true" tabindex="-1"></a>    stop(paste0(<span class="st">&#39;The function `indicator` must return only &#39;</span>,</span>
-<span id="cb37-2345"><a href="#cb37-2345" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;logical or 0/1 numeric outputs.&#39;</span>))</span>
-<span id="cb37-2346"><a href="#cb37-2346" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-2347"><a href="#cb37-2347" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return probability as expectation value of indicator function</span></span>
-<span id="cb37-2348"><a href="#cb37-2348" aria-hidden="true" tabindex="-1"></a>  ensemble_mcmc_est(indicator_samples)[<span class="dv">1</span>:<span class="dv">2</span>]</span>
-<span id="cb37-2349"><a href="#cb37-2349" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb37" data-startfrom="2311"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2310;"><span id="cb37-2311"><a href="#cb37-2311" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate the probability allocated to a subset implicitly defined by</span></span>
+<span id="cb37-2312"><a href="#cb37-2312" aria-hidden="true" tabindex="-1"></a><span class="co"># an indicator function.</span></span>
+<span id="cb37-2313"><a href="#cb37-2313" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays.</span></span>
+<span id="cb37-2314"><a href="#cb37-2314" aria-hidden="true" tabindex="-1"></a><span class="co">#                            The first dimension of each element indexes</span></span>
+<span id="cb37-2315"><a href="#cb37-2315" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the Markov chains and the second dimension</span></span>
+<span id="cb37-2316"><a href="#cb37-2316" aria-hidden="true" tabindex="-1"></a><span class="co">#                            indexes the sequential states within each</span></span>
+<span id="cb37-2317"><a href="#cb37-2317" aria-hidden="true" tabindex="-1"></a><span class="co">#                            Markov chain.</span></span>
+<span id="cb37-2318"><a href="#cb37-2318" aria-hidden="true" tabindex="-1"></a><span class="co"># @param indicator Function with logical or 0/1 numeric outputs.</span></span>
+<span id="cb37-2319"><a href="#cb37-2319" aria-hidden="true" tabindex="-1"></a><span class="co"># @param alt_arg_names Optional named list of alternate names for the</span></span>
+<span id="cb37-2320"><a href="#cb37-2320" aria-hidden="true" tabindex="-1"></a><span class="co">#                      nominal expectand argument names; when used all</span></span>
+<span id="cb37-2321"><a href="#cb37-2321" aria-hidden="true" tabindex="-1"></a><span class="co">#                      expectand argument names must be included.</span></span>
+<span id="cb37-2322"><a href="#cb37-2322" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The probability estimate and its standard error.</span></span>
+<span id="cb37-2323"><a href="#cb37-2323" aria-hidden="true" tabindex="-1"></a>implicit_subset_prob <span class="op">&lt;-</span> function(expectand_vals_list,</span>
+<span id="cb37-2324"><a href="#cb37-2324" aria-hidden="true" tabindex="-1"></a>                                 indicator,</span>
+<span id="cb37-2325"><a href="#cb37-2325" aria-hidden="true" tabindex="-1"></a>                                 alt_arg_names) {</span>
+<span id="cb37-2326"><a href="#cb37-2326" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Evaluate indicator function</span></span>
+<span id="cb37-2327"><a href="#cb37-2327" aria-hidden="true" tabindex="-1"></a>  indicator_samples <span class="op">&lt;-</span> eval_expectand_pushforward(expectand_vals_list,</span>
+<span id="cb37-2328"><a href="#cb37-2328" aria-hidden="true" tabindex="-1"></a>                                                  indicator,</span>
+<span id="cb37-2329"><a href="#cb37-2329" aria-hidden="true" tabindex="-1"></a>                                                  alt_arg_names)</span>
+<span id="cb37-2330"><a href="#cb37-2330" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-2331"><a href="#cb37-2331" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Verify outputs</span></span>
+<span id="cb37-2332"><a href="#cb37-2332" aria-hidden="true" tabindex="-1"></a>  unique_vals <span class="op">&lt;-</span> unique(c(indicator_samples, recursive<span class="op">=</span>TRUE))</span>
+<span id="cb37-2333"><a href="#cb37-2333" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-2334"><a href="#cb37-2334" aria-hidden="true" tabindex="-1"></a>  valid_outputs <span class="op">=</span> TRUE</span>
+<span id="cb37-2335"><a href="#cb37-2335" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (length(unique_vals) <span class="op">==</span> <span class="dv">1</span>) {</span>
+<span id="cb37-2336"><a href="#cb37-2336" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>(unique_vals <span class="op">==</span> <span class="dv">0</span> <span class="op">|</span> unique_vals <span class="op">==</span> <span class="dv">1</span>))</span>
+<span id="cb37-2337"><a href="#cb37-2337" aria-hidden="true" tabindex="-1"></a>      valid_outputs <span class="op">=</span> FALSE</span>
+<span id="cb37-2338"><a href="#cb37-2338" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (length(unique_vals) <span class="op">==</span> <span class="dv">2</span>) {</span>
+<span id="cb37-2339"><a href="#cb37-2339" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ( <span class="op">!</span>(  Reduce(<span class="st">&quot;&amp;&quot;</span>, unique_vals <span class="op">==</span> c(<span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb37-2340"><a href="#cb37-2340" aria-hidden="true" tabindex="-1"></a>           <span class="op">|</span> Reduce(<span class="st">&quot;&amp;&quot;</span>, unique_vals <span class="op">==</span> c(<span class="dv">1</span>, <span class="dv">0</span>))) )</span>
+<span id="cb37-2341"><a href="#cb37-2341" aria-hidden="true" tabindex="-1"></a>      valid_outputs <span class="op">=</span> FALSE</span>
+<span id="cb37-2342"><a href="#cb37-2342" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb37-2343"><a href="#cb37-2343" aria-hidden="true" tabindex="-1"></a>    valid_outputs <span class="op">=</span> FALSE</span>
+<span id="cb37-2344"><a href="#cb37-2344" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb37-2345"><a href="#cb37-2345" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="op">!</span>valid_outputs)</span>
+<span id="cb37-2346"><a href="#cb37-2346" aria-hidden="true" tabindex="-1"></a>    stop(paste0(<span class="st">&#39;The function `indicator` must return only &#39;</span>,</span>
+<span id="cb37-2347"><a href="#cb37-2347" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;logical or 0/1 numeric outputs.&#39;</span>))</span>
+<span id="cb37-2348"><a href="#cb37-2348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-2349"><a href="#cb37-2349" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return probability as expectation value of indicator function</span></span>
+<span id="cb37-2350"><a href="#cb37-2350" aria-hidden="true" tabindex="-1"></a>  ensemble_mcmc_est(indicator_samples)[<span class="dv">1</span>:<span class="dv">2</span>]</span>
+<span id="cb37-2351"><a href="#cb37-2351" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>We can also use realized Markov chains to estimate quantiles of the pushforward distribution along an expectand. Within a single Markov chain ordering the expectand values allow us to efficiently search for the value <span class="math inline">x_{q}</span> whose corresponding interval probability first exceeds the defining quantile probability <span class="math inline">p</span>, <span class="math display">\begin{align*}
 p
 &amp;&lt;
@@ -5303,161 +5305,161 @@ p
 \frac{1}{N} \sum_{n = 1}^{N} I_{ \{ -\infty,  x_{q} ] }( \tilde{x}_{n}).
 \end{align*}</span> The empirical quantiles within each Markov chain can then be averaged together to provide an ensemble estimator.</p>
 <p>In theory the empirical standard deviation of the individual Markov chain estimates consistently estimates the estimator error, but the estimation is unreliable without many Markov chains. Consequently it is not reported here.</p>
-<div class="sourceCode" id="cb38" data-startfrom="2351"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2350;"><span id="cb38-2351"><a href="#cb38-2351" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand pushforward quantiles from a Markov chain ensemble.</span></span>
-<span id="cb38-2352"><a href="#cb38-2352" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
-<span id="cb38-2353"><a href="#cb38-2353" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
-<span id="cb38-2354"><a href="#cb38-2354" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
-<span id="cb38-2355"><a href="#cb38-2355" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
-<span id="cb38-2356"><a href="#cb38-2356" aria-hidden="true" tabindex="-1"></a><span class="co"># @param probs An array of quantile probabilities.</span></span>
-<span id="cb38-2357"><a href="#cb38-2357" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The ensemble Markov chain Monte Carlo quantile estimate.</span></span>
-<span id="cb38-2358"><a href="#cb38-2358" aria-hidden="true" tabindex="-1"></a>ensemble_mcmc_quantile_est <span class="op">&lt;-</span> function(expectand_vals, probs) {</span>
-<span id="cb38-2359"><a href="#cb38-2359" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Validate inputs</span></span>
-<span id="cb38-2360"><a href="#cb38-2360" aria-hidden="true" tabindex="-1"></a>  validate_array(expectand_vals, <span class="st">&#39;expectand_vals&#39;</span>)</span>
-<span id="cb38-2361"><a href="#cb38-2361" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-2362"><a href="#cb38-2362" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.vector(probs)) {</span>
-<span id="cb38-2363"><a href="#cb38-2363" aria-hidden="true" tabindex="-1"></a>    stop(paste0(<span class="st">&#39;Input variable `probs` is not a &#39;</span>,</span>
-<span id="cb38-2364"><a href="#cb38-2364" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;one-dimensional numeric array.&#39;</span>))</span>
-<span id="cb38-2365"><a href="#cb38-2365" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb38-2366"><a href="#cb38-2366" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-2367"><a href="#cb38-2367" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Estimate and return quantile</span></span>
-<span id="cb38-2368"><a href="#cb38-2368" aria-hidden="true" tabindex="-1"></a>  q <span class="op">&lt;-</span> <span class="dv">0</span> <span class="op">*</span> probs</span>
-<span id="cb38-2369"><a href="#cb38-2369" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-2370"><a href="#cb38-2370" aria-hidden="true" tabindex="-1"></a>  C <span class="op">&lt;-</span> dim(expectand_vals)[<span class="dv">1</span>]</span>
-<span id="cb38-2371"><a href="#cb38-2371" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (c <span class="kw">in</span> <span class="dv">1</span>:C) {</span>
-<span id="cb38-2372"><a href="#cb38-2372" aria-hidden="true" tabindex="-1"></a>    q <span class="op">&lt;-</span> q <span class="op">+</span> quantile(expectand_vals[c,], probs<span class="op">=</span>probs) <span class="op">/</span> C</span>
-<span id="cb38-2373"><a href="#cb38-2373" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb38-2374"><a href="#cb38-2374" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-2375"><a href="#cb38-2375" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(q)</span>
-<span id="cb38-2376"><a href="#cb38-2376" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb38" data-startfrom="2353"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2352;"><span id="cb38-2353"><a href="#cb38-2353" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand pushforward quantiles from a Markov chain ensemble.</span></span>
+<span id="cb38-2354"><a href="#cb38-2354" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
+<span id="cb38-2355"><a href="#cb38-2355" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
+<span id="cb38-2356"><a href="#cb38-2356" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
+<span id="cb38-2357"><a href="#cb38-2357" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
+<span id="cb38-2358"><a href="#cb38-2358" aria-hidden="true" tabindex="-1"></a><span class="co"># @param probs An array of quantile probabilities.</span></span>
+<span id="cb38-2359"><a href="#cb38-2359" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The ensemble Markov chain Monte Carlo quantile estimate.</span></span>
+<span id="cb38-2360"><a href="#cb38-2360" aria-hidden="true" tabindex="-1"></a>ensemble_mcmc_quantile_est <span class="op">&lt;-</span> function(expectand_vals, probs) {</span>
+<span id="cb38-2361"><a href="#cb38-2361" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Validate inputs</span></span>
+<span id="cb38-2362"><a href="#cb38-2362" aria-hidden="true" tabindex="-1"></a>  validate_array(expectand_vals, <span class="st">&#39;expectand_vals&#39;</span>)</span>
+<span id="cb38-2363"><a href="#cb38-2363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-2364"><a href="#cb38-2364" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.vector(probs)) {</span>
+<span id="cb38-2365"><a href="#cb38-2365" aria-hidden="true" tabindex="-1"></a>    stop(paste0(<span class="st">&#39;Input variable `probs` is not a &#39;</span>,</span>
+<span id="cb38-2366"><a href="#cb38-2366" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;one-dimensional numeric array.&#39;</span>))</span>
+<span id="cb38-2367"><a href="#cb38-2367" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb38-2368"><a href="#cb38-2368" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-2369"><a href="#cb38-2369" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Estimate and return quantile</span></span>
+<span id="cb38-2370"><a href="#cb38-2370" aria-hidden="true" tabindex="-1"></a>  q <span class="op">&lt;-</span> <span class="dv">0</span> <span class="op">*</span> probs</span>
+<span id="cb38-2371"><a href="#cb38-2371" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-2372"><a href="#cb38-2372" aria-hidden="true" tabindex="-1"></a>  C <span class="op">&lt;-</span> dim(expectand_vals)[<span class="dv">1</span>]</span>
+<span id="cb38-2373"><a href="#cb38-2373" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (c <span class="kw">in</span> <span class="dv">1</span>:C) {</span>
+<span id="cb38-2374"><a href="#cb38-2374" aria-hidden="true" tabindex="-1"></a>    q <span class="op">&lt;-</span> q <span class="op">+</span> quantile(expectand_vals[c,], probs<span class="op">=</span>probs) <span class="op">/</span> C</span>
+<span id="cb38-2375"><a href="#cb38-2375" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb38-2376"><a href="#cb38-2376" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-2377"><a href="#cb38-2377" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(q)</span>
+<span id="cb38-2378"><a href="#cb38-2378" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Finally we can also visualize the entire pushforward distribution by estimating the target probabilities in histogram bins.</p>
-<div class="sourceCode" id="cb39" data-startfrom="2378"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2377;"><span id="cb39-2378"><a href="#cb39-2378" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize pushforward distribution along a given expectand as a</span></span>
-<span id="cb39-2379"><a href="#cb39-2379" aria-hidden="true" tabindex="-1"></a><span class="co"># sequence of bin probabilities weighted by bin widths that approximates</span></span>
-<span id="cb39-2380"><a href="#cb39-2380" aria-hidden="true" tabindex="-1"></a><span class="co"># the pushforward probability density function.  Markov chain Monte</span></span>
-<span id="cb39-2381"><a href="#cb39-2381" aria-hidden="true" tabindex="-1"></a><span class="co"># Carlo estimates the output bin probabilities from the input samples,</span></span>
-<span id="cb39-2382"><a href="#cb39-2382" aria-hidden="true" tabindex="-1"></a><span class="co"># with the bin probability estimator errors visualized in the border</span></span>
-<span id="cb39-2383"><a href="#cb39-2383" aria-hidden="true" tabindex="-1"></a><span class="co"># color.</span></span>
-<span id="cb39-2384"><a href="#cb39-2384" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
-<span id="cb39-2385"><a href="#cb39-2385" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
-<span id="cb39-2386"><a href="#cb39-2386" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
-<span id="cb39-2387"><a href="#cb39-2387" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
-<span id="cb39-2388"><a href="#cb39-2388" aria-hidden="true" tabindex="-1"></a><span class="co"># @param B The number of histogram bins</span></span>
-<span id="cb39-2389"><a href="#cb39-2389" aria-hidden="true" tabindex="-1"></a><span class="co"># @param display_name Expectand name</span></span>
-<span id="cb39-2390"><a href="#cb39-2390" aria-hidden="true" tabindex="-1"></a><span class="co"># @param flim Optional histogram range</span></span>
-<span id="cb39-2391"><a href="#cb39-2391" aria-hidden="true" tabindex="-1"></a><span class="co"># @param ylim Optional y-axis range; ignored if add is TRUE</span></span>
-<span id="cb39-2392"><a href="#cb39-2392" aria-hidden="true" tabindex="-1"></a><span class="co"># @param col Color for plotting weighted bin probabilities; defaults to</span></span>
-<span id="cb39-2393"><a href="#cb39-2393" aria-hidden="true" tabindex="-1"></a><span class="co">#            c_dark.</span></span>
-<span id="cb39-2394"><a href="#cb39-2394" aria-hidden="true" tabindex="-1"></a><span class="co"># @param border Color for plotting estimator error; defaults to gray</span></span>
-<span id="cb39-2395"><a href="#cb39-2395" aria-hidden="true" tabindex="-1"></a><span class="co"># @param add Configure plot to overlay over existing plot; defaults to</span></span>
-<span id="cb39-2396"><a href="#cb39-2396" aria-hidden="true" tabindex="-1"></a><span class="co">#            FALSE</span></span>
-<span id="cb39-2397"><a href="#cb39-2397" aria-hidden="true" tabindex="-1"></a><span class="co"># @param main Optional plot title</span></span>
-<span id="cb39-2398"><a href="#cb39-2398" aria-hidden="true" tabindex="-1"></a><span class="co"># @param baseline Optional baseline value for visual comparison</span></span>
-<span id="cb39-2399"><a href="#cb39-2399" aria-hidden="true" tabindex="-1"></a><span class="co"># @param baseline_col Color for plotting baseline value; defaults to</span></span>
-<span id="cb39-2400"><a href="#cb39-2400" aria-hidden="true" tabindex="-1"></a><span class="co">#                     &quot;black&quot;</span></span>
-<span id="cb39-2401"><a href="#cb39-2401" aria-hidden="true" tabindex="-1"></a>plot_expectand_pushforward <span class="op">&lt;-</span> function(expectand_vals, B,</span>
-<span id="cb39-2402"><a href="#cb39-2402" aria-hidden="true" tabindex="-1"></a>                                       display_name<span class="op">=</span><span class="st">&quot;f&quot;</span>,</span>
-<span id="cb39-2403"><a href="#cb39-2403" aria-hidden="true" tabindex="-1"></a>                                       flim<span class="op">=</span>NULL, ylim<span class="op">=</span>NULL,</span>
-<span id="cb39-2404"><a href="#cb39-2404" aria-hidden="true" tabindex="-1"></a>                                       col<span class="op">=</span>c_dark, border<span class="op">=</span><span class="st">&quot;#DDDDDD&quot;</span>,</span>
-<span id="cb39-2405"><a href="#cb39-2405" aria-hidden="true" tabindex="-1"></a>                                       add<span class="op">=</span>FALSE, main<span class="op">=</span><span class="st">&quot;&quot;</span>,</span>
-<span id="cb39-2406"><a href="#cb39-2406" aria-hidden="true" tabindex="-1"></a>                                       baseline<span class="op">=</span>NULL,</span>
-<span id="cb39-2407"><a href="#cb39-2407" aria-hidden="true" tabindex="-1"></a>                                       baseline_col<span class="op">=</span><span class="st">&quot;black&quot;</span>) {</span>
-<span id="cb39-2408"><a href="#cb39-2408" aria-hidden="true" tabindex="-1"></a>  validate_array(expectand_vals, <span class="st">&#39;expectand_vals&#39;</span>)</span>
-<span id="cb39-2409"><a href="#cb39-2409" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2410"><a href="#cb39-2410" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Automatically adjust histogram range to range of expectand values</span></span>
-<span id="cb39-2411"><a href="#cb39-2411" aria-hidden="true" tabindex="-1"></a>  <span class="co"># if range is not already set as an input variable</span></span>
-<span id="cb39-2412"><a href="#cb39-2412" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="kw">is</span>.null(flim)) {</span>
-<span id="cb39-2413"><a href="#cb39-2413" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> <span class="bu">min</span>(expectand_vals)</span>
-<span id="cb39-2414"><a href="#cb39-2414" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> <span class="bu">max</span>(expectand_vals)</span>
-<span id="cb39-2415"><a href="#cb39-2415" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">&lt;-</span> (max_f <span class="op">-</span> min_f) <span class="op">/</span> B</span>
-<span id="cb39-2416"><a href="#cb39-2416" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2417"><a href="#cb39-2417" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add bounding bins</span></span>
-<span id="cb39-2418"><a href="#cb39-2418" aria-hidden="true" tabindex="-1"></a>    B <span class="op">&lt;-</span> B <span class="op">+</span> <span class="dv">2</span></span>
-<span id="cb39-2419"><a href="#cb39-2419" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> min_f <span class="op">-</span> delta</span>
-<span id="cb39-2420"><a href="#cb39-2420" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> max_f <span class="op">+</span> delta</span>
-<span id="cb39-2421"><a href="#cb39-2421" aria-hidden="true" tabindex="-1"></a>    flim <span class="op">&lt;-</span> c(min_f, max_f)</span>
-<span id="cb39-2422"><a href="#cb39-2422" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2423"><a href="#cb39-2423" aria-hidden="true" tabindex="-1"></a>    bins <span class="op">&lt;-</span> seq(min_f, max_f, delta)</span>
-<span id="cb39-2424"><a href="#cb39-2424" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb39-2425"><a href="#cb39-2425" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> flim[<span class="dv">1</span>]</span>
-<span id="cb39-2426"><a href="#cb39-2426" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> flim[<span class="dv">2</span>]</span>
-<span id="cb39-2427"><a href="#cb39-2427" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2428"><a href="#cb39-2428" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">&lt;-</span> (max_f <span class="op">-</span> min_f) <span class="op">/</span> B</span>
-<span id="cb39-2429"><a href="#cb39-2429" aria-hidden="true" tabindex="-1"></a>    bins <span class="op">&lt;-</span> seq(min_f, max_f, delta)</span>
-<span id="cb39-2430"><a href="#cb39-2430" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb39-2431"><a href="#cb39-2431" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2432"><a href="#cb39-2432" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check value containment</span></span>
-<span id="cb39-2433"><a href="#cb39-2433" aria-hidden="true" tabindex="-1"></a>  S <span class="op">&lt;-</span> dim(expectand_vals)[<span class="dv">1</span>] <span class="op">*</span> dim(expectand_vals)[<span class="dv">2</span>]</span>
-<span id="cb39-2434"><a href="#cb39-2434" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2435"><a href="#cb39-2435" aria-hidden="true" tabindex="-1"></a>  S_low <span class="op">&lt;-</span> <span class="bu">sum</span>(c(expectand_vals, recursive<span class="op">=</span>TRUE) <span class="op">&lt;</span> min_f)</span>
-<span id="cb39-2436"><a href="#cb39-2436" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (S_low <span class="op">==</span> <span class="dv">1</span>)</span>
-<span id="cb39-2437"><a href="#cb39-2437" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> value (</span><span class="sc">%.1f%%</span><span class="st">) fell below the histogram binning.&#39;</span>,</span>
-<span id="cb39-2438"><a href="#cb39-2438" aria-hidden="true" tabindex="-1"></a>                    S_low, <span class="dv">100</span> <span class="op">*</span> S_low <span class="op">/</span> S))</span>
-<span id="cb39-2439"><a href="#cb39-2439" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (S_low <span class="op">&gt;</span> <span class="dv">1</span>)</span>
-<span id="cb39-2440"><a href="#cb39-2440" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> values (</span><span class="sc">%.1f%%</span><span class="st">) fell below the histogram binning.&#39;</span>,</span>
-<span id="cb39-2441"><a href="#cb39-2441" aria-hidden="true" tabindex="-1"></a>                    S_low, <span class="dv">100</span> <span class="op">*</span> S_low <span class="op">/</span> S))</span>
-<span id="cb39-2442"><a href="#cb39-2442" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2443"><a href="#cb39-2443" aria-hidden="true" tabindex="-1"></a>  S_high <span class="op">&lt;-</span> <span class="bu">sum</span>(max_f <span class="op">&lt;</span> c(expectand_vals, recursive<span class="op">=</span>TRUE))</span>
-<span id="cb39-2444"><a href="#cb39-2444" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (S_low <span class="op">==</span> <span class="dv">1</span>)</span>
-<span id="cb39-2445"><a href="#cb39-2445" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> value (</span><span class="sc">%.1f%%</span><span class="st">) fell above the histogram binning.&#39;</span>,</span>
-<span id="cb39-2446"><a href="#cb39-2446" aria-hidden="true" tabindex="-1"></a>                    S_high, <span class="dv">100</span> <span class="op">*</span> S_high <span class="op">/</span> S))</span>
-<span id="cb39-2447"><a href="#cb39-2447" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (S_low <span class="op">&gt;</span> <span class="dv">1</span>)</span>
-<span id="cb39-2448"><a href="#cb39-2448" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> values (</span><span class="sc">%.1f%%</span><span class="st">) fell above the histogram binning.&#39;</span>,</span>
-<span id="cb39-2449"><a href="#cb39-2449" aria-hidden="true" tabindex="-1"></a>                    S_high, <span class="dv">100</span> <span class="op">*</span> S_high <span class="op">/</span> S))</span>
-<span id="cb39-2450"><a href="#cb39-2450" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2451"><a href="#cb39-2451" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Compute bin heights</span></span>
-<span id="cb39-2452"><a href="#cb39-2452" aria-hidden="true" tabindex="-1"></a>  mean_p <span class="op">&lt;-</span> rep(<span class="dv">0</span>, B)</span>
-<span id="cb39-2453"><a href="#cb39-2453" aria-hidden="true" tabindex="-1"></a>  delta_p <span class="op">&lt;-</span> rep(<span class="dv">0</span>, B)</span>
-<span id="cb39-2454"><a href="#cb39-2454" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2455"><a href="#cb39-2455" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (b <span class="kw">in</span> <span class="dv">1</span>:B) {</span>
-<span id="cb39-2456"><a href="#cb39-2456" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Estimate bin probabilities</span></span>
-<span id="cb39-2457"><a href="#cb39-2457" aria-hidden="true" tabindex="-1"></a>    bin_indicator <span class="op">&lt;-</span> function(x) {</span>
-<span id="cb39-2458"><a href="#cb39-2458" aria-hidden="true" tabindex="-1"></a>      ifelse(bins[b] <span class="op">&lt;=</span> x <span class="op">&amp;</span> x <span class="op">&lt;</span> bins[b <span class="op">+</span> <span class="dv">1</span>], <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb39-2459"><a href="#cb39-2459" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb39-2460"><a href="#cb39-2460" aria-hidden="true" tabindex="-1"></a>    indicator_vals <span class="op">&lt;-</span> eval_uni_expectand_pushforward(expectand_vals,</span>
-<span id="cb39-2461"><a href="#cb39-2461" aria-hidden="true" tabindex="-1"></a>                                                     bin_indicator)</span>
-<span id="cb39-2462"><a href="#cb39-2462" aria-hidden="true" tabindex="-1"></a>    est <span class="op">&lt;-</span> ensemble_mcmc_est(indicator_vals)</span>
-<span id="cb39-2463"><a href="#cb39-2463" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2464"><a href="#cb39-2464" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Normalize bin probabilities by bin width to allow</span></span>
-<span id="cb39-2465"><a href="#cb39-2465" aria-hidden="true" tabindex="-1"></a>    <span class="co"># for direct comparison to probability density functions</span></span>
-<span id="cb39-2466"><a href="#cb39-2466" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> bins[b <span class="op">+</span> <span class="dv">1</span>] <span class="op">-</span> bins[b]</span>
-<span id="cb39-2467"><a href="#cb39-2467" aria-hidden="true" tabindex="-1"></a>    mean_p[b] <span class="op">=</span> est[<span class="dv">1</span>] <span class="op">/</span> width</span>
-<span id="cb39-2468"><a href="#cb39-2468" aria-hidden="true" tabindex="-1"></a>    delta_p[b] <span class="op">=</span> est[<span class="dv">2</span>] <span class="op">/</span> width</span>
-<span id="cb39-2469"><a href="#cb39-2469" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb39-2470"><a href="#cb39-2470" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2471"><a href="#cb39-2471" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot histogram</span></span>
-<span id="cb39-2472"><a href="#cb39-2472" aria-hidden="true" tabindex="-1"></a>  idx <span class="op">&lt;-</span> rep(<span class="dv">1</span>:B, each<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb39-2473"><a href="#cb39-2473" aria-hidden="true" tabindex="-1"></a>  x <span class="op">&lt;-</span> sapply(<span class="dv">1</span>:length(idx), function(b) <span class="cf">if</span>(b <span class="op">%%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">1</span>) bins[idx[b]]</span>
-<span id="cb39-2474"><a href="#cb39-2474" aria-hidden="true" tabindex="-1"></a>              <span class="cf">else</span> bins[idx[b] <span class="op">+</span> <span class="dv">1</span>])</span>
-<span id="cb39-2475"><a href="#cb39-2475" aria-hidden="true" tabindex="-1"></a>  lower_inter <span class="op">&lt;-</span> sapply(idx, function (n)</span>
-<span id="cb39-2476"><a href="#cb39-2476" aria-hidden="true" tabindex="-1"></a>    <span class="bu">max</span>(mean_p[n] <span class="op">-</span> <span class="dv">2</span> <span class="op">*</span> delta_p[n], <span class="dv">0</span>))</span>
-<span id="cb39-2477"><a href="#cb39-2477" aria-hidden="true" tabindex="-1"></a>  upper_inter <span class="op">&lt;-</span> sapply(idx, function (n)</span>
-<span id="cb39-2478"><a href="#cb39-2478" aria-hidden="true" tabindex="-1"></a>    <span class="bu">min</span>(mean_p[n] <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> delta_p[n], <span class="dv">1</span> <span class="op">/</span> width))</span>
-<span id="cb39-2479"><a href="#cb39-2479" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2480"><a href="#cb39-2480" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (add) {</span>
-<span id="cb39-2481"><a href="#cb39-2481" aria-hidden="true" tabindex="-1"></a>    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),</span>
-<span id="cb39-2482"><a href="#cb39-2482" aria-hidden="true" tabindex="-1"></a>            col<span class="op">=</span>border, border<span class="op">=</span>NA)</span>
-<span id="cb39-2483"><a href="#cb39-2483" aria-hidden="true" tabindex="-1"></a>    lines(x, mean_p[idx], col<span class="op">=</span>col, lwd<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb39-2484"><a href="#cb39-2484" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb39-2485"><a href="#cb39-2485" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">is</span>.null(ylim)) {</span>
-<span id="cb39-2486"><a href="#cb39-2486" aria-hidden="true" tabindex="-1"></a>      ylim<span class="op">=</span>c(<span class="dv">0</span>, <span class="bu">max</span>(<span class="fl">1.05</span> <span class="op">*</span> upper_inter))</span>
-<span id="cb39-2487"><a href="#cb39-2487" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb39-2488"><a href="#cb39-2488" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2489"><a href="#cb39-2489" aria-hidden="true" tabindex="-1"></a>    plot(<span class="dv">1</span>, <span class="bu">type</span><span class="op">=</span><span class="st">&quot;n&quot;</span>, main<span class="op">=</span>main,</span>
-<span id="cb39-2490"><a href="#cb39-2490" aria-hidden="true" tabindex="-1"></a>         xlim<span class="op">=</span>flim, xlab<span class="op">=</span>display_name,</span>
-<span id="cb39-2491"><a href="#cb39-2491" aria-hidden="true" tabindex="-1"></a>         ylim<span class="op">=</span>ylim, ylab<span class="op">=</span><span class="st">&quot;&quot;</span>, yaxt<span class="op">=</span><span class="st">&quot;n&quot;</span>)</span>
-<span id="cb39-2492"><a href="#cb39-2492" aria-hidden="true" tabindex="-1"></a>    title(ylab<span class="op">=</span><span class="st">&quot;Estimated Bin</span><span class="ch">\n</span><span class="st">Probabilities / Bin Width&quot;</span>,</span>
-<span id="cb39-2493"><a href="#cb39-2493" aria-hidden="true" tabindex="-1"></a>          mgp<span class="op">=</span>c(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
-<span id="cb39-2494"><a href="#cb39-2494" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2495"><a href="#cb39-2495" aria-hidden="true" tabindex="-1"></a>    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),</span>
-<span id="cb39-2496"><a href="#cb39-2496" aria-hidden="true" tabindex="-1"></a>            col<span class="op">=</span>border, border<span class="op">=</span>NA)</span>
-<span id="cb39-2497"><a href="#cb39-2497" aria-hidden="true" tabindex="-1"></a>    lines(x, mean_p[idx], col<span class="op">=</span>col, lwd<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb39-2498"><a href="#cb39-2498" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb39-2499"><a href="#cb39-2499" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-2500"><a href="#cb39-2500" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot baseline if applicable</span></span>
-<span id="cb39-2501"><a href="#cb39-2501" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.null(baseline)) {</span>
-<span id="cb39-2502"><a href="#cb39-2502" aria-hidden="true" tabindex="-1"></a>    abline(v<span class="op">=</span>baseline, col<span class="op">=</span><span class="st">&quot;white&quot;</span>, lty<span class="op">=</span><span class="dv">1</span>, lwd<span class="op">=</span><span class="dv">4</span>)</span>
-<span id="cb39-2503"><a href="#cb39-2503" aria-hidden="true" tabindex="-1"></a>    abline(v<span class="op">=</span>baseline, col<span class="op">=</span>baseline_col, lty<span class="op">=</span><span class="dv">1</span>, lwd<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb39-2504"><a href="#cb39-2504" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb39-2505"><a href="#cb39-2505" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb39" data-startfrom="2380"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2379;"><span id="cb39-2380"><a href="#cb39-2380" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize pushforward distribution along a given expectand as a</span></span>
+<span id="cb39-2381"><a href="#cb39-2381" aria-hidden="true" tabindex="-1"></a><span class="co"># sequence of bin probabilities weighted by bin widths that approximates</span></span>
+<span id="cb39-2382"><a href="#cb39-2382" aria-hidden="true" tabindex="-1"></a><span class="co"># the pushforward probability density function.  Markov chain Monte</span></span>
+<span id="cb39-2383"><a href="#cb39-2383" aria-hidden="true" tabindex="-1"></a><span class="co"># Carlo estimates the output bin probabilities from the input samples,</span></span>
+<span id="cb39-2384"><a href="#cb39-2384" aria-hidden="true" tabindex="-1"></a><span class="co"># with the bin probability estimator errors visualized in the border</span></span>
+<span id="cb39-2385"><a href="#cb39-2385" aria-hidden="true" tabindex="-1"></a><span class="co"># color.</span></span>
+<span id="cb39-2386"><a href="#cb39-2386" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
+<span id="cb39-2387"><a href="#cb39-2387" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
+<span id="cb39-2388"><a href="#cb39-2388" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
+<span id="cb39-2389"><a href="#cb39-2389" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
+<span id="cb39-2390"><a href="#cb39-2390" aria-hidden="true" tabindex="-1"></a><span class="co"># @param B The number of histogram bins</span></span>
+<span id="cb39-2391"><a href="#cb39-2391" aria-hidden="true" tabindex="-1"></a><span class="co"># @param display_name Expectand name</span></span>
+<span id="cb39-2392"><a href="#cb39-2392" aria-hidden="true" tabindex="-1"></a><span class="co"># @param flim Optional histogram range</span></span>
+<span id="cb39-2393"><a href="#cb39-2393" aria-hidden="true" tabindex="-1"></a><span class="co"># @param ylim Optional y-axis range; ignored if add is TRUE</span></span>
+<span id="cb39-2394"><a href="#cb39-2394" aria-hidden="true" tabindex="-1"></a><span class="co"># @param col Color for plotting weighted bin probabilities; defaults to</span></span>
+<span id="cb39-2395"><a href="#cb39-2395" aria-hidden="true" tabindex="-1"></a><span class="co">#            c_dark.</span></span>
+<span id="cb39-2396"><a href="#cb39-2396" aria-hidden="true" tabindex="-1"></a><span class="co"># @param border Color for plotting estimator error; defaults to gray</span></span>
+<span id="cb39-2397"><a href="#cb39-2397" aria-hidden="true" tabindex="-1"></a><span class="co"># @param add Configure plot to overlay over existing plot; defaults to</span></span>
+<span id="cb39-2398"><a href="#cb39-2398" aria-hidden="true" tabindex="-1"></a><span class="co">#            FALSE</span></span>
+<span id="cb39-2399"><a href="#cb39-2399" aria-hidden="true" tabindex="-1"></a><span class="co"># @param main Optional plot title</span></span>
+<span id="cb39-2400"><a href="#cb39-2400" aria-hidden="true" tabindex="-1"></a><span class="co"># @param baseline Optional baseline value for visual comparison</span></span>
+<span id="cb39-2401"><a href="#cb39-2401" aria-hidden="true" tabindex="-1"></a><span class="co"># @param baseline_col Color for plotting baseline value; defaults to</span></span>
+<span id="cb39-2402"><a href="#cb39-2402" aria-hidden="true" tabindex="-1"></a><span class="co">#                     &quot;black&quot;</span></span>
+<span id="cb39-2403"><a href="#cb39-2403" aria-hidden="true" tabindex="-1"></a>plot_expectand_pushforward <span class="op">&lt;-</span> function(expectand_vals, B,</span>
+<span id="cb39-2404"><a href="#cb39-2404" aria-hidden="true" tabindex="-1"></a>                                       display_name<span class="op">=</span><span class="st">&quot;f&quot;</span>,</span>
+<span id="cb39-2405"><a href="#cb39-2405" aria-hidden="true" tabindex="-1"></a>                                       flim<span class="op">=</span>NULL, ylim<span class="op">=</span>NULL,</span>
+<span id="cb39-2406"><a href="#cb39-2406" aria-hidden="true" tabindex="-1"></a>                                       col<span class="op">=</span>c_dark, border<span class="op">=</span><span class="st">&quot;#DDDDDD&quot;</span>,</span>
+<span id="cb39-2407"><a href="#cb39-2407" aria-hidden="true" tabindex="-1"></a>                                       add<span class="op">=</span>FALSE, main<span class="op">=</span><span class="st">&quot;&quot;</span>,</span>
+<span id="cb39-2408"><a href="#cb39-2408" aria-hidden="true" tabindex="-1"></a>                                       baseline<span class="op">=</span>NULL,</span>
+<span id="cb39-2409"><a href="#cb39-2409" aria-hidden="true" tabindex="-1"></a>                                       baseline_col<span class="op">=</span><span class="st">&quot;black&quot;</span>) {</span>
+<span id="cb39-2410"><a href="#cb39-2410" aria-hidden="true" tabindex="-1"></a>  validate_array(expectand_vals, <span class="st">&#39;expectand_vals&#39;</span>)</span>
+<span id="cb39-2411"><a href="#cb39-2411" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2412"><a href="#cb39-2412" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Automatically adjust histogram range to range of expectand values</span></span>
+<span id="cb39-2413"><a href="#cb39-2413" aria-hidden="true" tabindex="-1"></a>  <span class="co"># if range is not already set as an input variable</span></span>
+<span id="cb39-2414"><a href="#cb39-2414" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="kw">is</span>.null(flim)) {</span>
+<span id="cb39-2415"><a href="#cb39-2415" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> <span class="bu">min</span>(expectand_vals)</span>
+<span id="cb39-2416"><a href="#cb39-2416" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> <span class="bu">max</span>(expectand_vals)</span>
+<span id="cb39-2417"><a href="#cb39-2417" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">&lt;-</span> (max_f <span class="op">-</span> min_f) <span class="op">/</span> B</span>
+<span id="cb39-2418"><a href="#cb39-2418" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2419"><a href="#cb39-2419" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add bounding bins</span></span>
+<span id="cb39-2420"><a href="#cb39-2420" aria-hidden="true" tabindex="-1"></a>    B <span class="op">&lt;-</span> B <span class="op">+</span> <span class="dv">2</span></span>
+<span id="cb39-2421"><a href="#cb39-2421" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> min_f <span class="op">-</span> delta</span>
+<span id="cb39-2422"><a href="#cb39-2422" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> max_f <span class="op">+</span> delta</span>
+<span id="cb39-2423"><a href="#cb39-2423" aria-hidden="true" tabindex="-1"></a>    flim <span class="op">&lt;-</span> c(min_f, max_f)</span>
+<span id="cb39-2424"><a href="#cb39-2424" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2425"><a href="#cb39-2425" aria-hidden="true" tabindex="-1"></a>    bins <span class="op">&lt;-</span> seq(min_f, max_f, delta)</span>
+<span id="cb39-2426"><a href="#cb39-2426" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb39-2427"><a href="#cb39-2427" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> flim[<span class="dv">1</span>]</span>
+<span id="cb39-2428"><a href="#cb39-2428" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> flim[<span class="dv">2</span>]</span>
+<span id="cb39-2429"><a href="#cb39-2429" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2430"><a href="#cb39-2430" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">&lt;-</span> (max_f <span class="op">-</span> min_f) <span class="op">/</span> B</span>
+<span id="cb39-2431"><a href="#cb39-2431" aria-hidden="true" tabindex="-1"></a>    bins <span class="op">&lt;-</span> seq(min_f, max_f, delta)</span>
+<span id="cb39-2432"><a href="#cb39-2432" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb39-2433"><a href="#cb39-2433" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2434"><a href="#cb39-2434" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check value containment</span></span>
+<span id="cb39-2435"><a href="#cb39-2435" aria-hidden="true" tabindex="-1"></a>  S <span class="op">&lt;-</span> dim(expectand_vals)[<span class="dv">1</span>] <span class="op">*</span> dim(expectand_vals)[<span class="dv">2</span>]</span>
+<span id="cb39-2436"><a href="#cb39-2436" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2437"><a href="#cb39-2437" aria-hidden="true" tabindex="-1"></a>  S_low <span class="op">&lt;-</span> <span class="bu">sum</span>(c(expectand_vals, recursive<span class="op">=</span>TRUE) <span class="op">&lt;</span> min_f)</span>
+<span id="cb39-2438"><a href="#cb39-2438" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (S_low <span class="op">==</span> <span class="dv">1</span>)</span>
+<span id="cb39-2439"><a href="#cb39-2439" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> value (</span><span class="sc">%.1f%%</span><span class="st">) fell below the histogram binning.&#39;</span>,</span>
+<span id="cb39-2440"><a href="#cb39-2440" aria-hidden="true" tabindex="-1"></a>                    S_low, <span class="dv">100</span> <span class="op">*</span> S_low <span class="op">/</span> S))</span>
+<span id="cb39-2441"><a href="#cb39-2441" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (S_low <span class="op">&gt;</span> <span class="dv">1</span>)</span>
+<span id="cb39-2442"><a href="#cb39-2442" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> values (</span><span class="sc">%.1f%%</span><span class="st">) fell below the histogram binning.&#39;</span>,</span>
+<span id="cb39-2443"><a href="#cb39-2443" aria-hidden="true" tabindex="-1"></a>                    S_low, <span class="dv">100</span> <span class="op">*</span> S_low <span class="op">/</span> S))</span>
+<span id="cb39-2444"><a href="#cb39-2444" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2445"><a href="#cb39-2445" aria-hidden="true" tabindex="-1"></a>  S_high <span class="op">&lt;-</span> <span class="bu">sum</span>(max_f <span class="op">&lt;</span> c(expectand_vals, recursive<span class="op">=</span>TRUE))</span>
+<span id="cb39-2446"><a href="#cb39-2446" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (S_low <span class="op">==</span> <span class="dv">1</span>)</span>
+<span id="cb39-2447"><a href="#cb39-2447" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> value (</span><span class="sc">%.1f%%</span><span class="st">) fell above the histogram binning.&#39;</span>,</span>
+<span id="cb39-2448"><a href="#cb39-2448" aria-hidden="true" tabindex="-1"></a>                    S_high, <span class="dv">100</span> <span class="op">*</span> S_high <span class="op">/</span> S))</span>
+<span id="cb39-2449"><a href="#cb39-2449" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (S_low <span class="op">&gt;</span> <span class="dv">1</span>)</span>
+<span id="cb39-2450"><a href="#cb39-2450" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> values (</span><span class="sc">%.1f%%</span><span class="st">) fell above the histogram binning.&#39;</span>,</span>
+<span id="cb39-2451"><a href="#cb39-2451" aria-hidden="true" tabindex="-1"></a>                    S_high, <span class="dv">100</span> <span class="op">*</span> S_high <span class="op">/</span> S))</span>
+<span id="cb39-2452"><a href="#cb39-2452" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2453"><a href="#cb39-2453" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Compute bin heights</span></span>
+<span id="cb39-2454"><a href="#cb39-2454" aria-hidden="true" tabindex="-1"></a>  mean_p <span class="op">&lt;-</span> rep(<span class="dv">0</span>, B)</span>
+<span id="cb39-2455"><a href="#cb39-2455" aria-hidden="true" tabindex="-1"></a>  delta_p <span class="op">&lt;-</span> rep(<span class="dv">0</span>, B)</span>
+<span id="cb39-2456"><a href="#cb39-2456" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2457"><a href="#cb39-2457" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (b <span class="kw">in</span> <span class="dv">1</span>:B) {</span>
+<span id="cb39-2458"><a href="#cb39-2458" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Estimate bin probabilities</span></span>
+<span id="cb39-2459"><a href="#cb39-2459" aria-hidden="true" tabindex="-1"></a>    bin_indicator <span class="op">&lt;-</span> function(x) {</span>
+<span id="cb39-2460"><a href="#cb39-2460" aria-hidden="true" tabindex="-1"></a>      ifelse(bins[b] <span class="op">&lt;=</span> x <span class="op">&amp;</span> x <span class="op">&lt;</span> bins[b <span class="op">+</span> <span class="dv">1</span>], <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb39-2461"><a href="#cb39-2461" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb39-2462"><a href="#cb39-2462" aria-hidden="true" tabindex="-1"></a>    indicator_vals <span class="op">&lt;-</span> eval_uni_expectand_pushforward(expectand_vals,</span>
+<span id="cb39-2463"><a href="#cb39-2463" aria-hidden="true" tabindex="-1"></a>                                                     bin_indicator)</span>
+<span id="cb39-2464"><a href="#cb39-2464" aria-hidden="true" tabindex="-1"></a>    est <span class="op">&lt;-</span> ensemble_mcmc_est(indicator_vals)</span>
+<span id="cb39-2465"><a href="#cb39-2465" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2466"><a href="#cb39-2466" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Normalize bin probabilities by bin width to allow</span></span>
+<span id="cb39-2467"><a href="#cb39-2467" aria-hidden="true" tabindex="-1"></a>    <span class="co"># for direct comparison to probability density functions</span></span>
+<span id="cb39-2468"><a href="#cb39-2468" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> bins[b <span class="op">+</span> <span class="dv">1</span>] <span class="op">-</span> bins[b]</span>
+<span id="cb39-2469"><a href="#cb39-2469" aria-hidden="true" tabindex="-1"></a>    mean_p[b] <span class="op">=</span> est[<span class="dv">1</span>] <span class="op">/</span> width</span>
+<span id="cb39-2470"><a href="#cb39-2470" aria-hidden="true" tabindex="-1"></a>    delta_p[b] <span class="op">=</span> est[<span class="dv">2</span>] <span class="op">/</span> width</span>
+<span id="cb39-2471"><a href="#cb39-2471" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb39-2472"><a href="#cb39-2472" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2473"><a href="#cb39-2473" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot histogram</span></span>
+<span id="cb39-2474"><a href="#cb39-2474" aria-hidden="true" tabindex="-1"></a>  idx <span class="op">&lt;-</span> rep(<span class="dv">1</span>:B, each<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb39-2475"><a href="#cb39-2475" aria-hidden="true" tabindex="-1"></a>  x <span class="op">&lt;-</span> sapply(<span class="dv">1</span>:length(idx), function(b) <span class="cf">if</span>(b <span class="op">%%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">1</span>) bins[idx[b]]</span>
+<span id="cb39-2476"><a href="#cb39-2476" aria-hidden="true" tabindex="-1"></a>              <span class="cf">else</span> bins[idx[b] <span class="op">+</span> <span class="dv">1</span>])</span>
+<span id="cb39-2477"><a href="#cb39-2477" aria-hidden="true" tabindex="-1"></a>  lower_inter <span class="op">&lt;-</span> sapply(idx, function (n)</span>
+<span id="cb39-2478"><a href="#cb39-2478" aria-hidden="true" tabindex="-1"></a>    <span class="bu">max</span>(mean_p[n] <span class="op">-</span> <span class="dv">2</span> <span class="op">*</span> delta_p[n], <span class="dv">0</span>))</span>
+<span id="cb39-2479"><a href="#cb39-2479" aria-hidden="true" tabindex="-1"></a>  upper_inter <span class="op">&lt;-</span> sapply(idx, function (n)</span>
+<span id="cb39-2480"><a href="#cb39-2480" aria-hidden="true" tabindex="-1"></a>    <span class="bu">min</span>(mean_p[n] <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> delta_p[n], <span class="dv">1</span> <span class="op">/</span> width))</span>
+<span id="cb39-2481"><a href="#cb39-2481" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2482"><a href="#cb39-2482" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (add) {</span>
+<span id="cb39-2483"><a href="#cb39-2483" aria-hidden="true" tabindex="-1"></a>    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),</span>
+<span id="cb39-2484"><a href="#cb39-2484" aria-hidden="true" tabindex="-1"></a>            col<span class="op">=</span>border, border<span class="op">=</span>NA)</span>
+<span id="cb39-2485"><a href="#cb39-2485" aria-hidden="true" tabindex="-1"></a>    lines(x, mean_p[idx], col<span class="op">=</span>col, lwd<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb39-2486"><a href="#cb39-2486" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb39-2487"><a href="#cb39-2487" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">is</span>.null(ylim)) {</span>
+<span id="cb39-2488"><a href="#cb39-2488" aria-hidden="true" tabindex="-1"></a>      ylim<span class="op">=</span>c(<span class="dv">0</span>, <span class="bu">max</span>(<span class="fl">1.05</span> <span class="op">*</span> upper_inter))</span>
+<span id="cb39-2489"><a href="#cb39-2489" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb39-2490"><a href="#cb39-2490" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2491"><a href="#cb39-2491" aria-hidden="true" tabindex="-1"></a>    plot(<span class="dv">1</span>, <span class="bu">type</span><span class="op">=</span><span class="st">&quot;n&quot;</span>, main<span class="op">=</span>main,</span>
+<span id="cb39-2492"><a href="#cb39-2492" aria-hidden="true" tabindex="-1"></a>         xlim<span class="op">=</span>flim, xlab<span class="op">=</span>display_name,</span>
+<span id="cb39-2493"><a href="#cb39-2493" aria-hidden="true" tabindex="-1"></a>         ylim<span class="op">=</span>ylim, ylab<span class="op">=</span><span class="st">&quot;&quot;</span>, yaxt<span class="op">=</span><span class="st">&quot;n&quot;</span>)</span>
+<span id="cb39-2494"><a href="#cb39-2494" aria-hidden="true" tabindex="-1"></a>    title(ylab<span class="op">=</span><span class="st">&quot;Estimated Bin</span><span class="ch">\n</span><span class="st">Probabilities / Bin Width&quot;</span>,</span>
+<span id="cb39-2495"><a href="#cb39-2495" aria-hidden="true" tabindex="-1"></a>          mgp<span class="op">=</span>c(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
+<span id="cb39-2496"><a href="#cb39-2496" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2497"><a href="#cb39-2497" aria-hidden="true" tabindex="-1"></a>    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),</span>
+<span id="cb39-2498"><a href="#cb39-2498" aria-hidden="true" tabindex="-1"></a>            col<span class="op">=</span>border, border<span class="op">=</span>NA)</span>
+<span id="cb39-2499"><a href="#cb39-2499" aria-hidden="true" tabindex="-1"></a>    lines(x, mean_p[idx], col<span class="op">=</span>col, lwd<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb39-2500"><a href="#cb39-2500" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb39-2501"><a href="#cb39-2501" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2502"><a href="#cb39-2502" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot baseline if applicable</span></span>
+<span id="cb39-2503"><a href="#cb39-2503" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.null(baseline)) {</span>
+<span id="cb39-2504"><a href="#cb39-2504" aria-hidden="true" tabindex="-1"></a>    abline(v<span class="op">=</span>baseline, col<span class="op">=</span><span class="st">&quot;white&quot;</span>, lty<span class="op">=</span><span class="dv">1</span>, lwd<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb39-2505"><a href="#cb39-2505" aria-hidden="true" tabindex="-1"></a>    abline(v<span class="op">=</span>baseline, col<span class="op">=</span>baseline_col, lty<span class="op">=</span><span class="dv">1</span>, lwd<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb39-2506"><a href="#cb39-2506" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb39-2507"><a href="#cb39-2507" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="demonstration" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Demonstration</h1>
@@ -6573,14 +6575,15 @@ loaded via a namespace (and not attached):
  [1] gtable_0.3.4       jsonlite_1.8.8     compiler_4.3.2     Rcpp_1.0.11       
  [5] stringr_1.5.1      parallel_4.3.2     gridExtra_2.3      scales_1.3.0      
  [9] yaml_2.3.8         fastmap_1.1.1      ggplot2_3.4.4      R6_2.5.1          
-[13] curl_5.2.0         knitr_1.45         tibble_3.2.1       munsell_0.5.0     
-[17] pillar_1.9.0       rlang_1.1.2        utf8_1.2.4         V8_4.4.1          
-[21] stringi_1.8.3      inline_0.3.19      xfun_0.41          RcppParallel_5.1.7
-[25] cli_3.6.2          magrittr_2.0.3     digest_0.6.33      grid_4.3.2        
-[29] lifecycle_1.0.4    vctrs_0.6.5        evaluate_0.23      glue_1.6.2        
-[33] QuickJSR_1.0.8     codetools_0.2-19   stats4_4.3.2       pkgbuild_1.4.3    
-[37] fansi_1.0.6        colorspace_2.1-0   rmarkdown_2.25     matrixStats_1.2.0 
-[41] tools_4.3.2        loo_2.6.0          pkgconfig_2.0.3    htmltools_0.5.7   </code></pre>
+[13] curl_5.2.0         knitr_1.45         htmlwidgets_1.6.4  tibble_3.2.1      
+[17] munsell_0.5.0      pillar_1.9.0       rlang_1.1.2        utf8_1.2.4        
+[21] V8_4.4.1           stringi_1.8.3      inline_0.3.19      xfun_0.41         
+[25] RcppParallel_5.1.7 cli_3.6.2          magrittr_2.0.3     digest_0.6.33     
+[29] grid_4.3.2         lifecycle_1.0.4    vctrs_0.6.5        evaluate_0.23     
+[33] glue_1.6.2         QuickJSR_1.0.8     codetools_0.2-19   stats4_4.3.2      
+[37] pkgbuild_1.4.3     fansi_1.0.6        colorspace_2.1-0   rmarkdown_2.25    
+[41] matrixStats_1.2.0  tools_4.3.2        loo_2.6.0          pkgconfig_2.0.3   
+[45] htmltools_0.5.7   </code></pre>
 </div>
 </div>
 </section>

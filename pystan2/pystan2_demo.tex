@@ -443,12 +443,13 @@ inaccurate gradient evaluations.
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      no\_treedepth\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{n\_tds}\SpecialCharTok{:.0f\}}\SpecialStringTok{ of }\SpecialCharTok{\{}\NormalTok{S}\SpecialCharTok{\}}\SpecialStringTok{ \textquotesingle{}}
-                            \SpecialStringTok{f\textquotesingle{}transitions (}\SpecialCharTok{\{}\NormalTok{n\_tds }\OperatorTok{/}\NormalTok{ S}\SpecialCharTok{:.2\%\}}\SpecialStringTok{) saturated \textquotesingle{}}
-                            \SpecialStringTok{f\textquotesingle{}the maximum treedepth of }\SpecialCharTok{\{}\NormalTok{max\_treedepth}\SpecialCharTok{\}}\SpecialStringTok{.\textquotesingle{}}\NormalTok{)}
-    
+                            \SpecialStringTok{f\textquotesingle{}transitions (}\SpecialCharTok{\{}\NormalTok{n\_tds }\OperatorTok{/}\NormalTok{ S}\SpecialCharTok{:.3\%\}}\SpecialStringTok{)\textquotesingle{}}\NormalTok{)}
+\NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}           saturated the maximum \textquotesingle{}}
+                            \SpecialStringTok{f\textquotesingle{}treedepth of }\SpecialCharTok{\{}\NormalTok{max\_treedepth}\SpecialCharTok{\}}\SpecialStringTok{.\textquotesingle{}}\NormalTok{)}
+
     \CommentTok{\# Check the energy fraction of missing information (E{-}FMI)}
 \NormalTok{    energies }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}energy\_\_\textquotesingle{}}\NormalTok{][c]}
-\NormalTok{    numer }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{( [ (energies[i] }\OperatorTok{{-}}\NormalTok{ energies[i }\OperatorTok{{-}} \DecValTok{1}\NormalTok{])}\OperatorTok{**}\DecValTok{2} 
+\NormalTok{    numer }\OperatorTok{=} \BuiltInTok{sum}\NormalTok{( [ (energies[i] }\OperatorTok{{-}}\NormalTok{ energies[i }\OperatorTok{{-}} \DecValTok{1}\NormalTok{])}\OperatorTok{**}\DecValTok{2}
                    \ControlFlowTok{for}\NormalTok{ i }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{1}\NormalTok{, }\BuiltInTok{len}\NormalTok{(energies)) ] ) }\OperatorTok{/}\NormalTok{ S}
 \NormalTok{    denom }\OperatorTok{=}\NormalTok{ numpy.var(energies)}
     \ControlFlowTok{if}\NormalTok{ numer }\OperatorTok{/}\NormalTok{ denom }\OperatorTok{\textless{}} \FloatTok{0.2}\NormalTok{:}
@@ -456,17 +457,16 @@ inaccurate gradient evaluations.
 \NormalTok{      no\_efmi\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: \textquotesingle{}}
                             \SpecialStringTok{f\textquotesingle{}E{-}FMI = }\SpecialCharTok{\{}\NormalTok{numer }\OperatorTok{/}\NormalTok{ denom}\SpecialCharTok{:.3f\}}\SpecialStringTok{.\textquotesingle{}}\NormalTok{)}
-    
+
     \CommentTok{\# Check convergence of the stepsize adaptation}
 \NormalTok{    ave\_accept\_proxy }\OperatorTok{=}\NormalTok{ numpy.mean(diagnostics[}\StringTok{\textquotesingle{}accept\_stat\_\_\textquotesingle{}}\NormalTok{][c])}
     \ControlFlowTok{if}\NormalTok{ ave\_accept\_proxy }\OperatorTok{\textless{}} \FloatTok{0.9} \OperatorTok{*}\NormalTok{ adapt\_target:}
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      no\_accept\_warning }\OperatorTok{=} \VariableTok{False}
-\NormalTok{      local\_message }\OperatorTok{=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Average proxy acceptance \textquotesingle{}}
-                       \SpecialStringTok{f\textquotesingle{}statistic (}\SpecialCharTok{\{}\NormalTok{ave\_accept\_proxy}\SpecialCharTok{:.3f\}}\SpecialStringTok{) is smaller \textquotesingle{}}
-                       \SpecialStringTok{f\textquotesingle{}than 90\% of the target (}\SpecialCharTok{\{}\NormalTok{adapt\_target}\SpecialCharTok{:.3f\}}\SpecialStringTok{).\textquotesingle{}}\NormalTok{)}
-\NormalTok{      local\_message }\OperatorTok{=}\NormalTok{ textwrap.wrap(local\_message, max\_width)}
-\NormalTok{      local\_messages }\OperatorTok{+=}\NormalTok{ local\_message}
+\NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Average proxy acceptance \textquotesingle{}}
+                            \SpecialStringTok{f\textquotesingle{}statistic (}\SpecialCharTok{\{}\NormalTok{ave\_accept\_proxy}\SpecialCharTok{:.3f\}}\SpecialStringTok{)\textquotesingle{}}\NormalTok{)}
+\NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}           is smaller than 90\% of the \textquotesingle{}}
+                            \SpecialStringTok{f\textquotesingle{}target (}\SpecialCharTok{\{}\NormalTok{adapt\_target}\SpecialCharTok{:.3f\}}\SpecialStringTok{).\textquotesingle{}}\NormalTok{)}
     
     \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(local\_messages) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
 \NormalTok{      messages.append(local\_messages)}
@@ -3070,8 +3070,8 @@ Let's start with the Hamiltonian Monte Carlo diagnostics.
   Chain 2: 1009 of 1024 transitions (98.54%) diverged.
  
   Chain 3: 1014 of 1024 transitions (99.02%) diverged.
-  Chain 3: Average proxy acceptance statistic (0.700) is smaller than
-90% of the target (0.801).
+  Chain 3: Average proxy acceptance statistic (0.700)
+           is smaller than 90% of the target (0.801).
  
   Chain 4: 1016 of 1024 transitions (99.22%) diverged.
  
@@ -4068,7 +4068,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-13T15:41:54.060440-04:00
+Last updated: 2025-01-12T21:01:19.700585-05:00
 
 Python implementation: CPython
 Python version       : 3.9.6

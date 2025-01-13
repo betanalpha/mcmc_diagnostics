@@ -155,10 +155,10 @@ check_all_hmc_diagnostics <- function(diagnostics,
       no_treedepth_warning <- FALSE
       local_message <- 
         paste0(local_message,
-               sprintf('  Chain %s: %s of %s transitions (%s%%) ', 
+               sprintf('  Chain %s: %s of %s transitions (%.3f%%) ',
                        c, n_tds, S, 100 * n_tds / S),
-               sprintf('saturated the maximum treedepth of %s.\n', 
-                       max_treedepth))
+                       '           saturated the maximum treedepth ',
+               sprintf('of %s.\n', max_treedepth))
     }
     
     # Check the energy fraction of missing information (E-FMI)

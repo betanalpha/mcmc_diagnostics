@@ -405,8 +405,9 @@ inaccurate gradient evaluations.
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      no\_treedepth\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{n\_tds}\SpecialCharTok{:.0f\}}\SpecialStringTok{ of }\SpecialCharTok{\{}\NormalTok{S}\SpecialCharTok{\}}\SpecialStringTok{ \textquotesingle{}}
-                            \SpecialStringTok{f\textquotesingle{}transitions (}\SpecialCharTok{\{}\NormalTok{n\_tds }\OperatorTok{/}\NormalTok{ S}\SpecialCharTok{:.2\%\}}\SpecialStringTok{) saturated \textquotesingle{}}
-                            \SpecialStringTok{f\textquotesingle{}the maximum treedepth of }\SpecialCharTok{\{}\NormalTok{max\_treedepth}\SpecialCharTok{\}}\SpecialStringTok{.\textquotesingle{}}\NormalTok{)}
+                            \SpecialStringTok{f\textquotesingle{}transitions (}\SpecialCharTok{\{}\NormalTok{n\_tds }\OperatorTok{/}\NormalTok{ S}\SpecialCharTok{:.3\%\}}\SpecialStringTok{)\textquotesingle{}}\NormalTok{)}
+\NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}           saturated the maximum \textquotesingle{}}
+                            \SpecialStringTok{f\textquotesingle{}treedepth of }\SpecialCharTok{\{}\NormalTok{max\_treedepth}\SpecialCharTok{\}}\SpecialStringTok{.\textquotesingle{}}\NormalTok{)}
     
     \CommentTok{\# Check the energy fraction of missing information (E{-}FMI)}
 \NormalTok{    energies }\OperatorTok{=}\NormalTok{ diagnostics[}\StringTok{\textquotesingle{}energy\_\_\textquotesingle{}}\NormalTok{][c]}
@@ -424,11 +425,10 @@ inaccurate gradient evaluations.
     \ControlFlowTok{if}\NormalTok{ ave\_accept\_proxy }\OperatorTok{\textless{}} \FloatTok{0.9} \OperatorTok{*}\NormalTok{ adapt\_target:}
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{      no\_accept\_warning }\OperatorTok{=} \VariableTok{False}
-\NormalTok{      local\_message }\OperatorTok{=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Average proxy acceptance \textquotesingle{}}
-                       \SpecialStringTok{f\textquotesingle{}statistic (}\SpecialCharTok{\{}\NormalTok{ave\_accept\_proxy}\SpecialCharTok{:.3f\}}\SpecialStringTok{) is smaller \textquotesingle{}}
-                       \SpecialStringTok{f\textquotesingle{}than 90\% of the target (}\SpecialCharTok{\{}\NormalTok{adapt\_target}\SpecialCharTok{:.3f\}}\SpecialStringTok{).\textquotesingle{}}\NormalTok{)}
-\NormalTok{      local\_message }\OperatorTok{=}\NormalTok{ textwrap.wrap(local\_message, max\_width)}
-\NormalTok{      local\_messages }\OperatorTok{+=}\NormalTok{ local\_message}
+\NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Average proxy acceptance \textquotesingle{}}
+                            \SpecialStringTok{f\textquotesingle{}statistic (}\SpecialCharTok{\{}\NormalTok{ave\_accept\_proxy}\SpecialCharTok{:.3f\}}\SpecialStringTok{)\textquotesingle{}}\NormalTok{)}
+\NormalTok{      local\_messages.append(}\SpecialStringTok{f\textquotesingle{}           is smaller than 90\% of the \textquotesingle{}}
+                            \SpecialStringTok{f\textquotesingle{}target (}\SpecialCharTok{\{}\NormalTok{adapt\_target}\SpecialCharTok{:.3f\}}\SpecialStringTok{).\textquotesingle{}}\NormalTok{)}
     
     \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(local\_messages) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
 \NormalTok{      messages.append(local\_messages)}
@@ -3053,8 +3053,8 @@ Let's start with the Hamiltonian Monte Carlo diagnostics.
 
 \begin{verbatim}
   Chain 1: 1016 of 1024 transitions (99.22%) diverged.
-  Chain 1: Average proxy acceptance statistic (0.566) is smaller than
-90% of the target (0.801).
+  Chain 1: Average proxy acceptance statistic (0.566)
+           is smaller than 90% of the target (0.801).
  
   Chain 2: 1015 of 1024 transitions (99.12%) diverged.
  
@@ -4049,7 +4049,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2024-09-13T15:41:15.396481-04:00
+Last updated: 2025-01-12T20:53:53.169764-05:00
 
 Python implementation: CPython
 Python version       : 3.9.6

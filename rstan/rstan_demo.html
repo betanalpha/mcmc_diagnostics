@@ -3323,10 +3323,10 @@ window.Quarto = {
 <span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a>      no_treedepth_warning <span class="op">&lt;-</span> FALSE</span>
 <span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>      local_message <span class="op">&lt;-</span> </span>
 <span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a>        paste0(local_message,</span>
-<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>               sprintf(<span class="st">&#39;  Chain </span><span class="sc">%s</span><span class="st">: </span><span class="sc">%s</span><span class="st"> of </span><span class="sc">%s</span><span class="st"> transitions (</span><span class="sc">%s%%</span><span class="st">) &#39;</span>, </span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>               sprintf(<span class="st">&#39;  Chain </span><span class="sc">%s</span><span class="st">: </span><span class="sc">%s</span><span class="st"> of </span><span class="sc">%s</span><span class="st"> transitions (</span><span class="sc">%.3f%%</span><span class="st">) &#39;</span>,</span>
 <span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a>                       c, n_tds, S, <span class="dv">100</span> <span class="op">*</span> n_tds <span class="op">/</span> S),</span>
-<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>               sprintf(<span class="st">&#39;saturated the maximum treedepth of </span><span class="sc">%s</span><span class="st">.</span><span class="ch">\n</span><span class="st">&#39;</span>, </span>
-<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a>                       max_treedepth))</span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>                       <span class="st">&#39;           saturated the maximum treedepth &#39;</span>,</span>
+<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a>               sprintf(<span class="st">&#39;of </span><span class="sc">%s</span><span class="st">.</span><span class="ch">\n</span><span class="st">&#39;</span>, max_treedepth))</span>
 <span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Check the energy fraction of missing information (E-FMI)</span></span>
@@ -3410,15 +3410,15 @@ window.Quarto = {
 <span id="cb4-242"><a href="#cb4-242" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb4-243"><a href="#cb4-243" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-244"><a href="#cb4-244" aria-hidden="true" tabindex="-1"></a>  cat(message)</span>
-<span id="cb4-245"><a href="#cb4-245" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-245"><a href="#cb4-245" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-246"><a href="#cb4-246" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-247"><a href="#cb4-247" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot outcome of inverse metric adaptation</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="integrator-inverse-metric-elements" class="level2" data-number="2.2">
 <h2 data-number="2.2" class="anchored" data-anchor-id="integrator-inverse-metric-elements"><span class="header-section-number">2.2</span> Integrator Inverse Metric Elements</h2>
 <p>Diagnostic failures indicate the presence of problems but only hint at the nature of those problems. In order to resolve the underlying problems we need to investigate them beyond these hints. Fortunately Hamiltonian Monte Carlo provides a wealth of additional information that can assist.</p>
 <p>First we can look at the inverse metric adaptation in each of the Markov chains. Inconsistencies in the adapted inverse metric elements across the Markov chains are due to the individual chains encountering different behaviors during warmup.</p>
-<div class="sourceCode" id="cb5" data-startfrom="247"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 246;"><span id="cb5-247"><a href="#cb5-247" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot outcome of inverse metric adaptation</span></span>
-<span id="cb5-248"><a href="#cb5-248" aria-hidden="true" tabindex="-1"></a><span class="co"># @params stan_fit A StanFit object</span></span>
-<span id="cb5-249"><a href="#cb5-249" aria-hidden="true" tabindex="-1"></a><span class="co"># @params B The number of bins for the inverse metric element histograms.</span></span>
+<div class="sourceCode" id="cb5" data-startfrom="249"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 248;"><span id="cb5-249"><a href="#cb5-249" aria-hidden="true" tabindex="-1"></a><span class="co"># @params B The number of bins for the inverse metric element histograms.</span></span>
 <span id="cb5-250"><a href="#cb5-250" aria-hidden="true" tabindex="-1"></a>plot_inv_metric <span class="op">&lt;-</span> function(stan_fit, B<span class="op">=</span><span class="dv">25</span>) {</span>
 <span id="cb5-251"><a href="#cb5-251" aria-hidden="true" tabindex="-1"></a>  adaptation_info <span class="op">&lt;-</span> rstan:::get_adaptation_info(stan_fit)</span>
 <span id="cb5-252"><a href="#cb5-252" aria-hidden="true" tabindex="-1"></a>  C <span class="op">&lt;-</span> length(adaptation_info)</span>
@@ -3460,15 +3460,15 @@ window.Quarto = {
 <span id="cb5-288"><a href="#cb5-288" aria-hidden="true" tabindex="-1"></a>         xlim<span class="op">=</span>c(min_elem, max_elem), xlab<span class="op">=</span><span class="st">&quot;Inverse Metric Elements&quot;</span>,</span>
 <span id="cb5-289"><a href="#cb5-289" aria-hidden="true" tabindex="-1"></a>         ylim<span class="op">=</span>c(<span class="dv">0</span>, <span class="fl">1.05</span> <span class="op">*</span> max_y), ylab<span class="op">=</span><span class="st">&quot;&quot;</span>, yaxt<span class="op">=</span><span class="st">&quot;n&quot;</span>)</span>
 <span id="cb5-290"><a href="#cb5-290" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-291"><a href="#cb5-291" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-291"><a href="#cb5-291" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-292"><a href="#cb5-292" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-293"><a href="#cb5-293" aria-hidden="true" tabindex="-1"></a><span class="co"># Display adapted symplectic integrator step sizes</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Note that the adaptation information may be accessed differently in other Stan interfaces, in which case this function would have to be modified accordingly.</p>
 </section>
 <section id="integrator-step-sizes" class="level2" data-number="2.3">
 <h2 data-number="2.3" class="anchored" data-anchor-id="integrator-step-sizes"><span class="header-section-number">2.3</span> Integrator Step Sizes</h2>
 <p>The other product of Stan’s adaptation is the step size of the numerical integrator used to build the numerical Hamiltonian trajectories. As with the inverse metric elements heterogeneity in the adapted values across the Markov chains indicates that the Markov chains encountered substantially different behavior during warmup.</p>
-<div class="sourceCode" id="cb6" data-startfrom="293"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 292;"><span id="cb6-293"><a href="#cb6-293" aria-hidden="true" tabindex="-1"></a><span class="co"># Display adapted symplectic integrator step sizes</span></span>
-<span id="cb6-294"><a href="#cb6-294" aria-hidden="true" tabindex="-1"></a><span class="co"># @param diagnostics A named list of two-dimensional arrays for </span></span>
-<span id="cb6-295"><a href="#cb6-295" aria-hidden="true" tabindex="-1"></a><span class="co">#                    each diagnostic.  The first dimension of each</span></span>
+<div class="sourceCode" id="cb6" data-startfrom="295"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 294;"><span id="cb6-295"><a href="#cb6-295" aria-hidden="true" tabindex="-1"></a><span class="co">#                    each diagnostic.  The first dimension of each</span></span>
 <span id="cb6-296"><a href="#cb6-296" aria-hidden="true" tabindex="-1"></a><span class="co">#                    element indexes the Markov chains and the </span></span>
 <span id="cb6-297"><a href="#cb6-297" aria-hidden="true" tabindex="-1"></a><span class="co">#                    second dimension indexes the sequential </span></span>
 <span id="cb6-298"><a href="#cb6-298" aria-hidden="true" tabindex="-1"></a><span class="co">#                    states within each Markov chain.</span></span>
@@ -3483,14 +3483,14 @@ window.Quarto = {
 <span id="cb6-307"><a href="#cb6-307" aria-hidden="true" tabindex="-1"></a>    cat(sprintf(<span class="st">&#39;Chain </span><span class="sc">%s</span><span class="st">: Integrator Step Size = </span><span class="sc">%f</span><span class="ch">\n</span><span class="st">&#39;</span>,</span>
 <span id="cb6-308"><a href="#cb6-308" aria-hidden="true" tabindex="-1"></a>                c, stepsize))</span>
 <span id="cb6-309"><a href="#cb6-309" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb6-310"><a href="#cb6-310" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-310"><a href="#cb6-310" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-311"><a href="#cb6-311" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-312"><a href="#cb6-312" aria-hidden="true" tabindex="-1"></a><span class="co"># Display symplectic integrator trajectory lengths</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="numerical-trajectory-lengths" class="level2" data-number="2.4">
 <h2 data-number="2.4" class="anchored" data-anchor-id="numerical-trajectory-lengths"><span class="header-section-number">2.4</span> Numerical Trajectory Lengths</h2>
 <p>We can see the consequence of the adapted step sizes by looking at the numerical trajectories generated for each Hamiltonian Markov transition. The longer these trajectories the more degenerate the target distribution, and the more expensive it is to explore.</p>
-<div class="sourceCode" id="cb7" data-startfrom="312"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 311;"><span id="cb7-312"><a href="#cb7-312" aria-hidden="true" tabindex="-1"></a><span class="co"># Display symplectic integrator trajectory lengths</span></span>
-<span id="cb7-313"><a href="#cb7-313" aria-hidden="true" tabindex="-1"></a><span class="co"># @param diagnostics A named list of two-dimensional arrays for </span></span>
-<span id="cb7-314"><a href="#cb7-314" aria-hidden="true" tabindex="-1"></a><span class="co">#                    each diagnostic.  The first dimension of each</span></span>
+<div class="sourceCode" id="cb7" data-startfrom="314"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 313;"><span id="cb7-314"><a href="#cb7-314" aria-hidden="true" tabindex="-1"></a><span class="co">#                    each diagnostic.  The first dimension of each</span></span>
 <span id="cb7-315"><a href="#cb7-315" aria-hidden="true" tabindex="-1"></a><span class="co">#                    element indexes the Markov chains and the </span></span>
 <span id="cb7-316"><a href="#cb7-316" aria-hidden="true" tabindex="-1"></a><span class="co">#                    second dimension indexes the sequential </span></span>
 <span id="cb7-317"><a href="#cb7-317" aria-hidden="true" tabindex="-1"></a><span class="co">#                    states within each Markov chain.</span></span>
@@ -3521,10 +3521,10 @@ window.Quarto = {
 <span id="cb7-342"><a href="#cb7-342" aria-hidden="true" tabindex="-1"></a>    pad_counts <span class="op">&lt;-</span> counts[idx]</span>
 <span id="cb7-343"><a href="#cb7-343" aria-hidden="true" tabindex="-1"></a>    lines(xs, pad_counts, lwd<span class="op">=</span><span class="dv">2</span>, col<span class="op">=</span>colors[c])</span>
 <span id="cb7-344"><a href="#cb7-344" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb7-345"><a href="#cb7-345" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb8" data-startfrom="347"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 346;"><span id="cb8-347"><a href="#cb8-347" aria-hidden="true" tabindex="-1"></a><span class="co"># Display symplectic integrator trajectory lengths by Markov chain</span></span>
-<span id="cb8-348"><a href="#cb8-348" aria-hidden="true" tabindex="-1"></a><span class="co"># @param diagnostics A named list of two-dimensional arrays for </span></span>
-<span id="cb8-349"><a href="#cb8-349" aria-hidden="true" tabindex="-1"></a><span class="co">#                    each diagnostic.  The first dimension of each</span></span>
+<span id="cb7-345"><a href="#cb7-345" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-346"><a href="#cb7-346" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-347"><a href="#cb7-347" aria-hidden="true" tabindex="-1"></a><span class="co"># Display symplectic integrator trajectory lengths by Markov chain</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8" data-startfrom="349"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 348;"><span id="cb8-349"><a href="#cb8-349" aria-hidden="true" tabindex="-1"></a><span class="co">#                    each diagnostic.  The first dimension of each</span></span>
 <span id="cb8-350"><a href="#cb8-350" aria-hidden="true" tabindex="-1"></a><span class="co">#                    element indexes the Markov chains and the </span></span>
 <span id="cb8-351"><a href="#cb8-351" aria-hidden="true" tabindex="-1"></a><span class="co">#                    second dimension indexes the sequential </span></span>
 <span id="cb8-352"><a href="#cb8-352" aria-hidden="true" tabindex="-1"></a><span class="co">#                    states within each Markov chain.</span></span>
@@ -3558,14 +3558,14 @@ window.Quarto = {
 <span id="cb8-380"><a href="#cb8-380" aria-hidden="true" tabindex="-1"></a>         xlab<span class="op">=</span><span class="st">&quot;Numerical Trajectory Length&quot;</span>, xlim<span class="op">=</span>c(<span class="fl">0.5</span>, max_length <span class="op">+</span> <span class="fl">0.5</span>),</span>
 <span id="cb8-381"><a href="#cb8-381" aria-hidden="true" tabindex="-1"></a>         ylab<span class="op">=</span><span class="st">&quot;&quot;</span>, ylim<span class="op">=</span>c(<span class="dv">0</span>, <span class="fl">1.1</span> <span class="op">*</span> max_count), yaxt<span class="op">=</span><span class="st">&#39;n&#39;</span>)</span>
 <span id="cb8-382"><a href="#cb8-382" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-383"><a href="#cb8-383" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-383"><a href="#cb8-383" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-384"><a href="#cb8-384" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-385"><a href="#cb8-385" aria-hidden="true" tabindex="-1"></a><span class="co"># Display empirical average of the proxy acceptance statistic across </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="average-proxy-acceptance-statistic" class="level2" data-number="2.5">
 <h2 data-number="2.5" class="anchored" data-anchor-id="average-proxy-acceptance-statistic"><span class="header-section-number">2.5</span> Average Proxy Acceptance Statistic</h2>
 <p>When the different adaptation outcomes are due to problematic behaviors encountered during warmup then it the average proxy acceptance statistics should also vary across the Markov chains.</p>
-<div class="sourceCode" id="cb9" data-startfrom="385"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 384;"><span id="cb9-385"><a href="#cb9-385" aria-hidden="true" tabindex="-1"></a><span class="co"># Display empirical average of the proxy acceptance statistic across </span></span>
-<span id="cb9-386"><a href="#cb9-386" aria-hidden="true" tabindex="-1"></a><span class="co"># each Markov chain</span></span>
-<span id="cb9-387"><a href="#cb9-387" aria-hidden="true" tabindex="-1"></a><span class="co"># @param diagnostics A named list of two-dimensional arrays for </span></span>
+<div class="sourceCode" id="cb9" data-startfrom="387"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 386;"><span id="cb9-387"><a href="#cb9-387" aria-hidden="true" tabindex="-1"></a><span class="co"># @param diagnostics A named list of two-dimensional arrays for </span></span>
 <span id="cb9-388"><a href="#cb9-388" aria-hidden="true" tabindex="-1"></a><span class="co">#                    each diagnostic.  The first dimension of each</span></span>
 <span id="cb9-389"><a href="#cb9-389" aria-hidden="true" tabindex="-1"></a><span class="co">#                    element indexes the Markov chains and the </span></span>
 <span id="cb9-390"><a href="#cb9-390" aria-hidden="true" tabindex="-1"></a><span class="co">#                    second dimension indexes the sequential </span></span>
@@ -3581,15 +3581,15 @@ window.Quarto = {
 <span id="cb9-400"><a href="#cb9-400" aria-hidden="true" tabindex="-1"></a>    cat(sprintf(<span class="st">&#39;Chain </span><span class="sc">%s</span><span class="st">: Average proxy acceptance statistic = </span><span class="sc">%.3f</span><span class="ch">\n</span><span class="st">&#39;</span>,</span>
 <span id="cb9-401"><a href="#cb9-401" aria-hidden="true" tabindex="-1"></a>                c, ave_accept_proxy))</span>
 <span id="cb9-402"><a href="#cb9-402" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-403"><a href="#cb9-403" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-403"><a href="#cb9-403" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-404"><a href="#cb9-404" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-405"><a href="#cb9-405" aria-hidden="true" tabindex="-1"></a><span class="co"># Display symplectic integrator trajectory times</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="divergence-labeled-pairs-plot" class="level2" data-number="2.6">
 <h2 data-number="2.6" class="anchored" data-anchor-id="divergence-labeled-pairs-plot"><span class="header-section-number">2.6</span> Divergence-Labeled Pairs Plot</h2>
 <p>One of the most powerful features of divergent transitions is that they not only indicate problematic geometry but also provide some spatial information on the source of that problematic geometry. In particular the states generated from unstable numerical Hamiltonian trajectories will tend to be closer to the problematic geometry than those from stable trajectories.</p>
 <p>Consequently if we plot the states from divergent and non-divergent transitions separately then we should see the divergent states concentrate towards the problematic behavior. The high-dimensional states themselves can be visualized with pairs plots.</p>
-<div class="sourceCode" id="cb10" data-startfrom="458"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 457;"><span id="cb10-458"><a href="#cb10-458" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply transformation identity, log, or logit transformation to</span></span>
-<span id="cb10-459"><a href="#cb10-459" aria-hidden="true" tabindex="-1"></a><span class="co"># named values and flatten the output.  Transformation defaults to</span></span>
-<span id="cb10-460"><a href="#cb10-460" aria-hidden="true" tabindex="-1"></a><span class="co"># identity if name is not included in `transforms` dictionary.  A </span></span>
+<div class="sourceCode" id="cb10" data-startfrom="460"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 459;"><span id="cb10-460"><a href="#cb10-460" aria-hidden="true" tabindex="-1"></a><span class="co"># identity if name is not included in `transforms` dictionary.  A </span></span>
 <span id="cb10-461"><a href="#cb10-461" aria-hidden="true" tabindex="-1"></a><span class="co"># ValueError is thrown if values are not properly constrained.</span></span>
 <span id="cb10-462"><a href="#cb10-462" aria-hidden="true" tabindex="-1"></a><span class="co"># @param name Expectand name.</span></span>
 <span id="cb10-463"><a href="#cb10-463" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays for</span></span>
@@ -3636,10 +3636,10 @@ window.Quarto = {
 <span id="cb10-504"><a href="#cb10-504" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb10-505"><a href="#cb10-505" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (<span class="bu">list</span>(<span class="st">&#39;t_name&#39;</span> <span class="op">=</span> transformed_name, </span>
 <span id="cb10-506"><a href="#cb10-506" aria-hidden="true" tabindex="-1"></a>               <span class="st">&#39;t_vals&#39;</span> <span class="op">=</span> transformed_vals))</span>
-<span id="cb10-507"><a href="#cb10-507" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb11" data-startfrom="509"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 508;"><span id="cb11-509"><a href="#cb11-509" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot pairwise scatter plots with non-divergent and divergent </span></span>
-<span id="cb11-510"><a href="#cb11-510" aria-hidden="true" tabindex="-1"></a><span class="co"># transitions separated by color</span></span>
-<span id="cb11-511"><a href="#cb11-511" aria-hidden="true" tabindex="-1"></a><span class="co"># @param x_names An array of expectand names to be plotted on the x axis.</span></span>
+<span id="cb10-507"><a href="#cb10-507" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-508"><a href="#cb10-508" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-509"><a href="#cb10-509" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot pairwise scatter plots with non-divergent and divergent </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11" data-startfrom="511"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 510;"><span id="cb11-511"><a href="#cb11-511" aria-hidden="true" tabindex="-1"></a><span class="co"># @param x_names An array of expectand names to be plotted on the x axis.</span></span>
 <span id="cb11-512"><a href="#cb11-512" aria-hidden="true" tabindex="-1"></a><span class="co"># @param y_names An array of expectand names to be plotted on the y axis.</span></span>
 <span id="cb11-513"><a href="#cb11-513" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays for</span></span>
 <span id="cb11-514"><a href="#cb11-514" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
@@ -3824,7 +3824,9 @@ window.Quarto = {
 <span id="cb11-693"><a href="#cb11-693" aria-hidden="true" tabindex="-1"></a>             col<span class="op">=</span>cmap[div_nlfs], pch<span class="op">=</span><span class="dv">16</span>)</span>
 <span id="cb11-694"><a href="#cb11-694" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb11-695"><a href="#cb11-695" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb11-696"><a href="#cb11-696" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-696"><a href="#cb11-696" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-697"><a href="#cb11-697" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-698"><a href="#cb11-698" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute hat{xi}, an estimate for the shape of a generalized Pareto </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="expectand-diagnostic-functions" class="level1" data-number="3">
@@ -3840,9 +3842,7 @@ m &lt; \frac{1}{\xi}.
 <p>For example with <span class="math inline">\xi = 0.9</span> the expectation <span class="math inline">\mathbb{E}_{\pi}[f]</span> is finite but <span class="math inline">\mathbb{E}_{\pi}[f^{2}]</span> is not. Similarly for <span class="math inline">\xi = 0.4</span> the expectations <span class="math inline">\mathbb{E}_{\pi}[f]</span> and <span class="math inline">\mathbb{E}_{\pi}[f^{2}]</span> are finite but the third-order moment <span class="math inline">\mathbb{E}_{\pi}[f^{3}]</span> is not.</p>
 <p>The estimator <span class="math inline">\hat{\xi}</span> is constructed from the smallest and largest values of an expectand evaluated across a realized Markov chain, where the smallest and largest values are separated from the central values using a heuristic. Because <span class="math inline">\hat{\xi}</span> only estimates the tail shape I require a conservative threshold of <span class="math inline">\hat{\xi} \ge 0.25</span> for the diagnostic warning to be triggered.</p>
 <p>If the expectand output is bounded then the lower and upper tail might consist of the same value. In this case the <span class="math inline">\hat{\xi}</span> estimator is poorly-behaved, but the boundedness also guarantees that moments of all orders exist. To make this diagnostic as robust as possible <span class="math inline">\hat{\xi}</span> will return <span class="math inline">-2</span> in these cases to avoid the diagnostic threshold.</p>
-<div class="sourceCode" id="cb12" data-startfrom="698"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 697;"><span id="cb12-698"><a href="#cb12-698" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute hat{xi}, an estimate for the shape of a generalized Pareto </span></span>
-<span id="cb12-699"><a href="#cb12-699" aria-hidden="true" tabindex="-1"></a><span class="co"># distribution from a sample of positive values using the method </span></span>
-<span id="cb12-700"><a href="#cb12-700" aria-hidden="true" tabindex="-1"></a><span class="co"># introduced in &quot;A New and Efficient Estimation Method for the </span></span>
+<div class="sourceCode" id="cb12" data-startfrom="700"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 699;"><span id="cb12-700"><a href="#cb12-700" aria-hidden="true" tabindex="-1"></a><span class="co"># introduced in &quot;A New and Efficient Estimation Method for the </span></span>
 <span id="cb12-701"><a href="#cb12-701" aria-hidden="true" tabindex="-1"></a><span class="co"># Generalized Pareto Distribution&quot; by Zhang and Stephens </span></span>
 <span id="cb12-702"><a href="#cb12-702" aria-hidden="true" tabindex="-1"></a><span class="co"># https://doi.org/10.1198/tech.2009.08017.</span></span>
 <span id="cb12-703"><a href="#cb12-703" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
@@ -3901,10 +3901,10 @@ m &lt; \frac{1}{\xi}.
 <span id="cb12-756"><a href="#cb12-756" aria-hidden="true" tabindex="-1"></a>           <span class="bu">sum</span>(exp(log_w_vec <span class="op">-</span> max_log_w))</span>
 <span id="cb12-757"><a href="#cb12-757" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-758"><a href="#cb12-758" aria-hidden="true" tabindex="-1"></a>  mean( log (<span class="dv">1</span> <span class="op">-</span> b_hat <span class="op">*</span> sorted_vals) )</span>
-<span id="cb12-759"><a href="#cb12-759" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb13" data-startfrom="761"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 760;"><span id="cb13-761"><a href="#cb13-761" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute empirical generalized Pareto shape for upper and lower tails</span></span>
-<span id="cb13-762"><a href="#cb13-762" aria-hidden="true" tabindex="-1"></a><span class="co"># for the given expectand values, ignoring any autocorrelation between</span></span>
-<span id="cb13-763"><a href="#cb13-763" aria-hidden="true" tabindex="-1"></a><span class="co"># the values.</span></span>
+<span id="cb12-759"><a href="#cb12-759" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-760"><a href="#cb12-760" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-761"><a href="#cb12-761" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute empirical generalized Pareto shape for upper and lower tails</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13" data-startfrom="763"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 762;"><span id="cb13-763"><a href="#cb13-763" aria-hidden="true" tabindex="-1"></a><span class="co"># the values.</span></span>
 <span id="cb13-764"><a href="#cb13-764" aria-hidden="true" tabindex="-1"></a><span class="co"># @param vals A one-dimensional array of sequential expectand values.</span></span>
 <span id="cb13-765"><a href="#cb13-765" aria-hidden="true" tabindex="-1"></a><span class="co"># @return Left and right shape estimators.</span></span>
 <span id="cb13-766"><a href="#cb13-766" aria-hidden="true" tabindex="-1"></a>compute_tail_xi_hats <span class="op">&lt;-</span> function(vals) {</span>
@@ -3933,10 +3933,10 @@ m &lt; \frac{1}{\xi}.
 <span id="cb13-789"><a href="#cb13-789" aria-hidden="true" tabindex="-1"></a>    xi_hat_right <span class="op">&lt;-</span> compute_xi_hat(vals_right)</span>
 <span id="cb13-790"><a href="#cb13-790" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-791"><a href="#cb13-791" aria-hidden="true" tabindex="-1"></a>  c(xi_hat_left, xi_hat_right)</span>
-<span id="cb13-792"><a href="#cb13-792" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb14" data-startfrom="794"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 793;"><span id="cb14-794"><a href="#cb14-794" aria-hidden="true" tabindex="-1"></a><span class="co"># Check upper and lower tail behavior of the expectand values.</span></span>
-<span id="cb14-795"><a href="#cb14-795" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
-<span id="cb14-796"><a href="#cb14-796" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
+<span id="cb13-792"><a href="#cb13-792" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-793"><a href="#cb13-793" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-794"><a href="#cb13-794" aria-hidden="true" tabindex="-1"></a><span class="co"># Check upper and lower tail behavior of the expectand values.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14" data-startfrom="796"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 795;"><span id="cb14-796"><a href="#cb14-796" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
 <span id="cb14-797"><a href="#cb14-797" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
 <span id="cb14-798"><a href="#cb14-798" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
 <span id="cb14-799"><a href="#cb14-799" aria-hidden="true" tabindex="-1"></a><span class="co"># @param max_width Maximum line width for printing</span></span>
@@ -3999,15 +3999,15 @@ m &lt; \frac{1}{\xi}.
 <span id="cb14-856"><a href="#cb14-856" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb14-857"><a href="#cb14-857" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb14-858"><a href="#cb14-858" aria-hidden="true" tabindex="-1"></a>  cat(message)</span>
-<span id="cb14-859"><a href="#cb14-859" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-859"><a href="#cb14-859" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-860"><a href="#cb14-860" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-861"><a href="#cb14-861" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute empirical mean and variance of a given sequence with a single</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="frozen-chains" class="level2" data-number="3.2">
 <h2 data-number="3.2" class="anchored" data-anchor-id="frozen-chains"><span class="header-section-number">3.2</span> Frozen Chains</h2>
 <p>Another sign of problems is when all evaluations of an expectand are constant. This could be due to the Markov chain being stuck at a single state or just that the pushforward distribution of the expectand concentrates on a single value. We can’t distinguish between these possibilities without more information, but we can flag a constant expectand by looking at its empirical variance.</p>
 <p>Here we’ll use a Welford accumulator to compute the empirical variance of the expectand values in a single sweep.</p>
-<div class="sourceCode" id="cb15" data-startfrom="861"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 860;"><span id="cb15-861"><a href="#cb15-861" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute empirical mean and variance of a given sequence with a single</span></span>
-<span id="cb15-862"><a href="#cb15-862" aria-hidden="true" tabindex="-1"></a><span class="co"># pass using Welford accumulators.</span></span>
-<span id="cb15-863"><a href="#cb15-863" aria-hidden="true" tabindex="-1"></a><span class="co"># @params vals A one-dimensional array of sequential expectand values.</span></span>
+<div class="sourceCode" id="cb15" data-startfrom="863"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 862;"><span id="cb15-863"><a href="#cb15-863" aria-hidden="true" tabindex="-1"></a><span class="co"># @params vals A one-dimensional array of sequential expectand values.</span></span>
 <span id="cb15-864"><a href="#cb15-864" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The empirical mean and variance.</span></span>
 <span id="cb15-865"><a href="#cb15-865" aria-hidden="true" tabindex="-1"></a>welford_summary <span class="op">&lt;-</span> function(vals) {</span>
 <span id="cb15-866"><a href="#cb15-866" aria-hidden="true" tabindex="-1"></a>  mean <span class="op">&lt;-</span> <span class="dv">0</span></span>
@@ -4023,10 +4023,10 @@ m &lt; \frac{1}{\xi}.
 <span id="cb15-876"><a href="#cb15-876" aria-hidden="true" tabindex="-1"></a>  var <span class="op">&lt;-</span> var<span class="op">/</span> (N <span class="op">-</span> <span class="dv">1</span>)</span>
 <span id="cb15-877"><a href="#cb15-877" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-878"><a href="#cb15-878" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(c(mean, var))</span>
-<span id="cb15-879"><a href="#cb15-879" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb16" data-startfrom="881"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 880;"><span id="cb16-881"><a href="#cb16-881" aria-hidden="true" tabindex="-1"></a><span class="co"># Check expectand values for vanishing empirical variance.</span></span>
-<span id="cb16-882"><a href="#cb16-882" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
-<span id="cb16-883"><a href="#cb16-883" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
+<span id="cb15-879"><a href="#cb15-879" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-880"><a href="#cb15-880" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-881"><a href="#cb15-881" aria-hidden="true" tabindex="-1"></a><span class="co"># Check expectand values for vanishing empirical variance.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16" data-startfrom="883"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 882;"><span id="cb16-883"><a href="#cb16-883" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
 <span id="cb16-884"><a href="#cb16-884" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
 <span id="cb16-885"><a href="#cb16-885" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
 <span id="cb16-886"><a href="#cb16-886" aria-hidden="true" tabindex="-1"></a><span class="co"># @param max_width Maximum line width for printing</span></span>
@@ -4058,26 +4058,26 @@ m &lt; \frac{1}{\xi}.
 <span id="cb16-912"><a href="#cb16-912" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb16-913"><a href="#cb16-913" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb16-914"><a href="#cb16-914" aria-hidden="true" tabindex="-1"></a>  cat(message)</span>
-<span id="cb16-915"><a href="#cb16-915" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-915"><a href="#cb16-915" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-916"><a href="#cb16-916" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-917"><a href="#cb16-917" aria-hidden="true" tabindex="-1"></a><span class="co"># Split a sequence of expectand values in half to create an initial and </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="split-rhat" class="level2" data-number="3.3">
 <h2 data-number="3.3" class="anchored" data-anchor-id="split-rhat"><span class="header-section-number">3.3</span> Split Rhat</h2>
 <p>One of the key features of Markov chain equilibrium is that the distribution of Markov chain realizations is independent of the initialization. In particular the expectand evaluations from any equilibrated Markov chain should be statistically equivalent to any other. Even more the evaluations across any subset of Markov chain states should be equivalent.</p>
 <p>The split <span class="math inline">\hat{R}</span> statistic quantifies the heterogeneity in the expectand evaluations across an ensemble of Markov chains, each of which has been split in half. Mathematically split <span class="math inline">\hat{R}</span> is similar to analysis of variance in that compares the empirical variance of the average expectand values in each chain half to the average of the empirical variances in each chain half; the key difference is that split <span class="math inline">\hat{R}</span> transforms this ratio so that in equilibrium the statistic decays towards <span class="math inline">1</span> from above.</p>
 <p>When split <span class="math inline">\hat{R}</span> is much larger than <span class="math inline">1</span> the expectand evaluations across each Markov chain halves are not consistent with each other. This could be because the Markov chains have not converged to the same typical set or because they have not yet expanded into that typical set.</p>
-<div class="sourceCode" id="cb17" data-startfrom="917"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 916;"><span id="cb17-917"><a href="#cb17-917" aria-hidden="true" tabindex="-1"></a><span class="co"># Split a sequence of expectand values in half to create an initial and </span></span>
-<span id="cb17-918"><a href="#cb17-918" aria-hidden="true" tabindex="-1"></a><span class="co"># terminal Markov chains</span></span>
-<span id="cb17-919"><a href="#cb17-919" aria-hidden="true" tabindex="-1"></a><span class="co"># @params chain A sequence of expectand values derived from a single </span></span>
+<div class="sourceCode" id="cb17" data-startfrom="919"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 918;"><span id="cb17-919"><a href="#cb17-919" aria-hidden="true" tabindex="-1"></a><span class="co"># @params chain A sequence of expectand values derived from a single </span></span>
 <span id="cb17-920"><a href="#cb17-920" aria-hidden="true" tabindex="-1"></a><span class="co">#               Markov chain.</span></span>
 <span id="cb17-921"><a href="#cb17-921" aria-hidden="true" tabindex="-1"></a><span class="co"># @return Two subsequences of expectand values.</span></span>
 <span id="cb17-922"><a href="#cb17-922" aria-hidden="true" tabindex="-1"></a>split_chain <span class="op">&lt;-</span> function(chain) {</span>
 <span id="cb17-923"><a href="#cb17-923" aria-hidden="true" tabindex="-1"></a>  N <span class="op">&lt;-</span> length(chain)</span>
 <span id="cb17-924"><a href="#cb17-924" aria-hidden="true" tabindex="-1"></a>  M <span class="op">&lt;-</span> N <span class="op">%/%</span> <span class="dv">2</span></span>
 <span id="cb17-925"><a href="#cb17-925" aria-hidden="true" tabindex="-1"></a>  <span class="bu">list</span>(chain1 <span class="op">&lt;-</span> chain[<span class="dv">1</span>:M], chain2 <span class="op">&lt;-</span> chain[(M <span class="op">+</span> <span class="dv">1</span>):N])</span>
-<span id="cb17-926"><a href="#cb17-926" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb18" data-startfrom="928"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 927;"><span id="cb18-928"><a href="#cb18-928" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute split hat{R} for the expectand values.</span></span>
-<span id="cb18-929"><a href="#cb18-929" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
-<span id="cb18-930"><a href="#cb18-930" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
+<span id="cb17-926"><a href="#cb17-926" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-927"><a href="#cb17-927" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-928"><a href="#cb17-928" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute split hat{R} for the expectand values.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18" data-startfrom="930"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 929;"><span id="cb18-930"><a href="#cb18-930" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
 <span id="cb18-931"><a href="#cb18-931" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
 <span id="cb18-932"><a href="#cb18-932" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
 <span id="cb18-933"><a href="#cb18-933" aria-hidden="true" tabindex="-1"></a><span class="co"># @return Split Rhat estimate.</span></span>
@@ -4112,10 +4112,10 @@ m &lt; \frac{1}{\xi}.
 <span id="cb18-962"><a href="#cb18-962" aria-hidden="true" tabindex="-1"></a>    rhat <span class="op">=</span> sqrt( (N <span class="op">-</span> <span class="dv">1</span> <span class="op">+</span> B <span class="op">/</span> W) <span class="op">/</span> N )</span>
 <span id="cb18-963"><a href="#cb18-963" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-964"><a href="#cb18-964" aria-hidden="true" tabindex="-1"></a>  (rhat)</span>
-<span id="cb18-965"><a href="#cb18-965" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb19" data-startfrom="967"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 966;"><span id="cb19-967"><a href="#cb19-967" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute split hat{R} for all input expectands.</span></span>
-<span id="cb19-968"><a href="#cb19-968" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays for</span></span>
-<span id="cb19-969"><a href="#cb19-969" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
+<span id="cb18-965"><a href="#cb18-965" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-966"><a href="#cb18-966" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-967"><a href="#cb18-967" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute split hat{R} for all input expectands.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb19" data-startfrom="969"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 968;"><span id="cb19-969"><a href="#cb19-969" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
 <span id="cb19-970"><a href="#cb19-970" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each element indexes the Markov chains and</span></span>
 <span id="cb19-971"><a href="#cb19-971" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the second dimension indexes the sequential</span></span>
 <span id="cb19-972"><a href="#cb19-972" aria-hidden="true" tabindex="-1"></a><span class="co">#                            states within each Markov chain.</span></span>
@@ -4130,10 +4130,10 @@ m &lt; \frac{1}{\xi}.
 <span id="cb19-981"><a href="#cb19-981" aria-hidden="true" tabindex="-1"></a>    rhats <span class="op">&lt;-</span> c(rhats, compute_split_rhat(expectand_vals))</span>
 <span id="cb19-982"><a href="#cb19-982" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb19-983"><a href="#cb19-983" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(rhats)</span>
-<span id="cb19-984"><a href="#cb19-984" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb20" data-startfrom="986"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 985;"><span id="cb20-986"><a href="#cb20-986" aria-hidden="true" tabindex="-1"></a><span class="co"># Check split hat{R} across the given expectand values.</span></span>
-<span id="cb20-987"><a href="#cb20-987" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
-<span id="cb20-988"><a href="#cb20-988" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
+<span id="cb19-984"><a href="#cb19-984" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-985"><a href="#cb19-985" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-986"><a href="#cb19-986" aria-hidden="true" tabindex="-1"></a><span class="co"># Check split hat{R} across the given expectand values.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb20" data-startfrom="988"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 987;"><span id="cb20-988"><a href="#cb20-988" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
 <span id="cb20-989"><a href="#cb20-989" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
 <span id="cb20-990"><a href="#cb20-990" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
 <span id="cb20-991"><a href="#cb20-991" aria-hidden="true" tabindex="-1"></a><span class="co"># @param max_width Maximum line width for printing</span></span>
@@ -4165,14 +4165,14 @@ m &lt; \frac{1}{\xi}.
 <span id="cb20-1017"><a href="#cb20-1017" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb20-1018"><a href="#cb20-1018" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb20-1019"><a href="#cb20-1019" aria-hidden="true" tabindex="-1"></a>  cat(message)</span>
-<span id="cb20-1020"><a href="#cb20-1020" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-1020"><a href="#cb20-1020" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-1021"><a href="#cb20-1021" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-1022"><a href="#cb20-1022" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute empirical integrated autocorrelation time, \hat{tau}, for a</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="integrated-autocorrelation-time" class="level2" data-number="3.4">
 <h2 data-number="3.4" class="anchored" data-anchor-id="integrated-autocorrelation-time"><span class="header-section-number">3.4</span> Integrated Autocorrelation Time</h2>
 <p>The information about the target distribution encoded within a Markov chain, and hence the potential precision of Markov chain Monte Carlo estimators, is limited by the autocorrelation of the internal states. Assuming equilibrium we can estimate the stationary autocorrelations between the outputs of a given expectand from the realized Markov chain and then combine them into an estimate of the integrated autocorrelation time <span class="math inline">\hat{\tau}[f]</span>.</p>
-<div class="sourceCode" id="cb21" data-startfrom="1022"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1021;"><span id="cb21-1022"><a href="#cb21-1022" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute empirical integrated autocorrelation time, \hat{tau}, for a</span></span>
-<span id="cb21-1023"><a href="#cb21-1023" aria-hidden="true" tabindex="-1"></a><span class="co"># sequence of expectand values.</span></span>
-<span id="cb21-1024"><a href="#cb21-1024" aria-hidden="true" tabindex="-1"></a><span class="co"># @param vals A one-dimensional array of sequential expectand values.</span></span>
+<div class="sourceCode" id="cb21" data-startfrom="1024"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1023;"><span id="cb21-1024"><a href="#cb21-1024" aria-hidden="true" tabindex="-1"></a><span class="co"># @param vals A one-dimensional array of sequential expectand values.</span></span>
 <span id="cb21-1025"><a href="#cb21-1025" aria-hidden="true" tabindex="-1"></a><span class="co"># @return Left and right shape estimators.</span></span>
 <span id="cb21-1026"><a href="#cb21-1026" aria-hidden="true" tabindex="-1"></a>compute_tau_hat <span class="op">&lt;-</span> function(vals) {</span>
 <span id="cb21-1027"><a href="#cb21-1027" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Compute empirical autocorrelations</span></span>
@@ -4227,15 +4227,15 @@ m &lt; \frac{1}{\xi}.
 <span id="cb21-1076"><a href="#cb21-1076" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb21-1077"><a href="#cb21-1077" aria-hidden="true" tabindex="-1"></a>    old_pair_sum <span class="op">&lt;-</span> current_pair_sum</span>
 <span id="cb21-1078"><a href="#cb21-1078" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb21-1079"><a href="#cb21-1079" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb21-1079"><a href="#cb21-1079" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-1080"><a href="#cb21-1080" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-1081"><a href="#cb21-1081" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the incremental empirical integrated autocorrelation time for</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>This, estimate, however, can be unreliable if the Markov chains have not had sufficient time to explore. In my experience a good rule of thumb is that the empirical integrated autocorrelation time has cannot be larger than five times the number of total iterations, <span class="math display">
 \hat{\tau}[f] &lt; 5 \cdot N.
 </span> Equivalently the incremental empirical integrated autocorrelation time cannot be larger than five, <span class="math display">
 \frac{ \hat{\tau}[f] }{N} &lt; 5.
 </span></p>
-<div class="sourceCode" id="cb22" data-startfrom="1081"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1080;"><span id="cb22-1081"><a href="#cb22-1081" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the incremental empirical integrated autocorrelation time for</span></span>
-<span id="cb22-1082"><a href="#cb22-1082" aria-hidden="true" tabindex="-1"></a><span class="co"># all the given expectand values.</span></span>
-<span id="cb22-1083"><a href="#cb22-1083" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
+<div class="sourceCode" id="cb22" data-startfrom="1083"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1082;"><span id="cb22-1083"><a href="#cb22-1083" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
 <span id="cb22-1084"><a href="#cb22-1084" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
 <span id="cb22-1085"><a href="#cb22-1085" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
 <span id="cb22-1086"><a href="#cb22-1086" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
@@ -4278,15 +4278,15 @@ m &lt; \frac{1}{\xi}.
 <span id="cb22-1123"><a href="#cb22-1123" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb22-1124"><a href="#cb22-1124" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb22-1125"><a href="#cb22-1125" aria-hidden="true" tabindex="-1"></a>  cat(message)</span>
-<span id="cb22-1126"><a href="#cb22-1126" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb22-1126"><a href="#cb22-1126" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb22-1127"><a href="#cb22-1127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-1128"><a href="#cb22-1128" aria-hidden="true" tabindex="-1"></a></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The integrated autocorrelation times moderates the asymptotic variance of well-behaved Markov chain Monte Carlo estimators through the effective sample size, <span class="math display">
 \text{ESS}[f] = \frac{N}{\tau[f]},
 </span> or in practice the empirical effective sample size that we estimate from the realized Markov chains, <span class="math display">
 \hat{\text{ESS}[f]} = \frac{N}{\hat{\tau}[f]}.
 </span> The effective sample size can be interpreted as how large of an ensemble of exact samples we would need to achieve the same estimator error for the particular expectand of interest.</p>
-<div class="sourceCode" id="cb23" data-startfrom="1129"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1128;"><span id="cb23-1129"><a href="#cb23-1129" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute the minimum empirical effective sample size, or \hat{ESS},</span></span>
-<span id="cb23-1130"><a href="#cb23-1130" aria-hidden="true" tabindex="-1"></a><span class="co"># across the Markov chains for the given expectands.</span></span>
-<span id="cb23-1131"><a href="#cb23-1131" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays for</span></span>
+<div class="sourceCode" id="cb23" data-startfrom="1131"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1130;"><span id="cb23-1131"><a href="#cb23-1131" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays for</span></span>
 <span id="cb23-1132"><a href="#cb23-1132" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
 <span id="cb23-1133"><a href="#cb23-1133" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each element indexes the Markov chains and</span></span>
 <span id="cb23-1134"><a href="#cb23-1134" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the second dimension indexes the sequential</span></span>
@@ -4309,13 +4309,13 @@ m &lt; \frac{1}{\xi}.
 <span id="cb23-1151"><a href="#cb23-1151" aria-hidden="true" tabindex="-1"></a>    min_ess_hats <span class="op">&lt;-</span> c(min_ess_hats, <span class="bu">min</span>(ess_hats))</span>
 <span id="cb23-1152"><a href="#cb23-1152" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb23-1153"><a href="#cb23-1153" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(min_ess_hats)</span>
-<span id="cb23-1154"><a href="#cb23-1154" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb23-1154"><a href="#cb23-1154" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-1155"><a href="#cb23-1155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-1156"><a href="#cb23-1156" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the empirical effective sample size \hat{ESS} for the given</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Assuming stationarity we can use the empirical effective sample size to estimate the Markov chain Monte Carlo standard error for any well-behaved expectand estimator <span class="math display">
 \hat{f} \approx \mathbb{E}_{\pi}[f].
 </span> The necessary effective sample size depends on the precision required for a given Markov chain Monte Carlo estimator. This can vary not only from analysis to analysis but also between multiple expectands within a single analysis. That said an effective sample size of <span class="math inline">100</span> is more than sufficient for most applications and provides a useful rule of thumb. In some applications even smaller effective sample sizes can yield sufficiently precise Markov chain Monte Carlo estimators.</p>
-<div class="sourceCode" id="cb24" data-startfrom="1156"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1155;"><span id="cb24-1156"><a href="#cb24-1156" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the empirical effective sample size \hat{ESS} for the given</span></span>
-<span id="cb24-1157"><a href="#cb24-1157" aria-hidden="true" tabindex="-1"></a><span class="co"># expectand values.</span></span>
-<span id="cb24-1158"><a href="#cb24-1158" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
+<div class="sourceCode" id="cb24" data-startfrom="1158"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1157;"><span id="cb24-1158"><a href="#cb24-1158" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
 <span id="cb24-1159"><a href="#cb24-1159" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
 <span id="cb24-1160"><a href="#cb24-1160" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
 <span id="cb24-1161"><a href="#cb24-1161" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
@@ -4358,15 +4358,15 @@ m &lt; \frac{1}{\xi}.
 <span id="cb24-1198"><a href="#cb24-1198" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb24-1199"><a href="#cb24-1199" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb24-1200"><a href="#cb24-1200" aria-hidden="true" tabindex="-1"></a>  cat(message)</span>
-<span id="cb24-1201"><a href="#cb24-1201" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb24-1201"><a href="#cb24-1201" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-1202"><a href="#cb24-1202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-1203"><a href="#cb24-1203" aria-hidden="true" tabindex="-1"></a><span class="co"># Check all expectand-specific diagnostics.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>For example empirical effective sample sizes can provide a useful way to distinguish if some diagnostic failures are due to Markov chains that are just too short or more persistent problems.</p>
 </section>
 <section id="all-expectand-diagnostics" class="level2" data-number="3.5">
 <h2 data-number="3.5" class="anchored" data-anchor-id="all-expectand-diagnostics"><span class="header-section-number">3.5</span> All Expectand Diagnostics</h2>
 <p>In practice we have no reason not to check all of these diagnostics at once for each expectand of interest.</p>
-<div class="sourceCode" id="cb25" data-startfrom="1203"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1202;"><span id="cb25-1203"><a href="#cb25-1203" aria-hidden="true" tabindex="-1"></a><span class="co"># Check all expectand-specific diagnostics.</span></span>
-<span id="cb25-1204"><a href="#cb25-1204" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays for</span></span>
-<span id="cb25-1205"><a href="#cb25-1205" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
+<div class="sourceCode" id="cb25" data-startfrom="1205"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1204;"><span id="cb25-1205"><a href="#cb25-1205" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
 <span id="cb25-1206"><a href="#cb25-1206" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each element indexes the Markov chains and</span></span>
 <span id="cb25-1207"><a href="#cb25-1207" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the second dimension indexes the sequential</span></span>
 <span id="cb25-1208"><a href="#cb25-1208" aria-hidden="true" tabindex="-1"></a><span class="co">#                            states within each Markov chain.</span></span>
@@ -4573,11 +4573,11 @@ m &lt; \frac{1}{\xi}.
 <span id="cb25-1409"><a href="#cb25-1409" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb25-1410"><a href="#cb25-1410" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-1411"><a href="#cb25-1411" aria-hidden="true" tabindex="-1"></a>  cat(message)</span>
-<span id="cb25-1412"><a href="#cb25-1412" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-1412"><a href="#cb25-1412" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb25-1413"><a href="#cb25-1413" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-1414"><a href="#cb25-1414" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize all expectand-specific diagnostics.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>That said for particularly problematic fits the output from checking all of the expectands can be overwhelming. In cases where that may be a risk we can summarize the output more compactly.</p>
-<div class="sourceCode" id="cb26" data-startfrom="1414"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1413;"><span id="cb26-1414"><a href="#cb26-1414" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize all expectand-specific diagnostics.</span></span>
-<span id="cb26-1415"><a href="#cb26-1415" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays for</span></span>
-<span id="cb26-1416"><a href="#cb26-1416" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
+<div class="sourceCode" id="cb26" data-startfrom="1416"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1415;"><span id="cb26-1416"><a href="#cb26-1416" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
 <span id="cb26-1417"><a href="#cb26-1417" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each element indexes the Markov chains and</span></span>
 <span id="cb26-1418"><a href="#cb26-1418" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the second dimension indexes the sequential</span></span>
 <span id="cb26-1419"><a href="#cb26-1419" aria-hidden="true" tabindex="-1"></a><span class="co">#                            states within each Markov chain.</span></span>
@@ -4758,11 +4758,11 @@ m &lt; \frac{1}{\xi}.
 <span id="cb26-1594"><a href="#cb26-1594" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb26-1595"><a href="#cb26-1595" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb26-1596"><a href="#cb26-1596" aria-hidden="true" tabindex="-1"></a>  cat(message)</span>
-<span id="cb26-1597"><a href="#cb26-1597" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb26-1597"><a href="#cb26-1597" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb26-1598"><a href="#cb26-1598" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-1599"><a href="#cb26-1599" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize Hamiltonian Monte Carlo and expectand diagnostics</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Alternatively we might filter the expectands, keeping only those of immediate interest.</p>
-<div class="sourceCode" id="cb27" data-startfrom="1799"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1798;"><span id="cb27-1799"><a href="#cb27-1799" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter `expectand_vals_list` object by name.</span></span>
-<span id="cb27-1800"><a href="#cb27-1800" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays for</span></span>
-<span id="cb27-1801"><a href="#cb27-1801" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
+<div class="sourceCode" id="cb27" data-startfrom="1801"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1800;"><span id="cb27-1801"><a href="#cb27-1801" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
 <span id="cb27-1802"><a href="#cb27-1802" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each element indexes the Markov chains and</span></span>
 <span id="cb27-1803"><a href="#cb27-1803" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the second dimension indexes the sequential</span></span>
 <span id="cb27-1804"><a href="#cb27-1804" aria-hidden="true" tabindex="-1"></a><span class="co">#                            states within each Markov chain.</span></span>
@@ -4826,14 +4826,14 @@ m &lt; \frac{1}{\xi}.
 <span id="cb27-1862"><a href="#cb27-1862" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb27-1863"><a href="#cb27-1863" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb27-1864"><a href="#cb27-1864" aria-hidden="true" tabindex="-1"></a>  expectand_vals_list[good_names]</span>
-<span id="cb27-1865"><a href="#cb27-1865" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb27-1865"><a href="#cb27-1865" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb27-1866"><a href="#cb27-1866" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-1867"><a href="#cb27-1867" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute empirical autocorrelations for a given Markov chain sequence</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="empirical-autocorrelation-visualization" class="level2" data-number="3.6">
 <h2 data-number="3.6" class="anchored" data-anchor-id="empirical-autocorrelation-visualization"><span class="header-section-number">3.6</span> Empirical Autocorrelation Visualization</h2>
 <p>If we encounter large empirical integrated autocorrelation times, or small estimated effective sample sizes, then we may want to follow up with the empirical autocorrelations themselves. An empirical correlogram provides a useful visualization of these estimates.</p>
-<div class="sourceCode" id="cb28" data-startfrom="1867"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1866;"><span id="cb28-1867"><a href="#cb28-1867" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute empirical autocorrelations for a given Markov chain sequence</span></span>
-<span id="cb28-1868"><a href="#cb28-1868" aria-hidden="true" tabindex="-1"></a><span class="co"># @parmas vals A one-dimensional array of sequential expectand values.</span></span>
-<span id="cb28-1869"><a href="#cb28-1869" aria-hidden="true" tabindex="-1"></a><span class="co"># @return A one-dimensional array of empirical autocorrelations at each</span></span>
+<div class="sourceCode" id="cb28" data-startfrom="1869"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1868;"><span id="cb28-1869"><a href="#cb28-1869" aria-hidden="true" tabindex="-1"></a><span class="co"># @return A one-dimensional array of empirical autocorrelations at each</span></span>
 <span id="cb28-1870"><a href="#cb28-1870" aria-hidden="true" tabindex="-1"></a><span class="co">#         lag up to the length of the sequence.</span></span>
 <span id="cb28-1871"><a href="#cb28-1871" aria-hidden="true" tabindex="-1"></a>compute_rhos <span class="op">&lt;-</span> function(vals) {</span>
 <span id="cb28-1872"><a href="#cb28-1872" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Compute empirical autocorrelations</span></span>
@@ -4884,10 +4884,10 @@ m &lt; \frac{1}{\xi}.
 <span id="cb28-1917"><a href="#cb28-1917" aria-hidden="true" tabindex="-1"></a>    old_pair_sum <span class="op">&lt;-</span> current_pair_sum</span>
 <span id="cb28-1918"><a href="#cb28-1918" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb28-1919"><a href="#cb28-1919" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(rhos)</span>
-<span id="cb28-1920"><a href="#cb28-1920" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb29" data-startfrom="1922"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1921;"><span id="cb29-1922"><a href="#cb29-1922" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot empirical correlograms for a given expectand across a Markov </span></span>
-<span id="cb29-1923"><a href="#cb29-1923" aria-hidden="true" tabindex="-1"></a><span class="co"># chain ensemble.</span></span>
-<span id="cb29-1924"><a href="#cb29-1924" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
+<span id="cb28-1920"><a href="#cb28-1920" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-1921"><a href="#cb28-1921" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-1922"><a href="#cb28-1922" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot empirical correlograms for a given expectand across a Markov </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb29" data-startfrom="1924"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1923;"><span id="cb29-1924"><a href="#cb29-1924" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
 <span id="cb29-1925"><a href="#cb29-1925" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
 <span id="cb29-1926"><a href="#cb29-1926" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
 <span id="cb29-1927"><a href="#cb29-1927" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
@@ -4916,14 +4916,14 @@ m &lt; \frac{1}{\xi}.
 <span id="cb29-1950"><a href="#cb29-1950" aria-hidden="true" tabindex="-1"></a>    pad_rhos <span class="op">&lt;-</span> unlist(lapply(idx, function(n) rhos[n <span class="op">+</span> <span class="dv">1</span>]))</span>
 <span id="cb29-1951"><a href="#cb29-1951" aria-hidden="true" tabindex="-1"></a>    lines(xs, pad_rhos, lwd<span class="op">=</span><span class="dv">2</span>, col<span class="op">=</span>colors[c])</span>
 <span id="cb29-1952"><a href="#cb29-1952" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb29-1953"><a href="#cb29-1953" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb29-1953"><a href="#cb29-1953" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb29-1954"><a href="#cb29-1954" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-1955"><a href="#cb29-1955" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the projection of a Markov chain ensemble along two </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="chain-separated-pairs-plot" class="level2" data-number="3.7">
 <h2 data-number="3.7" class="anchored" data-anchor-id="chain-separated-pairs-plot"><span class="header-section-number">3.7</span> Chain-Separated Pairs Plot</h2>
 <p>We can also visualize strong autocorrelations by coloring the states of each Markov chain in a continuous gradient. When neighboring states are strongly correlated these colors will appear to vary smoothly across the ambient space. More productive Markov transitions result in a more chaotic spray of colors.</p>
-<div class="sourceCode" id="cb30" data-startfrom="1955"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1954;"><span id="cb30-1955"><a href="#cb30-1955" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the projection of a Markov chain ensemble along two </span></span>
-<span id="cb30-1956"><a href="#cb30-1956" aria-hidden="true" tabindex="-1"></a><span class="co"># expectands as a pairs plot.  Point colors darken along each Markov </span></span>
-<span id="cb30-1957"><a href="#cb30-1957" aria-hidden="true" tabindex="-1"></a><span class="co"># chain to visualize the autocorrelation.</span></span>
+<div class="sourceCode" id="cb30" data-startfrom="1957"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 1956;"><span id="cb30-1957"><a href="#cb30-1957" aria-hidden="true" tabindex="-1"></a><span class="co"># chain to visualize the autocorrelation.</span></span>
 <span id="cb30-1958"><a href="#cb30-1958" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand1_vals A two-dimensional array of expectand values</span></span>
 <span id="cb30-1959"><a href="#cb30-1959" aria-hidden="true" tabindex="-1"></a><span class="co">#                        with the first dimension indexing the Markov</span></span>
 <span id="cb30-1960"><a href="#cb30-1960" aria-hidden="true" tabindex="-1"></a><span class="co">#                        chains and the second dimension indexing the</span></span>
@@ -4974,16 +4974,16 @@ m &lt; \frac{1}{\xi}.
 <span id="cb30-2005"><a href="#cb30-2005" aria-hidden="true" tabindex="-1"></a>    points(expectand1_vals[c,], expectand2_vals[c,],</span>
 <span id="cb30-2006"><a href="#cb30-2006" aria-hidden="true" tabindex="-1"></a>           col<span class="op">=</span>cmap, pch<span class="op">=</span><span class="dv">16</span>, cex<span class="op">=</span><span class="fl">1.0</span>)</span>
 <span id="cb30-2007"><a href="#cb30-2007" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb30-2008"><a href="#cb30-2008" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb30-2008"><a href="#cb30-2008" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb30-2009"><a href="#cb30-2009" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-2010"><a href="#cb30-2010" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate an expectand on the values of a one-dimensional input</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="markov-chain-monte-carlo-estimation" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Markov Chain Monte Carlo Estimation</h1>
 <p>If none of the diagnostics indicate an obstruction to a Markov chain Monte Carlo central limit theorem then we can construct expectation value estimates and their standard errors.</p>
 <p>When interested in expectands that have not already been computed we will need to evaluate the existing samples on these new functions, generating pushforward samples. This is particularly straightforward for functions with a single input variable.</p>
-<div class="sourceCode" id="cb31" data-startfrom="2010"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2009;"><span id="cb31-2010"><a href="#cb31-2010" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate an expectand on the values of a one-dimensional input</span></span>
-<span id="cb31-2011"><a href="#cb31-2011" aria-hidden="true" tabindex="-1"></a><span class="co"># variable.</span></span>
-<span id="cb31-2012"><a href="#cb31-2012" aria-hidden="true" tabindex="-1"></a><span class="co"># @param input_vals A two-dimensional array of expectand values with</span></span>
+<div class="sourceCode" id="cb31" data-startfrom="2012"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2011;"><span id="cb31-2012"><a href="#cb31-2012" aria-hidden="true" tabindex="-1"></a><span class="co"># @param input_vals A two-dimensional array of expectand values with</span></span>
 <span id="cb31-2013"><a href="#cb31-2013" aria-hidden="true" tabindex="-1"></a><span class="co">#                   the first dimension indexing the Markov chains</span></span>
 <span id="cb31-2014"><a href="#cb31-2014" aria-hidden="true" tabindex="-1"></a><span class="co">#                   and the second dimension indexing the sequential</span></span>
 <span id="cb31-2015"><a href="#cb31-2015" aria-hidden="true" tabindex="-1"></a><span class="co">#                   states within each Markov chain.</span></span>
@@ -4998,11 +4998,11 @@ m &lt; \frac{1}{\xi}.
 <span id="cb31-2024"><a href="#cb31-2024" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
 <span id="cb31-2025"><a href="#cb31-2025" aria-hidden="true" tabindex="-1"></a>    <span class="bu">apply</span>(input_vals, <span class="dv">2</span>, expectand)</span>
 <span id="cb31-2026"><a href="#cb31-2026" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb31-2027"><a href="#cb31-2027" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb31-2027"><a href="#cb31-2027" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-2028"><a href="#cb31-2028" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-2029"><a href="#cb31-2029" aria-hidden="true" tabindex="-1"></a><span class="co"># Recursively create vector of element names, including indexing</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Pushing samples forward along more complicated functions is a bit trickier to implement.</p>
-<div class="sourceCode" id="cb32" data-startfrom="2055"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2054;"><span id="cb32-2055"><a href="#cb32-2055" aria-hidden="true" tabindex="-1"></a><span class="co"># Create array of element names from the specified dimensions.</span></span>
-<span id="cb32-2056"><a href="#cb32-2056" aria-hidden="true" tabindex="-1"></a><span class="co"># For example `name_array(&#39;x&#39;, c(2, 3)))` returns the array</span></span>
-<span id="cb32-2057"><a href="#cb32-2057" aria-hidden="true" tabindex="-1"></a><span class="co"># &gt;&gt;      [,1]     [,2]     [,3]</span></span>
+<div class="sourceCode" id="cb32" data-startfrom="2057"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2056;"><span id="cb32-2057"><a href="#cb32-2057" aria-hidden="true" tabindex="-1"></a><span class="co"># &gt;&gt;      [,1]     [,2]     [,3]</span></span>
 <span id="cb32-2058"><a href="#cb32-2058" aria-hidden="true" tabindex="-1"></a><span class="co"># &gt;&gt; [1,] &quot;x[1,1]&quot; &quot;x[1,2]&quot; &quot;x[1,3]&quot;</span></span>
 <span id="cb32-2059"><a href="#cb32-2059" aria-hidden="true" tabindex="-1"></a><span class="co"># &gt;&gt; [2,] &quot;x[2,1]&quot; &quot;x[2,2]&quot; &quot;x[2,3]&quot;</span></span>
 <span id="cb32-2060"><a href="#cb32-2060" aria-hidden="true" tabindex="-1"></a><span class="co"># @ param base Base name.</span></span>
@@ -5022,10 +5022,10 @@ m &lt; \frac{1}{\xi}.
 <span id="cb32-2074"><a href="#cb32-2074" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Assumes that R arrays are stored in column-major order.</span></span>
 <span id="cb32-2075"><a href="#cb32-2075" aria-hidden="true" tabindex="-1"></a>  names <span class="op">&lt;-</span> elem_names(base, dims)</span>
 <span id="cb32-2076"><a href="#cb32-2076" aria-hidden="true" tabindex="-1"></a>  array(names, dims)</span>
-<span id="cb32-2077"><a href="#cb32-2077" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb33" data-startfrom="2079"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2078;"><span id="cb33-2079"><a href="#cb33-2079" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate a list of expectands on the values of an arbitrary number of</span></span>
-<span id="cb33-2080"><a href="#cb33-2080" aria-hidden="true" tabindex="-1"></a><span class="co"># input variables.  Expectands must all return a scalar numeric or</span></span>
-<span id="cb33-2081"><a href="#cb33-2081" aria-hidden="true" tabindex="-1"></a><span class="co"># logical output.</span></span>
+<span id="cb32-2077"><a href="#cb32-2077" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb32-2078"><a href="#cb32-2078" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-2079"><a href="#cb32-2079" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate a list of expectands on the values of an arbitrary number of</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb33" data-startfrom="2081"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2080;"><span id="cb33-2081"><a href="#cb33-2081" aria-hidden="true" tabindex="-1"></a><span class="co"># logical output.</span></span>
 <span id="cb33-2082"><a href="#cb33-2082" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
 <span id="cb33-2083"><a href="#cb33-2083" aria-hidden="true" tabindex="-1"></a><span class="co"># By default expectand argument values are accessed by name</span></span>
 <span id="cb33-2084"><a href="#cb33-2084" aria-hidden="true" tabindex="-1"></a><span class="co"># in expectand_vals_list.  If a non-null alt_arg_names is provided then</span></span>
@@ -5157,10 +5157,10 @@ m &lt; \frac{1}{\xi}.
 <span id="cb33-2210"><a href="#cb33-2210" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb33-2211"><a href="#cb33-2211" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb33-2212"><a href="#cb33-2212" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(pushforward_vals)</span>
-<span id="cb33-2213"><a href="#cb33-2213" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb34" data-startfrom="2215"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2214;"><span id="cb34-2215"><a href="#cb34-2215" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate an expectand on the values of an arbitrary number of input</span></span>
-<span id="cb34-2216"><a href="#cb34-2216" aria-hidden="true" tabindex="-1"></a><span class="co"># variables.  Expectand must return a scalar numeric or logical output.</span></span>
-<span id="cb34-2217"><a href="#cb34-2217" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb33-2213"><a href="#cb33-2213" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb33-2214"><a href="#cb33-2214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-2215"><a href="#cb33-2215" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate an expectand on the values of an arbitrary number of input</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb34" data-startfrom="2217"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2216;"><span id="cb34-2217"><a href="#cb34-2217" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
 <span id="cb34-2218"><a href="#cb34-2218" aria-hidden="true" tabindex="-1"></a><span class="co"># By default expectand argument values are accessed by name</span></span>
 <span id="cb34-2219"><a href="#cb34-2219" aria-hidden="true" tabindex="-1"></a><span class="co"># in expectand_vals_list.  If a non-null alt_arg_names is provided then</span></span>
 <span id="cb34-2220"><a href="#cb34-2220" aria-hidden="true" tabindex="-1"></a><span class="co"># the alternate names are used to access values in expectand_vals_list.</span></span>
@@ -5187,11 +5187,11 @@ m &lt; \frac{1}{\xi}.
 <span id="cb34-2241"><a href="#cb34-2241" aria-hidden="true" tabindex="-1"></a>                                                  <span class="bu">list</span>(expectand),</span>
 <span id="cb34-2242"><a href="#cb34-2242" aria-hidden="true" tabindex="-1"></a>                                                  alt_arg_names)</span>
 <span id="cb34-2243"><a href="#cb34-2243" aria-hidden="true" tabindex="-1"></a>  pushforward_vals[[<span class="dv">1</span>]]</span>
-<span id="cb34-2244"><a href="#cb34-2244" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb34-2244"><a href="#cb34-2244" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb34-2245"><a href="#cb34-2245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-2246"><a href="#cb34-2246" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand expectation value from a single Markov chain.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Regardless of whether the expectand samples were generated by <code>Stan</code> or if we had to derive them ourselves the Markov chain Monte Carlo estimation is the same. In particular we can estimate expectation values using either a single Markov chain or an entire ensemble of Markov chains.</p>
-<div class="sourceCode" id="cb35" data-startfrom="2246"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2245;"><span id="cb35-2246"><a href="#cb35-2246" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand expectation value from a single Markov chain.</span></span>
-<span id="cb35-2247"><a href="#cb35-2247" aria-hidden="true" tabindex="-1"></a><span class="co"># @param vals A one-dimensional array of sequential expectand values.</span></span>
-<span id="cb35-2248"><a href="#cb35-2248" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The Markov chain Monte Carlo estimate, its estimated standard </span></span>
+<div class="sourceCode" id="cb35" data-startfrom="2248"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2247;"><span id="cb35-2248"><a href="#cb35-2248" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The Markov chain Monte Carlo estimate, its estimated standard </span></span>
 <span id="cb35-2249"><a href="#cb35-2249" aria-hidden="true" tabindex="-1"></a><span class="co">#         error, and empirical effective sample size.</span></span>
 <span id="cb35-2250"><a href="#cb35-2250" aria-hidden="true" tabindex="-1"></a>mcmc_est <span class="op">&lt;-</span> function(vals) {</span>
 <span id="cb35-2251"><a href="#cb35-2251" aria-hidden="true" tabindex="-1"></a>  S <span class="op">&lt;-</span> length(vals)</span>
@@ -5208,10 +5208,10 @@ m &lt; \frac{1}{\xi}.
 <span id="cb35-2262"><a href="#cb35-2262" aria-hidden="true" tabindex="-1"></a>  tau_hat <span class="op">&lt;-</span> compute_tau_hat(vals)</span>
 <span id="cb35-2263"><a href="#cb35-2263" aria-hidden="true" tabindex="-1"></a>  ess_hat <span class="op">&lt;-</span> S <span class="op">/</span> tau_hat</span>
 <span id="cb35-2264"><a href="#cb35-2264" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(c(summary[<span class="dv">1</span>], sqrt(summary[<span class="dv">2</span>] <span class="op">/</span> ess_hat), ess_hat))</span>
-<span id="cb35-2265"><a href="#cb35-2265" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb36" data-startfrom="2267"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2266;"><span id="cb36-2267"><a href="#cb36-2267" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand expectation value from a Markov chain ensemble.</span></span>
-<span id="cb36-2268"><a href="#cb36-2268" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
-<span id="cb36-2269"><a href="#cb36-2269" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
+<span id="cb35-2265"><a href="#cb35-2265" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb35-2266"><a href="#cb35-2266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-2267"><a href="#cb35-2267" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand expectation value from a Markov chain ensemble.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb36" data-startfrom="2269"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2268;"><span id="cb36-2269"><a href="#cb36-2269" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
 <span id="cb36-2270"><a href="#cb36-2270" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
 <span id="cb36-2271"><a href="#cb36-2271" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
 <span id="cb36-2272"><a href="#cb36-2272" aria-hidden="true" tabindex="-1"></a><span class="co"># @return The ensemble Markov chain Monte Carlo estimate, its estimated</span></span>
@@ -5250,11 +5250,11 @@ m &lt; \frac{1}{\xi}.
 <span id="cb36-2305"><a href="#cb36-2305" aria-hidden="true" tabindex="-1"></a>  var <span class="op">&lt;-</span> <span class="bu">sum</span>(<span class="bu">vars</span>) <span class="op">/</span> total_ess</span>
 <span id="cb36-2306"><a href="#cb36-2306" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb36-2307"><a href="#cb36-2307" aria-hidden="true" tabindex="-1"></a>  c(mean, sqrt(var <span class="op">/</span> total_ess), total_ess)</span>
-<span id="cb36-2308"><a href="#cb36-2308" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb36-2308"><a href="#cb36-2308" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb36-2309"><a href="#cb36-2309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-2310"><a href="#cb36-2310" aria-hidden="true" tabindex="-1"></a></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>A particularly common probabilistic calculation is estimating the probability allocated to subsets that are defined only implicitly by an indicator function. In practice we can estimate this probability by pushing samples forward along the indicator function and then constructing the Markov chain Monte Carlo expectation value estimator. These two steps occur together so often that it’s helpful to wrap them into a dedicated function.</p>
-<div class="sourceCode" id="cb37" data-startfrom="2311"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2310;"><span id="cb37-2311"><a href="#cb37-2311" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate the probability allocated to a subset implicitly defined by</span></span>
-<span id="cb37-2312"><a href="#cb37-2312" aria-hidden="true" tabindex="-1"></a><span class="co"># an indicator function.</span></span>
-<span id="cb37-2313"><a href="#cb37-2313" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays.</span></span>
+<div class="sourceCode" id="cb37" data-startfrom="2313"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2312;"><span id="cb37-2313"><a href="#cb37-2313" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals_list A named list of two-dimensional arrays.</span></span>
 <span id="cb37-2314"><a href="#cb37-2314" aria-hidden="true" tabindex="-1"></a><span class="co">#                            The first dimension of each element indexes</span></span>
 <span id="cb37-2315"><a href="#cb37-2315" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the Markov chains and the second dimension</span></span>
 <span id="cb37-2316"><a href="#cb37-2316" aria-hidden="true" tabindex="-1"></a><span class="co">#                            indexes the sequential states within each</span></span>
@@ -5292,7 +5292,9 @@ m &lt; \frac{1}{\xi}.
 <span id="cb37-2348"><a href="#cb37-2348" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb37-2349"><a href="#cb37-2349" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return probability as expectation value of indicator function</span></span>
 <span id="cb37-2350"><a href="#cb37-2350" aria-hidden="true" tabindex="-1"></a>  ensemble_mcmc_est(indicator_samples)[<span class="dv">1</span>:<span class="dv">2</span>]</span>
-<span id="cb37-2351"><a href="#cb37-2351" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb37-2351"><a href="#cb37-2351" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb37-2352"><a href="#cb37-2352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-2353"><a href="#cb37-2353" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand pushforward quantiles from a Markov chain ensemble.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>We can also use realized Markov chains to estimate quantiles of the pushforward distribution along an expectand. Within a single Markov chain ordering the expectand values allow us to efficiently search for the value <span class="math inline">x_{q}</span> whose corresponding interval probability first exceeds the defining quantile probability <span class="math inline">p</span>, <span class="math display">\begin{align*}
 p
 &amp;&lt;
@@ -5305,9 +5307,7 @@ p
 \frac{1}{N} \sum_{n = 1}^{N} I_{ \{ -\infty,  x_{q} ] }( \tilde{x}_{n}).
 \end{align*}</span> The empirical quantiles within each Markov chain can then be averaged together to provide an ensemble estimator.</p>
 <p>In theory the empirical standard deviation of the individual Markov chain estimates consistently estimates the estimator error, but the estimation is unreliable without many Markov chains. Consequently it is not reported here.</p>
-<div class="sourceCode" id="cb38" data-startfrom="2353"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2352;"><span id="cb38-2353"><a href="#cb38-2353" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate expectand pushforward quantiles from a Markov chain ensemble.</span></span>
-<span id="cb38-2354"><a href="#cb38-2354" aria-hidden="true" tabindex="-1"></a><span class="co"># @param expectand_vals A two-dimensional array of expectand values with</span></span>
-<span id="cb38-2355"><a href="#cb38-2355" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
+<div class="sourceCode" id="cb38" data-startfrom="2355"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2354;"><span id="cb38-2355"><a href="#cb38-2355" aria-hidden="true" tabindex="-1"></a><span class="co">#                       the first dimension indexing the Markov chains</span></span>
 <span id="cb38-2356"><a href="#cb38-2356" aria-hidden="true" tabindex="-1"></a><span class="co">#                       and the second dimension indexing the sequential</span></span>
 <span id="cb38-2357"><a href="#cb38-2357" aria-hidden="true" tabindex="-1"></a><span class="co">#                       states within each Markov chain.</span></span>
 <span id="cb38-2358"><a href="#cb38-2358" aria-hidden="true" tabindex="-1"></a><span class="co"># @param probs An array of quantile probabilities.</span></span>
@@ -5330,11 +5330,11 @@ p
 <span id="cb38-2375"><a href="#cb38-2375" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb38-2376"><a href="#cb38-2376" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb38-2377"><a href="#cb38-2377" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(q)</span>
-<span id="cb38-2378"><a href="#cb38-2378" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb38-2378"><a href="#cb38-2378" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb38-2379"><a href="#cb38-2379" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-2380"><a href="#cb38-2380" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize pushforward distribution along a given expectand as a</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Finally we can also visualize the entire pushforward distribution by estimating the target probabilities in histogram bins.</p>
-<div class="sourceCode" id="cb39" data-startfrom="2380"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2379;"><span id="cb39-2380"><a href="#cb39-2380" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize pushforward distribution along a given expectand as a</span></span>
-<span id="cb39-2381"><a href="#cb39-2381" aria-hidden="true" tabindex="-1"></a><span class="co"># sequence of bin probabilities weighted by bin widths that approximates</span></span>
-<span id="cb39-2382"><a href="#cb39-2382" aria-hidden="true" tabindex="-1"></a><span class="co"># the pushforward probability density function.  Markov chain Monte</span></span>
+<div class="sourceCode" id="cb39" data-startfrom="2382"><pre class="sourceCode python code-with-copy"><code class="sourceCode python" style="counter-reset: source-line 2381;"><span id="cb39-2382"><a href="#cb39-2382" aria-hidden="true" tabindex="-1"></a><span class="co"># the pushforward probability density function.  Markov chain Monte</span></span>
 <span id="cb39-2383"><a href="#cb39-2383" aria-hidden="true" tabindex="-1"></a><span class="co"># Carlo estimates the output bin probabilities from the input samples,</span></span>
 <span id="cb39-2384"><a href="#cb39-2384" aria-hidden="true" tabindex="-1"></a><span class="co"># with the bin probability estimator errors visualized in the border</span></span>
 <span id="cb39-2385"><a href="#cb39-2385" aria-hidden="true" tabindex="-1"></a><span class="co"># color.</span></span>

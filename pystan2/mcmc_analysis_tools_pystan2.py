@@ -172,12 +172,13 @@ def check_all_hmc_diagnostics(diagnostics,
       no_warning = False
       no_treedepth_warning = False
       local_messages.append(f'  Chain {c + 1}: {n_tds:.0f} of {S} '
-                            f'transitions ({n_tds / S:.2%}) saturated '
-                            f'the maximum treedepth of {max_treedepth}.')
-    
+                            f'transitions ({n_tds / S:.3%})')
+      local_messages.append(f'           saturated the maximum '
+                            f'treedepth of {max_treedepth}.')
+
     # Check the energy fraction of missing information (E-FMI)
     energies = diagnostics['energy__'][c]
-    numer = sum( [ (energies[i] - energies[i - 1])**2 
+    numer = sum( [ (energies[i] - energies[i - 1])**2
                    for i in range(1, len(energies)) ] ) / S
     denom = numpy.var(energies)
     if numer / denom < 0.2:
@@ -185,17 +186,16 @@ def check_all_hmc_diagnostics(diagnostics,
       no_efmi_warning = False
       local_messages.append(f'  Chain {c + 1}: '
                             f'E-FMI = {numer / denom:.3f}.')
-    
+
     # Check convergence of the stepsize adaptation
     ave_accept_proxy = numpy.mean(diagnostics['accept_stat__'][c])
     if ave_accept_proxy < 0.9 * adapt_target:
       no_warning = False
       no_accept_warning = False
-      local_message = (f'  Chain {c + 1}: Average proxy acceptance '
-                       f'statistic ({ave_accept_proxy:.3f}) is smaller '
-                       f'than 90% of the target ({adapt_target:.3f}).')
-      local_message = textwrap.wrap(local_message, max_width)
-      local_messages += local_message
+      local_messages.append(f'  Chain {c + 1}: Average proxy acceptance '
+                            f'statistic ({ave_accept_proxy:.3f})')
+      local_messages.append(f'           is smaller than 90% of the '
+                            f'target ({adapt_target:.3f}).')
     
     if len(local_messages) > 0:
       messages.append(local_messages)

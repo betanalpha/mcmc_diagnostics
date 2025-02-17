@@ -155,7 +155,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
       no_treedepth_warning <- FALSE
       local_message <- 
         paste0(local_message,
-               sprintf('  Chain %s: %s of %s transitions (%.3f%%) ',
+               sprintf('  Chain %s: %s of %s transitions (%.2f%%)\n',
                        c, n_tds, S, 100 * n_tds / S),
                        '           saturated the maximum treedepth ',
                sprintf('of %s.\n', max_treedepth))
@@ -181,9 +181,9 @@ check_all_hmc_diagnostics <- function(diagnostics,
       no_accept_warning <- FALSE
       local_message <- 
         paste0(local_message,
-               sprintf('  Chain %s: Averge proxy acceptance ', c),
-               sprintf('statistic (%.3f) is\n', ave_accept_proxy),
-                       '           smaller than 90% of the target ',
+               sprintf('  Chain %s: Average proxy acceptance ', c),
+               sprintf('statistic (%.3f)\n', ave_accept_proxy),
+                       '           is smaller than 90% of the target ',
                sprintf('(%.3f).\n', adapt_target))
     }
     
@@ -1573,7 +1573,8 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
     desc <-
       body <- paste0('The expectands %s triggered incremental ',
                      'hat{tau} warnings.\n\n')
-      paste0(sprintf(body, paste(failed_tau_hat_names, collapse=", ")),
+      paste0(sprintf(body,
+                     paste(failed_inc_tau_hat_names, collapse=", ")),
              'If the incremental empirical integrated autocorrelation ',
              'times are too large then the Markov chains have not ',
              'explored long enough for the autocorrelation estimates ',

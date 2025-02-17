@@ -429,7 +429,7 @@ inaccurate gradient evaluations.
 \NormalTok{      no\_treedepth\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ FALSE}
 \NormalTok{      local\_message }\OperatorTok{\textless{}{-}} 
 \NormalTok{        paste0(local\_message,}
-\NormalTok{               sprintf(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: }\SpecialCharTok{\%s}\StringTok{ of }\SpecialCharTok{\%s}\StringTok{ transitions (}\SpecialCharTok{\%.3f\%\%}\StringTok{) \textquotesingle{}}\NormalTok{,}
+\NormalTok{               sprintf(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: }\SpecialCharTok{\%s}\StringTok{ of }\SpecialCharTok{\%s}\StringTok{ transitions (}\SpecialCharTok{\%.2f\%\%}\StringTok{)}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{,}
 \NormalTok{                       c, n\_tds, S, }\DecValTok{100} \OperatorTok{*}\NormalTok{ n\_tds }\OperatorTok{/}\NormalTok{ S),}
                        \StringTok{\textquotesingle{}           saturated the maximum treedepth \textquotesingle{}}\NormalTok{,}
 \NormalTok{               sprintf(}\StringTok{\textquotesingle{}of }\SpecialCharTok{\%s}\StringTok{.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, max\_treedepth))}
@@ -455,9 +455,9 @@ inaccurate gradient evaluations.
 \NormalTok{      no\_accept\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ FALSE}
 \NormalTok{      local\_message }\OperatorTok{\textless{}{-}} 
 \NormalTok{        paste0(local\_message,}
-\NormalTok{               sprintf(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: Averge proxy acceptance \textquotesingle{}}\NormalTok{, c),}
-\NormalTok{               sprintf(}\StringTok{\textquotesingle{}statistic (}\SpecialCharTok{\%.3f}\StringTok{) is}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, ave\_accept\_proxy),}
-                       \StringTok{\textquotesingle{}           smaller than 90}\SpecialCharTok{\% o}\StringTok{f the target \textquotesingle{}}\NormalTok{,}
+\NormalTok{               sprintf(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: Average proxy acceptance \textquotesingle{}}\NormalTok{, c),}
+\NormalTok{               sprintf(}\StringTok{\textquotesingle{}statistic (}\SpecialCharTok{\%.3f}\StringTok{)}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, ave\_accept\_proxy),}
+                       \StringTok{\textquotesingle{}           is smaller than 90}\SpecialCharTok{\% o}\StringTok{f the target \textquotesingle{}}\NormalTok{,}
 \NormalTok{               sprintf(}\StringTok{\textquotesingle{}(}\SpecialCharTok{\%.3f}\StringTok{).}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, adapt\_target))}
 \NormalTok{    \}}
     
@@ -2080,7 +2080,8 @@ we can summarize the output more compactly.
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}
 \NormalTok{      body }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}The expectands }\SpecialCharTok{\%s}\StringTok{ triggered incremental \textquotesingle{}}\NormalTok{,}
                      \StringTok{\textquotesingle{}hat}\SpecialCharTok{\{tau\}}\StringTok{ warnings.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{      paste0(sprintf(body, paste(failed\_tau\_hat\_names, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{)),}
+\NormalTok{      paste0(sprintf(body,}
+\NormalTok{                     paste(failed\_inc\_tau\_hat\_names, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{)),}
              \StringTok{\textquotesingle{}If the incremental empirical integrated autocorrelation \textquotesingle{}}\NormalTok{,}
              \StringTok{\textquotesingle{}times are too large then the Markov chains have not \textquotesingle{}}\NormalTok{,}
              \StringTok{\textquotesingle{}explored long enough for the autocorrelation estimates \textquotesingle{}}\NormalTok{,}
@@ -2103,7 +2104,6 @@ we can summarize the output more compactly.
 \NormalTok{  cat(message)}
 \NormalTok{\}}
 
-\CommentTok{\# Summarize Hamiltonian Monte Carlo and expectand diagnostics}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2112,6 +2112,7 @@ immediate interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
 \CommentTok{\#                            the second dimension indexes the sequential}
@@ -2178,7 +2179,6 @@ immediate interest.
 \NormalTok{  expectand\_vals\_list[good\_names]}
 \NormalTok{\}}
 
-\CommentTok{\# Compute empirical autocorrelations for a given Markov chain sequence}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2192,6 +2192,7 @@ provides a useful visualization of these estimates.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# @parmas vals A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return A one{-}dimensional array of empirical autocorrelations at each}
 \CommentTok{\#         lag up to the length of the sequence.}
 \NormalTok{compute\_rhos }\OperatorTok{\textless{}{-}}\NormalTok{ function(vals) \{}
@@ -2245,12 +2246,12 @@ provides a useful visualization of these estimates.
   \ControlFlowTok{return}\NormalTok{(rhos)}
 \NormalTok{\}}
 
-\CommentTok{\# Plot empirical correlograms for a given expectand across a Markov }
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# chain ensemble.}
 \CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
@@ -2282,7 +2283,6 @@ provides a useful visualization of these estimates.
 \NormalTok{  \}}
 \NormalTok{\}}
 
-\CommentTok{\# Visualize the projection of a Markov chain ensemble along two }
 \end{Highlighting}
 \end{Shaded}
 
@@ -2297,6 +2297,7 @@ chaotic spray of colors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# expectands as a pairs plot.  Point colors darken along each Markov }
 \CommentTok{\# chain to visualize the autocorrelation.}
 \CommentTok{\# @param expectand1\_vals A two{-}dimensional array of expectand values}
 \CommentTok{\#                        with the first dimension indexing the Markov}
@@ -2350,7 +2351,6 @@ chaotic spray of colors.
 \NormalTok{  \}}
 \NormalTok{\}}
 
-\CommentTok{\# Evaluate an expectand on the values of a one{-}dimensional input}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2368,6 +2368,7 @@ functions with a single input variable.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# variable.}
 \CommentTok{\# @param input\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                   the first dimension indexing the Markov chains}
 \CommentTok{\#                   and the second dimension indexing the sequential}
@@ -2385,7 +2386,6 @@ functions with a single input variable.
 \NormalTok{  \}}
 \NormalTok{\}}
 
-\CommentTok{\# Recursively create vector of element names, including indexing}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2394,6 +2394,7 @@ trickier to implement.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# For example \textasciigrave{}name\_array(\textquotesingle{}x\textquotesingle{}, c(2, 3)))\textasciigrave{} returns the array}
 \CommentTok{\# \textgreater{}\textgreater{}      [,1]     [,2]     [,3]}
 \CommentTok{\# \textgreater{}\textgreater{} [1,] "x[1,1]" "x[1,2]" "x[1,3]"}
 \CommentTok{\# \textgreater{}\textgreater{} [2,] "x[2,1]" "x[2,2]" "x[2,3]"}
@@ -2416,12 +2417,12 @@ trickier to implement.
 \NormalTok{  array(names, dims)}
 \NormalTok{\}}
 
-\CommentTok{\# Evaluate a list of expectands on the values of an arbitrary number of}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# input variables.  Expectands must all return a scalar numeric or}
 \CommentTok{\# logical output.}
 \CommentTok{\#}
 \CommentTok{\# By default expectand argument values are accessed by name}
@@ -2556,12 +2557,12 @@ trickier to implement.
   \ControlFlowTok{return}\NormalTok{(pushforward\_vals)}
 \NormalTok{\}}
 
-\CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# variables.  Expectand must return a scalar numeric or logical output.}
 \CommentTok{\#}
 \CommentTok{\# By default expectand argument values are accessed by name}
 \CommentTok{\# in expectand\_vals\_list.  If a non{-}null alt\_arg\_names is provided then}
@@ -2591,7 +2592,6 @@ trickier to implement.
 \NormalTok{  pushforward\_vals[[}\DecValTok{1}\NormalTok{]]}
 \NormalTok{\}}
 
-\CommentTok{\# Estimate expectand expectation value from a single Markov chain.}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2603,6 +2603,7 @@ ensemble of Markov chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# @param vals A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return The Markov chain Monte Carlo estimate, its estimated standard }
 \CommentTok{\#         error, and empirical effective sample size.}
 \NormalTok{mcmc\_est }\OperatorTok{\textless{}{-}}\NormalTok{ function(vals) \{}
@@ -2622,12 +2623,12 @@ ensemble of Markov chains.
   \ControlFlowTok{return}\NormalTok{(c(summary[}\DecValTok{1}\NormalTok{], sqrt(summary[}\DecValTok{2}\NormalTok{] }\OperatorTok{/}\NormalTok{ ess\_hat), ess\_hat))}
 \NormalTok{\}}
 
-\CommentTok{\# Estimate expectand expectation value from a Markov chain ensemble.}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
 \CommentTok{\#                       states within each Markov chain.}
@@ -2669,7 +2670,6 @@ ensemble of Markov chains.
 \NormalTok{  c(mean, sqrt(var }\OperatorTok{/}\NormalTok{ total\_ess), total\_ess)}
 \NormalTok{\}}
 
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2683,6 +2683,7 @@ into a dedicated function.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# an indicator function.}
 \CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays.}
 \CommentTok{\#                            The first dimension of each element indexes}
 \CommentTok{\#                            the Markov chains and the second dimension}
@@ -2723,7 +2724,6 @@ into a dedicated function.
 \NormalTok{  ensemble\_mcmc\_est(indicator\_samples)[}\DecValTok{1}\NormalTok{:}\DecValTok{2}\NormalTok{]}
 \NormalTok{\}}
 
-\CommentTok{\# Estimate expectand pushforward quantiles from a Markov chain ensemble.}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2751,6 +2751,7 @@ not reported here.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
 \CommentTok{\#                       states within each Markov chain.}
@@ -2776,7 +2777,6 @@ not reported here.
   \ControlFlowTok{return}\NormalTok{(q)}
 \NormalTok{\}}
 
-\CommentTok{\# Visualize pushforward distribution along a given expectand as a}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2785,6 +2785,7 @@ estimating the target probabilities in histogram bins.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# sequence of bin probabilities weighted by bin widths that approximates}
 \CommentTok{\# the pushforward probability density function.  Markov chain Monte}
 \CommentTok{\# Carlo estimates the output bin probabilities from the input samples,}
 \CommentTok{\# with the bin probability estimator errors visualized in the border}
@@ -3111,8 +3112,8 @@ Let's start with the Hamiltonian Monte Carlo diagnostics.
   Chain 3: 1015 of 1024 transitions (99.1%) diverged.
 
   Chain 4: 1013 of 1024 transitions (98.9%) diverged.
-  Chain 4: Averge proxy acceptance statistic (0.629) is
-           smaller than 90% of the target (0.801).
+  Chain 4: Average proxy acceptance statistic (0.629)
+           is smaller than 90% of the target (0.801).
 
   Divergent Hamiltonian transitions result from unstable numerical
 trajectories.  These instabilities are often due to degenerate target

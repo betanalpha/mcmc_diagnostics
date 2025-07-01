@@ -1701,7 +1701,7 @@ def encode_all_diagnostics(expectand_vals_dict,
       # Check zero variance across all Markov chains for exclusion
       any_zvar = False
       for c in range(C):
-        var = welford_summary(expectand_vals[c,])[1]
+        var = welford_summary(expectand_vals[c,:])[1]
         if var < 1e-10:
           any_zvar = True
       if any_zvar:
@@ -1709,7 +1709,7 @@ def encode_all_diagnostics(expectand_vals_dict,
 
     for c in range(C):
       # Check tail xi_hats in each Markov chain
-      xi_hats = compute_tail_xi_hats(expectand_vals)
+      xi_hats = compute_tail_xi_hats(expectand_vals[c,:])
       xi_hat_threshold = 0.25
       if math.isnan(xi_hats[0]) or math.isnan(xi_hats[1]):
         xi_hat_warning = True
@@ -1718,7 +1718,7 @@ def encode_all_diagnostics(expectand_vals_dict,
         xi_hat_warning = True
 
       # Check empirical variance in each Markov chain
-      var = welford_summary(expectand_vals)[1]
+      var = welford_summary(expectand_vals[c,:])[1]
       if var < 1e-10:
         zvar_warning = True
 

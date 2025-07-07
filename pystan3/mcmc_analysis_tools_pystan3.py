@@ -1108,11 +1108,8 @@ def compute_tau_hat(vals):
   """Compute empirical integrated autocorrelation time for a sequence"""
   # Compute empirical autocorrelations
   N = len(vals)
-  m, v = welford_summary(vals)
+  m = welford_summary(vals)[0]
   zs = [ val - m for val in vals ]
-  
-  if v < 1e-10:
-    return math.inf
   
   B = 2**math.ceil(math.log2(N)) # Next power of 2 after N
   zs_buff = zs + [0] * (B - N)
@@ -1122,6 +1119,9 @@ def compute_tau_hat(vals):
   Rs = numpy.fft.ifft(Ss)
 
   acov_buff = numpy.real(Rs)
+  if acov_buff[0] == 0:
+    return math.inf
+
   rhos = acov_buff[0:N] / acov_buff[0]
   
   # Drop last lag if (L + 1) is odd so that the lag pairs are complete
@@ -1151,9 +1151,8 @@ def compute_tau_hat(vals):
       rhos[2 * p]     = 0.5 * old_pair_sum
       rhos[2 * p + 1] = 0.5 * old_pair_sum
 
-    # if p == P:
-      # throw some kind of error when autocorrelation
-      # sequence doesn't get terminated
+    if p == P:
+      return math.nan
     
     old_pair_sum = current_pair_sum
 
@@ -1176,24 +1175,39 @@ def check_inc_tau_hat(expectand_vals, max_width=72):
 
   for c in range(C):
     tau_hat = compute_tau_hat(expectand_vals[c,:])
+
+    if math.isinf(tau_hat):
+      print(f'Chain {c + 1}: The calculation of hat{{tau}} is ',
+             'unreliable because\nthe empirical variance ',
+             'is zero.\n')
+      no_warning = False
+    elif math.isnan(tau_hat):
+      print(f'Chain {c + 1}: The calculation of hat{{tau}} is ',
+             'unreliable because\nthe empirical ',
+             'autocorrelations did not decay sufficiently ',
+             'quickly.\n')
+      no_warning = False
+
     inc_tau_hat = tau_hat / S
     if inc_tau_hat > 5:
-      print(f'Chain {c + 1}: The incremental empirical integrated '
-            f'autocorrelation time {inc_tau_hat :.3f} is too large.')
+      print(f'Chain {c + 1}: Incremental hat{{tau}} '
+            f'({inc_tau_hat :.3f}) is too large.\n')
       no_warning = False
 
   if no_warning:
-    desc = ('The incremental empirical integrated autocorrelation '
-            'time is small enough for the empirical autocorrelation '
-            'estimates to be reliable.')
+    desc = ('The incremental empirical integrated ',
+            'autocorrelation time is sufficiently well-behaved ',
+            'for the empirical autocorrelation estimates to be ',
+            'reliable.')
     desc = textwrap.wrap(desc, max_width)
     desc.append(' ')
     print('\n'.join(desc))
   else:
-    desc = ('If the incremental empirical integrated autocorrelation '
-            'times are too large then the Markov '
-            'chains have not explored long enough for the '
-            'autocorrelation estimates to be reliable.')
+    desc = ('If the incremental empirical integrated ',
+            'autocorrelation times are unreliable or too large ',
+            'then the Markov chains have not explored long ',
+            'enough for the autocorrelation estimates to be ',
+            'reliable.')
     desc = textwrap.wrap(desc, max_width)
     desc.append(' ')
     print('\n'.join(desc))
@@ -1379,12 +1393,27 @@ def check_all_expectand_diagnostics(expectand_vals_dict,
       tau_hat = compute_tau_hat(expectand_vals[c,:])
 
       # Check incremental empirical integrated autocorrelation time
-      inc_tau_hat = tau_hat / S
-      if inc_tau_hat > 5:
+      if math.isinf(tau_hat):
         no_inc_tau_hat_warning = False
         local_warning = True
-        local_message += (f'  Chain {c + 1}: Incremental hat{{tau}} '
-                          f'({inc_tau_hat:.1f}) is too large.\n')
+        local_message += (f'Chain {c + 1}: The calculation of ',
+                           'hat{{tau}} is unreliable because\nthe ',
+                           'empirical variance is zero.\n')
+      elif math.isnan(tau_hat):
+        no_inc_tau_hat_warning = False
+        local_warning = True
+        print(f'Chain {c + 1}: The calculation of hat{{tau}} is ',
+               'unreliable because\nthe empirical ',
+               'autocorrelations did not decay sufficiently ',
+               'quickly.\n')
+      else:
+        inc_tau_hat = tau_hat / S
+        if inc_tau_hat > 5:
+          no_inc_tau_hat_warning = False
+          local_warning = True
+          local_message += (f'Chain {c + 1}: Incremental hat{{tau}} '
+                            f'({inc_tau_hat :.31}) is too large.\n')
+
       # Check empirical effective sample size
       ess_hat = S / tau_hat
       if ess_hat < min_ess_hat_per_chain:
@@ -1432,10 +1461,11 @@ def check_all_expectand_diagnostics(expectand_vals_dict,
     print('\n'.join(desc))
 
   if not no_inc_tau_hat_warning:
-    desc = ('If the incremental empirical integrated autocorrelation '
-            'times are too large then the Markov '
-            'chains have not explored long enough for the '
-            'autocorrelation estimates to be reliable.')
+    desc = ('If the incremental empirical integrated ',
+            'autocorrelation times are unreliable or too large ',
+            'then the Markov chains have not explored long ',
+            'enough for the autocorrelation estimates to be ',
+            'reliable.')
     desc = textwrap.wrap(desc, max_width)
     desc.append(' ')
     print('\n'.join(desc))
@@ -1522,8 +1552,7 @@ def summarize_expectand_diagnostics(expectand_vals_dict,
       tau_hat = compute_tau_hat(expectand_vals[c,:])
 
       # Check incremental empirical integrated autocorrelation time
-      inc_tau_hat = tau_hat / S
-      if inc_tau_hat > 5:
+      if math.isinf(tau_hat) or math.isnan(tau_hat) or (tau_hat / S) > 5:
         failed_names.append(name)
         failed_inc_tau_hat_names.append(name)
 
@@ -1596,10 +1625,11 @@ def summarize_expectand_diagnostics(expectand_vals_dict,
     desc = textwrap.wrap(desc, max_width)
     print('\n'.join(desc))
 
-    desc = ('If the incremental empirical integrated autocorrelation '
-            'times per iteration are too large then the Markov '
-            'chains have not explored long enough for the '
-            'autocorrelation estimates to be reliable.')
+    desc = ('If the incremental empirical integrated ',
+            'autocorrelation times are unreliable or too large ',
+            'then the Markov chains have not explored long ',
+            'enough for the autocorrelation estimates to be ',
+            'reliable.')
     desc = textwrap.wrap(desc, max_width)
     desc.append(' ')
     print('\n'.join(desc))
@@ -1733,8 +1763,7 @@ def encode_all_diagnostics(expectand_vals_dict,
       tau_hat = compute_tau_hat(expectand_vals[c,:])
 
       # Check incremental empirical integrated autocorrelation time
-      inc_tau_hat = tau_hat / S
-      if inc_tau_hat > 5:
+      if math.isinf(tau_hat) or math.isnan(tau_hat) or (tau_hat / S) > 5:
         inc_tau_hat_warning = True
 
       # Check empirical effective sample size
@@ -1842,11 +1871,8 @@ def compute_rhos(vals):
   """Visualize empirical autocorrelations for a given sequence"""
   # Compute empirical autocorrelations
   N = len(vals)
-  m, v = welford_summary(vals)
+  m = welford_summary(vals)[0]
   zs = [ val - m for val in vals ]
-  
-  if v < 1e-10:
-    return [1] * N
   
   B = 2**math.ceil(math.log2(N)) # Next power of 2 after N
   zs_buff = zs + [0] * (B - N)
@@ -1856,6 +1882,9 @@ def compute_rhos(vals):
   Rs = numpy.fft.ifft(Ss)
   
   acov_buff = numpy.real(Rs)
+  if acov_buff[0] == 0:
+    return math.inf
+
   rhos = acov_buff[0:N] / acov_buff[0]
   
   # Drop last lag if (L + 1) is odd so that the lag pairs are complete

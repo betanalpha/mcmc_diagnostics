@@ -194,7 +194,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
 
   if (no_warning) {
     desc <- paste0('All Hamiltonian Monte Carlo diagnostics are ',
-                   'consistent with reliable Markov chain Monte Carlo.\n\n')
+                   'consistent with reliable Markov chain Monte Carlo.')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
     message <- paste0(message, desc)
   }
@@ -208,7 +208,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
                    'with adept_delta larger ',
                    sprintf('than %.3f may reduce the ', adapt_target),
                    'instabilities at the cost of more expensive ',
-                   'Hamiltonian transitions.\n\n')
+                   'Hamiltonian transitions.')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }
@@ -218,7 +218,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
                    'maximum treedepth have terminated prematurely.  ',
                    sprintf('Increasing max_depth above %s ', max_treedepth),
                    'should result in more expensive, but more ',
-                   'efficient, Hamiltonian transitions.\n\n')
+                   'efficient, Hamiltonian transitions.')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }
@@ -226,7 +226,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
   if (!no_efmi_warning) {
     desc <- paste0('E-FMI below 0.2 arise when a funnel-like geometry ',
                    'obstructs how effectively Hamiltonian trajectories ',
-                   'can explore the target distribution.\n\n')
+                   'can explore the target distribution.')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }
@@ -236,7 +236,7 @@ check_all_hmc_diagnostics <- function(diagnostics,
                    'indicates that the adaptation of the numerical ',
                    'integrator step size failed to converge.  This is ',
                    'often due to discontinuous or imprecise ',
-                   'gradients.\n\n')
+                   'gradients.')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }
@@ -1027,9 +1027,6 @@ compute_tau_hat <- function(vals) {
   # Compute empirical autocorrelations
   N <- length(vals)
   zs <- vals - mean(vals)
-  
-  if (var(vals) < 1e-10)
-    return(Inf)
 
   B <- 2**ceiling(log2(N)) # Next power of 2 after N
   zs_buff <- c(zs, rep(0, B - N))
@@ -1039,6 +1036,10 @@ compute_tau_hat <- function(vals) {
   Rs <- fft(Ss, inverse=TRUE)
 
   acov_buff <- Re(Rs)
+
+  if (acov_buff[1] == 0)
+    return(Inf)
+
   rhos <- head(acov_buff, N) / acov_buff[1]
 
   # Drop last lag if (L + 1) is odd so that the lag pairs are complete
@@ -1053,7 +1054,7 @@ compute_tau_hat <- function(vals) {
   old_pair_sum <- rhos[1] + rhos[2]
   for (p in 2:P) {
     current_pair_sum <- rhos[2 * p - 1] + rhos[2 * p]
-  
+
     if (current_pair_sum < 0) {
       rho_sum <- sum(rhos[2:(2 * p)])
     
@@ -1067,7 +1068,7 @@ compute_tau_hat <- function(vals) {
     if (current_pair_sum > old_pair_sum) {
       current_pair_sum <- old_pair_sum
       rhos[2 * p - 1] <- 0.5 * old_pair_sum
-      rhos[2 * p] <- 0.5 * old_pair_sum
+      rhos[2 * p]     <- 0.5 * old_pair_sum
     }
   
     if (p == P) {
@@ -1097,29 +1098,46 @@ check_inc_tau_hat <- function(expectand_vals,
 
   for (c in 1:C) {
     tau_hat <- compute_tau_hat(expectand_vals[c,])
-    inc_tau_hat <- tau_hat / S
-    if (inc_tau_hat > 5) {
-      body <- print0('  Chain %s: The incremental empirical ',
-                     'integrated autocorrelation time %.3f ',
-                     'is too large.\n')
-      message <- paste0(message, sprintf(body, c, inc_tau_hat))
+
+    if (is.infinite(tau_hat)) {
       no_warning <- FALSE
+      body <- paste0('  Chain %s: The calculation of hat{tau} is ',
+                     'unreliable because\nthe empirical variance ',
+                     'is zero.\n')
+      local_message <- paste0(local_message, sprintf(body, c))
+    } else if(is.nan(tau_hat)) {
+      no_warning <- FALSE
+      body <- paste0('  Chain %s: The calculation of hat{tau} is ',
+                     'unreliable because\nthe empirical ',
+                     'autocorrelations did not decay sufficiently ',
+                     'quickly.\n')
+      local_message <- paste0(local_message, sprintf(body, c))
+    } else {
+      inc_tau_hat <- tau_hat / S
+      if (inc_tau_hat > 5) {
+        no_warning <- FALSE
+        body <- paste0('  Chain %s: Incremental hat{tau} (%.3f) is ',
+                       'too large.\n')
+        local_message <- paste0(local_message,
+                                sprintf(body, c, inc_tau_hat))
+      }
     }
   }
   if (no_warning) {
     desc <- paste0('The incremental empirical integrated ',
-                   'autocorrelation time is small enough for the ',
-                   'empirical autocorrelation estimates to be ',
-                   'reliable.\n\n')
+                   'autocorrelation time is sufficiently well-behaved ',
+                   'for the empirical autocorrelation estimates to be ',
+                   'reliable.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
-    message <- paste0(message, desc)
+    message <- paste0(message, desc, '\n')
   } else {
     desc <- paste0('If the incremental empirical integrated ',
-                   'autocorrelation times are too large then the ',
-                   'Markov chains have not explored long enough for ',
-                   'the autocorrelation estimates to be reliable.\n\n')
+                   'autocorrelation times are unreliable or too large ',
+                   'then the Markov chains have not explored long ',
+                   'enough for the autocorrelation estimates to be ',
+                   'reliable.')
     desc <- paste0(strwrap(desc, max_width, 2), collapse='\n')
-    message <- paste0(message, desc)
+    message <- paste0(message, desc, '\n')
   }
 
   cat(message)
@@ -1233,7 +1251,7 @@ check_all_expectand_diagnostics <- function(expectand_vals_list,
           name))
       next
     }
-    
+
     expectand_vals <- expectand_vals_list[[name]]
     C <- dim(expectand_vals)[1]
     S <- dim(expectand_vals)[2]
@@ -1333,16 +1351,31 @@ check_all_expectand_diagnostics <- function(expectand_vals_list,
       vals <- expectand_vals[c,]
       tau_hat <- compute_tau_hat(vals)
 
-      # Check incremental empirical integrated autocorrelation time
-      inc_tau_hat <- tau_hat / S
-
-      if (inc_tau_hat > 5) {
+      if (is.infinite(tau_hat)) {
         no_inc_tau_hat_warning <- FALSE
         local_warning <- TRUE
-        body <- paste0('  Chain %s: Incremental hat{tau} (%.3f) is ',
+        body <- paste0('  Chain %s: The calculation of hat{tau} is ',
+                       'unreliable because\nthe empirical variance ',
+                       'is zero.\n')
+        local_message <- paste0(local_message, sprintf(body, c))
+      } else if(is.nan(tau_hat)) {
+        no_inc_tau_hat_warning <- FALSE
+        local_warning <- TRUE
+        body <- paste0('  Chain %s: The calculation of hat{tau} is ',
+                       'unreliable because\nthe empirical ',
+                       'autocorrelations did not decay sufficiently ',
+                       'quickly.\n')
+        local_message <- paste0(local_message, sprintf(body, c))
+      } else {
+        inc_tau_hat <- tau_hat / S
+        if (inc_tau_hat > 5) {
+          no_inc_tau_hat_warning <- FALSE
+          local_warning <- TRUE
+          body <- paste0('  Chain %s: Incremental hat{tau} (%.3f) is ',
                        'too large.\n')
-        local_message <- paste0(local_message,
-                                sprintf(body, inc_tau_hat))
+          local_message <- paste0(local_message,
+                                  sprintf(body, c, inc_tau_hat))
+        }
       }
 
       # Check empirical effective sample size
@@ -1366,44 +1399,45 @@ check_all_expectand_diagnostics <- function(expectand_vals_list,
 
   if (!no_xi_hat_warning) {
     desc <- paste0('Large tail hat{xi}s suggest that the expectand ',
-                   'might not be sufficiently integrable.\n\n')
+                   'might not be sufficiently integrable.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, '\n', desc, '\n')
   }
   if (!no_zvar_warning) {
     desc <- paste0('If the expectands are not constant then zero ',
                    'empirical variance suggests that the Markov ',
-                   'transitions may be misbehaving.\n\n')
+                   'transitions may be misbehaving.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, '\n', desc, '\n')
   }
   if (!no_rhat_warning) {
     desc <- paste0('Split Rhat larger than 1.1 suggests that at ',
                    'least one of the Markov chains has not reached ',
-                   'an equilibrium.\n\n')
+                   'an equilibrium.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, '\n', desc, '\n')
   }
   if (!no_inc_tau_hat_warning) {
     desc <- paste0('If the incremental empirical integrated ',
-                   'autocorrelation times are too large then the ',
-                   'Markov chains have not explored long enough for',
-                   'the autocorrelation estimates to be reliable.\n\n')
+                   'autocorrelation times are unreliable or too large ',
+                   'then the Markov chains have not explored long ',
+                   'enough for the autocorrelation estimates to be ',
+                   'reliable.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
-    message <- paste0(message, '\n', desc)
+    message <- paste0(message, '\n', desc, '\n')
   }
   if (!no_ess_hat_warning) {
     desc <- paste0('Small empirical effective sample sizes result in ',
-                   'imprecise Markov chain Monte Carlo estimators.\n\n')
+                   'imprecise Markov chain Monte Carlo estimators.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
-    message <- paste0(message, '\n', desc)
+    message <- paste0(message, '\n', desc, '\n')
   }
 
   if(no_xi_hat_warning & no_zvar_warning & 
      no_rhat_warning & no_inc_tau_hat_warning & no_ess_hat_warning) {
     desc <- paste0('All expectands checked appear to be behaving ',
                    'well enough for reliable Markov chain Monte ',
-                   'Carlo estimation.\n\n')
+                   'Carlo estimation.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc)
   }
@@ -1499,9 +1533,9 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
       tau_hat <- compute_tau_hat(expectand_vals[c,])
 
       # Check incremental empirical integrated autocorrelation time
-      inc_tau_hat <- tau_hat / S
-
-      if (inc_tau_hat > 5) {
+      if (is.infinite(tau_hat) |
+          is.nan(tau_hat)      |
+          (tau_hat / S) > 5      ) {
         failed_names <- c(failed_names, name)
         failed_inc_tau_hat_names <- c(failed_inc_tau_hat_names, name)
       }
@@ -1521,16 +1555,16 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
   failed_names <- unique(failed_names)
   if (length(failed_names)) {
     desc <- 
-      sprintf('The expectands %s triggered diagnostic warnings.\n\n',
+      sprintf('The expectands %s triggered diagnostic warnings.',
               paste(failed_names, collapse=", "))
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   } else {
     desc <- paste0('All expectands checked appear to be behaving ',
                    'well enough for reliable Markov chain Monte ',
-                   'Carlo estimation.\n\n')
+                   'Carlo estimation.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
-    message <- paste0(message, desc)
+    message <- paste0(message, desc, '\n\n')
   }
 
   failed_xi_hat_names <- unique(failed_xi_hat_names)
@@ -1539,7 +1573,7 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
       paste0(sprintf('The expectands %s triggered hat{xi} warnings.\n\n',
              paste(failed_xi_hat_names, collapse=", ")),
              '  Large tail hat{xi}s suggest that the expectand ',
-             'might not be sufficiently integrable.\n\n')
+             'might not be sufficiently integrable.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }
@@ -1553,7 +1587,7 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
              'empirical variance suggests that the Markov ',
              'transitions may be misbehaving.\n\n')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
-    message <- paste0(message, desc, '\n\n')
+    message <- paste0(message, desc, '')
   }
   
   failed_rhat_names <- unique(failed_rhat_names)
@@ -1563,7 +1597,7 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
              paste(failed_rhat_names, collapse=", ")),
              '  Split Rhat larger than 1.1 suggests that at ',
              'least one of the Markov chains has not reached ',
-             'an equilibrium.\n\n')
+             'an equilibrium.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }
@@ -1575,10 +1609,11 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
                      'hat{tau} warnings.\n\n')
       paste0(sprintf(body,
                      paste(failed_inc_tau_hat_names, collapse=", ")),
-             'If the incremental empirical integrated autocorrelation ',
-             'times are too large then the Markov chains have not ',
-             'explored long enough for the autocorrelation estimates ',
-             'to be reliable.\n\n')
+             'If the incremental empirical integrated ',
+             'autocorrelation times are unreliable or too large ',
+             'then the Markov chains have not explored long ',
+             'enough for the autocorrelation estimates to be ',
+             'reliable.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }
@@ -1589,7 +1624,7 @@ summarize_expectand_diagnostics <- function(expectand_vals_list,
       paste0(sprintf('The expectands %s triggered hat{ESS} warnings.\n\n',
              paste(failed_ess_hat_names, collapse=", ")),
              'Small empirical effective sample sizes result in ',
-             'imprecise Markov chain Monte Carlo estimators.\n\n')
+             'imprecise Markov chain Monte Carlo estimators.')
     desc <- paste0(strwrap(desc, max_width, 0), collapse='\n')
     message <- paste0(message, desc, '\n\n')
   }
@@ -1726,9 +1761,10 @@ encode_all_diagnostics <- function(expectand_vals_list,
 
       # Check empirical integrated autocorrelation time
       tau_hat <- compute_tau_hat(vals)
-      inc_tau_hat <- tau_hat /  S
 
-      if (int_tau_hat > 5) {
+      if (is.infinite(tau_hat) |
+          is.nan(tau_hat)      |
+          (tau_hat / S) > 5      ) {
         inc_tau_hat_warning <- TRUE
       }
 
@@ -1873,9 +1909,6 @@ compute_rhos <- function(vals) {
   # Compute empirical autocorrelations
   N <- length(vals)
   zs <- vals - mean(vals)
-  
-  if (var(vals) < 1e-10)
-    return(rep(1, N))
 
   B <- 2**ceiling(log2(N)) # Next power of 2 after N
   zs_buff <- c(zs, rep(0, B - N))
@@ -1885,6 +1918,10 @@ compute_rhos <- function(vals) {
   Rs <- fft(Ss, inverse=TRUE)
 
   acov_buff <- Re(Rs)
+
+  if (acov_buff[1] == 0)
+    return(Inf)
+
   rhos <- head(acov_buff, N) / acov_buff[1]
 
   # Drop last lag if (L + 1) is odd so that the

@@ -468,7 +468,7 @@ inaccurate gradient evaluations.
 
   \ControlFlowTok{if}\NormalTok{ (no\_warning) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}All Hamiltonian Monte Carlo diagnostics are \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}consistent with reliable Markov chain Monte Carlo.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}consistent with reliable Markov chain Monte Carlo.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{2}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc)}
 \NormalTok{  \}}
@@ -482,7 +482,7 @@ inaccurate gradient evaluations.
                    \StringTok{\textquotesingle{}with adept\_delta larger \textquotesingle{}}\NormalTok{,}
 \NormalTok{                   sprintf(}\StringTok{\textquotesingle{}than }\SpecialCharTok{\%.3f}\StringTok{ may reduce the \textquotesingle{}}\NormalTok{, adapt\_target),}
                    \StringTok{\textquotesingle{}instabilities at the cost of more expensive \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}Hamiltonian transitions.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}Hamiltonian transitions.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{2}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
@@ -492,7 +492,7 @@ inaccurate gradient evaluations.
                    \StringTok{\textquotesingle{}maximum treedepth have terminated prematurely.  \textquotesingle{}}\NormalTok{,}
 \NormalTok{                   sprintf(}\StringTok{\textquotesingle{}Increasing max\_depth above }\SpecialCharTok{\%s}\StringTok{ \textquotesingle{}}\NormalTok{, max\_treedepth),}
                    \StringTok{\textquotesingle{}should result in more expensive, but more \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}efficient, Hamiltonian transitions.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}efficient, Hamiltonian transitions.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{2}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
@@ -500,7 +500,7 @@ inaccurate gradient evaluations.
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\NormalTok{no\_efmi\_warning) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}E{-}FMI below 0.2 arise when a funnel{-}like geometry \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}obstructs how effectively Hamiltonian trajectories \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}can explore the target distribution.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}can explore the target distribution.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{2}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
@@ -510,15 +510,13 @@ inaccurate gradient evaluations.
                    \StringTok{\textquotesingle{}indicates that the adaptation of the numerical \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}integrator step size failed to converge.  This is \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}often due to discontinuous or imprecise \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}gradients.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}gradients.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{2}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
 
 \NormalTok{  cat(message)}
 \NormalTok{\}}
-
-\CommentTok{\# Plot outcome of inverse metric adaptation}
 \end{Highlighting}
 \end{Shaded}
 
@@ -538,6 +536,8 @@ different behaviors during warmup.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Plot outcome of inverse metric adaptation}
+\CommentTok{\# @params stan\_fit A StanFit object}
 \CommentTok{\# @params B The number of bins for the inverse metric element histograms.}
 \NormalTok{plot\_inv\_metric }\OperatorTok{\textless{}{-}}\NormalTok{ function(stan\_fit, B}\OperatorTok{=}\DecValTok{25}\NormalTok{) \{}
 \NormalTok{  adaptation\_info }\OperatorTok{\textless{}{-}}\NormalTok{ rstan:::get\_adaptation\_info(stan\_fit)}
@@ -581,8 +581,6 @@ different behaviors during warmup.
 \NormalTok{         ylim}\OperatorTok{=}\NormalTok{c(}\DecValTok{0}\NormalTok{, }\FloatTok{1.05} \OperatorTok{*}\NormalTok{ max\_y), ylab}\OperatorTok{=}\StringTok{""}\NormalTok{, yaxt}\OperatorTok{=}\StringTok{"n"}\NormalTok{)}
 \NormalTok{  \}}
 \NormalTok{\}}
-
-\CommentTok{\# Display adapted symplectic integrator step sizes}
 \end{Highlighting}
 \end{Shaded}
 
@@ -600,6 +598,8 @@ substantially different behavior during warmup.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Display adapted symplectic integrator step sizes}
+\CommentTok{\# @param diagnostics A named list of two{-}dimensional arrays for }
 \CommentTok{\#                    each diagnostic.  The first dimension of each}
 \CommentTok{\#                    element indexes the Markov chains and the }
 \CommentTok{\#                    second dimension indexes the sequential }
@@ -616,8 +616,6 @@ substantially different behavior during warmup.
 \NormalTok{                c, stepsize))}
 \NormalTok{  \}}
 \NormalTok{\}}
-
-\CommentTok{\# Display symplectic integrator trajectory lengths}
 \end{Highlighting}
 \end{Shaded}
 
@@ -631,6 +629,8 @@ distribution, and the more expensive it is to explore.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Display symplectic integrator trajectory lengths}
+\CommentTok{\# @param diagnostics A named list of two{-}dimensional arrays for }
 \CommentTok{\#                    each diagnostic.  The first dimension of each}
 \CommentTok{\#                    element indexes the Markov chains and the }
 \CommentTok{\#                    second dimension indexes the sequential }
@@ -663,13 +663,13 @@ distribution, and the more expensive it is to explore.
 \NormalTok{    lines(xs, pad\_counts, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{, col}\OperatorTok{=}\NormalTok{colors[c])}
 \NormalTok{  \}}
 \NormalTok{\}}
-
-\CommentTok{\# Display symplectic integrator trajectory lengths by Markov chain}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Display symplectic integrator trajectory lengths by Markov chain}
+\CommentTok{\# @param diagnostics A named list of two{-}dimensional arrays for }
 \CommentTok{\#                    each diagnostic.  The first dimension of each}
 \CommentTok{\#                    element indexes the Markov chains and the }
 \CommentTok{\#                    second dimension indexes the sequential }
@@ -705,8 +705,6 @@ distribution, and the more expensive it is to explore.
 \NormalTok{         ylab}\OperatorTok{=}\StringTok{""}\NormalTok{, ylim}\OperatorTok{=}\NormalTok{c(}\DecValTok{0}\NormalTok{, }\FloatTok{1.1} \OperatorTok{*}\NormalTok{ max\_count), yaxt}\OperatorTok{=}\StringTok{\textquotesingle{}n\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
 \NormalTok{\}}
-
-\CommentTok{\# Display empirical average of the proxy acceptance statistic across }
 \end{Highlighting}
 \end{Shaded}
 
@@ -719,6 +717,8 @@ statistics should also vary across the Markov chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Display empirical average of the proxy acceptance statistic across }
+\CommentTok{\# each Markov chain}
 \CommentTok{\# @param diagnostics A named list of two{-}dimensional arrays for }
 \CommentTok{\#                    each diagnostic.  The first dimension of each}
 \CommentTok{\#                    element indexes the Markov chains and the }
@@ -736,8 +736,6 @@ statistics should also vary across the Markov chains.
 \NormalTok{                c, ave\_accept\_proxy))}
 \NormalTok{  \}}
 \NormalTok{\}}
-
-\CommentTok{\# Display symplectic integrator trajectory times}
 \end{Highlighting}
 \end{Shaded}
 
@@ -758,6 +756,8 @@ states themselves can be visualized with pairs plots.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Apply transformation identity, log, or logit transformation to}
+\CommentTok{\# named values and flatten the output.  Transformation defaults to}
 \CommentTok{\# identity if name is not included in \textasciigrave{}transforms\textasciigrave{} dictionary.  A }
 \CommentTok{\# ValueError is thrown if values are not properly constrained.}
 \CommentTok{\# @param name Expectand name.}
@@ -806,13 +806,13 @@ states themselves can be visualized with pairs plots.
   \ControlFlowTok{return}\NormalTok{ (}\BuiltInTok{list}\NormalTok{(}\StringTok{\textquotesingle{}t\_name\textquotesingle{}} \OperatorTok{=}\NormalTok{ transformed\_name, }
                \StringTok{\textquotesingle{}t\_vals\textquotesingle{}} \OperatorTok{=}\NormalTok{ transformed\_vals))}
 \NormalTok{\}}
-
-\CommentTok{\# Plot pairwise scatter plots with non{-}divergent and divergent }
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Plot pairwise scatter plots with non{-}divergent and divergent }
+\CommentTok{\# transitions separated by color}
 \CommentTok{\# @param x\_names An array of expectand names to be plotted on the x axis.}
 \CommentTok{\# @param y\_names An array of expectand names to be plotted on the y axis.}
 \CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
@@ -999,8 +999,6 @@ states themselves can be visualized with pairs plots.
 \NormalTok{    \}}
 \NormalTok{  \}}
 \NormalTok{\}}
-
-\CommentTok{\# Compute hat\{xi\}, an estimate for the shape of a generalized Pareto }
 \end{Highlighting}
 \end{Shaded}
 
@@ -1056,6 +1054,8 @@ threshold.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Compute hat\{xi\}, an estimate for the shape of a generalized Pareto }
+\CommentTok{\# distribution from a sample of positive values using the method }
 \CommentTok{\# introduced in "A New and Efficient Estimation Method for the }
 \CommentTok{\# Generalized Pareto Distribution" by Zhang and Stephens }
 \CommentTok{\# https://doi.org/10.1198/tech.2009.08017.}
@@ -1116,13 +1116,13 @@ threshold.
 
 \NormalTok{  mean( log (}\DecValTok{1} \OperatorTok{{-}}\NormalTok{ b\_hat }\OperatorTok{*}\NormalTok{ sorted\_vals) )}
 \NormalTok{\}}
-
-\CommentTok{\# Compute empirical generalized Pareto shape for upper and lower tails}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Compute empirical generalized Pareto shape for upper and lower tails}
+\CommentTok{\# for the given expectand values, ignoring any autocorrelation between}
 \CommentTok{\# the values.}
 \CommentTok{\# @param vals A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return Left and right shape estimators.}
@@ -1153,13 +1153,13 @@ threshold.
 
 \NormalTok{  c(xi\_hat\_left, xi\_hat\_right)}
 \NormalTok{\}}
-
-\CommentTok{\# Check upper and lower tail behavior of the expectand values.}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Check upper and lower tail behavior of the expectand values.}
+\CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
 \CommentTok{\#                       states within each Markov chain.}
@@ -1224,8 +1224,6 @@ threshold.
   
 \NormalTok{  cat(message)}
 \NormalTok{\}}
-
-\CommentTok{\# Compute empirical mean and variance of a given sequence with a single}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1243,6 +1241,8 @@ of the expectand values in a single sweep.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Compute empirical mean and variance of a given sequence with a single}
+\CommentTok{\# pass using Welford accumulators.}
 \CommentTok{\# @params vals A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return The empirical mean and variance.}
 \NormalTok{welford\_summary }\OperatorTok{\textless{}{-}}\NormalTok{ function(vals) \{}
@@ -1260,13 +1260,13 @@ of the expectand values in a single sweep.
 
   \ControlFlowTok{return}\NormalTok{(c(mean, var))}
 \NormalTok{\}}
-
-\CommentTok{\# Check expectand values for vanishing empirical variance.}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Check expectand values for vanishing empirical variance.}
+\CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
 \CommentTok{\#                       states within each Markov chain.}
@@ -1300,8 +1300,6 @@ of the expectand values in a single sweep.
   
 \NormalTok{  cat(message)}
 \NormalTok{\}}
-
-\CommentTok{\# Split a sequence of expectand values in half to create an initial and }
 \end{Highlighting}
 \end{Shaded}
 
@@ -1331,6 +1329,8 @@ set.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Split a sequence of expectand values in half to create an initial and }
+\CommentTok{\# terminal Markov chains}
 \CommentTok{\# @params chain A sequence of expectand values derived from a single }
 \CommentTok{\#               Markov chain.}
 \CommentTok{\# @return Two subsequences of expectand values.}
@@ -1339,13 +1339,13 @@ set.
 \NormalTok{  M }\OperatorTok{\textless{}{-}}\NormalTok{ N }\OperatorTok{\%/\%} \DecValTok{2}
   \BuiltInTok{list}\NormalTok{(chain1 }\OperatorTok{\textless{}{-}}\NormalTok{ chain[}\DecValTok{1}\NormalTok{:M], chain2 }\OperatorTok{\textless{}{-}}\NormalTok{ chain[(M }\OperatorTok{+} \DecValTok{1}\NormalTok{):N])}
 \NormalTok{\}}
-
-\CommentTok{\# Compute split hat\{R\} for the expectand values.}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Compute split hat\{R\} for the expectand values.}
+\CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
 \CommentTok{\#                       states within each Markov chain.}
@@ -1382,13 +1382,13 @@ set.
 
 \NormalTok{  (rhat)}
 \NormalTok{\}}
-
-\CommentTok{\# Compute split hat\{R\} for all input expectands.}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Compute split hat\{R\} for all input expectands.}
+\CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
 \CommentTok{\#                            the second dimension indexes the sequential}
@@ -1405,13 +1405,13 @@ set.
 \NormalTok{  \}}
   \ControlFlowTok{return}\NormalTok{(rhats)}
 \NormalTok{\}}
-
-\CommentTok{\# Check split hat\{R\} across the given expectand values.}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Check split hat\{R\} across the given expectand values.}
+\CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
 \CommentTok{\#                       states within each Markov chain.}
@@ -1445,8 +1445,6 @@ set.
   
 \NormalTok{  cat(message)}
 \NormalTok{\}}
-
-\CommentTok{\# Compute empirical integrated autocorrelation time, \textbackslash{}hat\{tau\}, for a}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1463,15 +1461,14 @@ time \(\hat{\tau}[f]\).
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Compute empirical integrated autocorrelation time, \textbackslash{}hat\{tau\}, for a}
+\CommentTok{\# sequence of expectand values.}
 \CommentTok{\# @param vals A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return Left and right shape estimators.}
 \NormalTok{compute\_tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ function(vals) \{}
   \CommentTok{\# Compute empirical autocorrelations}
 \NormalTok{  N }\OperatorTok{\textless{}{-}}\NormalTok{ length(vals)}
 \NormalTok{  zs }\OperatorTok{\textless{}{-}}\NormalTok{ vals }\OperatorTok{{-}}\NormalTok{ mean(vals)}
-  
-  \ControlFlowTok{if}\NormalTok{ (var(vals) }\OperatorTok{\textless{}} \FloatTok{1e{-}10}\NormalTok{)}
-    \ControlFlowTok{return}\NormalTok{(Inf)}
 
 \NormalTok{  B }\OperatorTok{\textless{}{-}} \DecValTok{2}\OperatorTok{**}\NormalTok{ceiling(log2(N)) }\CommentTok{\# Next power of 2 after N}
 \NormalTok{  zs\_buff }\OperatorTok{\textless{}{-}}\NormalTok{ c(zs, rep(}\DecValTok{0}\NormalTok{, B }\OperatorTok{{-}}\NormalTok{ N))}
@@ -1481,6 +1478,10 @@ time \(\hat{\tau}[f]\).
 \NormalTok{  Rs }\OperatorTok{\textless{}{-}}\NormalTok{ fft(Ss, inverse}\OperatorTok{=}\NormalTok{TRUE)}
 
 \NormalTok{  acov\_buff }\OperatorTok{\textless{}{-}}\NormalTok{ Re(Rs)}
+
+  \ControlFlowTok{if}\NormalTok{ (acov\_buff[}\DecValTok{1}\NormalTok{] }\OperatorTok{==} \DecValTok{0}\NormalTok{)}
+    \ControlFlowTok{return}\NormalTok{(Inf)}
+
 \NormalTok{  rhos }\OperatorTok{\textless{}{-}}\NormalTok{ head(acov\_buff, N) }\OperatorTok{/}\NormalTok{ acov\_buff[}\DecValTok{1}\NormalTok{]}
 
   \CommentTok{\# Drop last lag if (L + 1) is odd so that the lag pairs are complete}
@@ -1495,7 +1496,7 @@ time \(\hat{\tau}[f]\).
 \NormalTok{  old\_pair\_sum }\OperatorTok{\textless{}{-}}\NormalTok{ rhos[}\DecValTok{1}\NormalTok{] }\OperatorTok{+}\NormalTok{ rhos[}\DecValTok{2}\NormalTok{]}
   \ControlFlowTok{for}\NormalTok{ (p }\KeywordTok{in} \DecValTok{2}\NormalTok{:P) \{}
 \NormalTok{    current\_pair\_sum }\OperatorTok{\textless{}{-}}\NormalTok{ rhos[}\DecValTok{2} \OperatorTok{*}\NormalTok{ p }\OperatorTok{{-}} \DecValTok{1}\NormalTok{] }\OperatorTok{+}\NormalTok{ rhos[}\DecValTok{2} \OperatorTok{*}\NormalTok{ p]}
-  
+
     \ControlFlowTok{if}\NormalTok{ (current\_pair\_sum }\OperatorTok{\textless{}} \DecValTok{0}\NormalTok{) \{}
 \NormalTok{      rho\_sum }\OperatorTok{\textless{}{-}} \BuiltInTok{sum}\NormalTok{(rhos[}\DecValTok{2}\NormalTok{:(}\DecValTok{2} \OperatorTok{*}\NormalTok{ p)])}
     
@@ -1509,7 +1510,7 @@ time \(\hat{\tau}[f]\).
     \ControlFlowTok{if}\NormalTok{ (current\_pair\_sum }\OperatorTok{\textgreater{}}\NormalTok{ old\_pair\_sum) \{}
 \NormalTok{      current\_pair\_sum }\OperatorTok{\textless{}{-}}\NormalTok{ old\_pair\_sum}
 \NormalTok{      rhos[}\DecValTok{2} \OperatorTok{*}\NormalTok{ p }\OperatorTok{{-}} \DecValTok{1}\NormalTok{] }\OperatorTok{\textless{}{-}} \FloatTok{0.5} \OperatorTok{*}\NormalTok{ old\_pair\_sum}
-\NormalTok{      rhos[}\DecValTok{2} \OperatorTok{*}\NormalTok{ p] }\OperatorTok{\textless{}{-}} \FloatTok{0.5} \OperatorTok{*}\NormalTok{ old\_pair\_sum}
+\NormalTok{      rhos[}\DecValTok{2} \OperatorTok{*}\NormalTok{ p]     }\OperatorTok{\textless{}{-}} \FloatTok{0.5} \OperatorTok{*}\NormalTok{ old\_pair\_sum}
 \NormalTok{    \}}
   
     \ControlFlowTok{if}\NormalTok{ (p }\OperatorTok{==}\NormalTok{ P) \{}
@@ -1519,8 +1520,6 @@ time \(\hat{\tau}[f]\).
 \NormalTok{    old\_pair\_sum }\OperatorTok{\textless{}{-}}\NormalTok{ current\_pair\_sum}
 \NormalTok{  \}}
 \NormalTok{\}}
-
-\CommentTok{\# Check the incremental empirical integrated autocorrelation time for}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1536,6 +1535,8 @@ time cannot be larger than five, \[
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Check the incremental empirical integrated autocorrelation time for}
+\CommentTok{\# all the given expectand values.}
 \CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
@@ -1553,35 +1554,50 @@ time cannot be larger than five, \[
 
   \ControlFlowTok{for}\NormalTok{ (c }\KeywordTok{in} \DecValTok{1}\NormalTok{:C) \{}
 \NormalTok{    tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ compute\_tau\_hat(expectand\_vals[c,])}
-\NormalTok{    inc\_tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
-    \ControlFlowTok{if}\NormalTok{ (inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{) \{}
-\NormalTok{      body }\OperatorTok{\textless{}{-}}\NormalTok{ print0(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: The incremental empirical \textquotesingle{}}\NormalTok{,}
-                     \StringTok{\textquotesingle{}integrated autocorrelation time }\SpecialCharTok{\%.3f}\StringTok{ \textquotesingle{}}\NormalTok{,}
-                     \StringTok{\textquotesingle{}is too large.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{      message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, sprintf(body, c, inc\_tau\_hat))}
+
+    \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.infinite(tau\_hat)) \{}
 \NormalTok{      no\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ FALSE}
+\NormalTok{      body }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: The calculation of hat}\SpecialCharTok{\{tau\}}\StringTok{ is \textquotesingle{}}\NormalTok{,}
+                     \StringTok{\textquotesingle{}unreliable because}\CharTok{\textbackslash{}n}\StringTok{the empirical variance \textquotesingle{}}\NormalTok{,}
+                     \StringTok{\textquotesingle{}is zero.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{      local\_message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(local\_message, sprintf(body, c))}
+\NormalTok{    \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{(}\KeywordTok{is}\NormalTok{.nan(tau\_hat)) \{}
+\NormalTok{      no\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ FALSE}
+\NormalTok{      body }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: The calculation of hat}\SpecialCharTok{\{tau\}}\StringTok{ is \textquotesingle{}}\NormalTok{,}
+                     \StringTok{\textquotesingle{}unreliable because}\CharTok{\textbackslash{}n}\StringTok{the empirical \textquotesingle{}}\NormalTok{,}
+                     \StringTok{\textquotesingle{}autocorrelations did not decay sufficiently \textquotesingle{}}\NormalTok{,}
+                     \StringTok{\textquotesingle{}quickly.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{      local\_message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(local\_message, sprintf(body, c))}
+\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{      inc\_tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
+      \ControlFlowTok{if}\NormalTok{ (inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{) \{}
+\NormalTok{        no\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ FALSE}
+\NormalTok{        body }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: Incremental hat}\SpecialCharTok{\{tau\}}\StringTok{ (}\SpecialCharTok{\%.3f}\StringTok{) is \textquotesingle{}}\NormalTok{,}
+                       \StringTok{\textquotesingle{}too large.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{        local\_message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(local\_message,}
+\NormalTok{                                sprintf(body, c, inc\_tau\_hat))}
+\NormalTok{      \}}
 \NormalTok{    \}}
 \NormalTok{  \}}
   \ControlFlowTok{if}\NormalTok{ (no\_warning) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}The incremental empirical integrated \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}autocorrelation time is small enough for the \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}empirical autocorrelation estimates to be \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}reliable.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}autocorrelation time is sufficiently well{-}behaved \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}for the empirical autocorrelation estimates to be \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}reliable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc)}
+\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}If the incremental empirical integrated \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}autocorrelation times are too large then the \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}Markov chains have not explored long enough for \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}the autocorrelation estimates to be reliable.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}autocorrelation times are unreliable or too large \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}then the Markov chains have not explored long \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}enough for the autocorrelation estimates to be \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}reliable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{2}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc)}
+\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
 
 \NormalTok{  cat(message)}
 \NormalTok{\}}
-
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -1598,6 +1614,8 @@ error for the particular expectand of interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Compute the minimum empirical effective sample size, or \textbackslash{}hat\{ESS\},}
+\CommentTok{\# across the Markov chains for the given expectands.}
 \CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
@@ -1622,8 +1640,6 @@ error for the particular expectand of interest.
 \NormalTok{  \}}
   \ControlFlowTok{return}\NormalTok{(min\_ess\_hats)}
 \NormalTok{\}}
-
-\CommentTok{\# Check the empirical effective sample size \textbackslash{}hat\{ESS\} for the given}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1641,6 +1657,8 @@ yield sufficiently precise Markov chain Monte Carlo estimators.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Check the empirical effective sample size \textbackslash{}hat\{ESS\} for the given}
+\CommentTok{\# expectand values.}
 \CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
@@ -1685,8 +1703,6 @@ yield sufficiently precise Markov chain Monte Carlo estimators.
   
 \NormalTok{  cat(message)}
 \NormalTok{\}}
-
-\CommentTok{\# Check all expectand{-}specific diagnostics.}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1701,6 +1717,8 @@ once for each expectand of interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Check all expectand{-}specific diagnostics.}
+\CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
 \CommentTok{\#                            the second dimension indexes the sequential}
@@ -1732,7 +1750,7 @@ once for each expectand of interest.
 \NormalTok{          name))}
       \BuiltInTok{next}
 \NormalTok{    \}}
-    
+
 \NormalTok{    expectand\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ expectand\_vals\_list[[name]]}
 \NormalTok{    C }\OperatorTok{\textless{}{-}}\NormalTok{ dim(expectand\_vals)[}\DecValTok{1}\NormalTok{]}
 \NormalTok{    S }\OperatorTok{\textless{}{-}}\NormalTok{ dim(expectand\_vals)[}\DecValTok{2}\NormalTok{]}
@@ -1832,16 +1850,31 @@ once for each expectand of interest.
 \NormalTok{      vals }\OperatorTok{\textless{}{-}}\NormalTok{ expectand\_vals[c,]}
 \NormalTok{      tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ compute\_tau\_hat(vals)}
 
-      \CommentTok{\# Check incremental empirical integrated autocorrelation time}
-\NormalTok{      inc\_tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
-
-      \ControlFlowTok{if}\NormalTok{ (inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{) \{}
+      \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.infinite(tau\_hat)) \{}
 \NormalTok{        no\_inc\_tau\_hat\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ FALSE}
 \NormalTok{        local\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ TRUE}
-\NormalTok{        body }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: Incremental hat}\SpecialCharTok{\{tau\}}\StringTok{ (}\SpecialCharTok{\%.3f}\StringTok{) is \textquotesingle{}}\NormalTok{,}
+\NormalTok{        body }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: The calculation of hat}\SpecialCharTok{\{tau\}}\StringTok{ is \textquotesingle{}}\NormalTok{,}
+                       \StringTok{\textquotesingle{}unreliable because}\CharTok{\textbackslash{}n}\StringTok{the empirical variance \textquotesingle{}}\NormalTok{,}
+                       \StringTok{\textquotesingle{}is zero.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{        local\_message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(local\_message, sprintf(body, c))}
+\NormalTok{      \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{(}\KeywordTok{is}\NormalTok{.nan(tau\_hat)) \{}
+\NormalTok{        no\_inc\_tau\_hat\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ FALSE}
+\NormalTok{        local\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ TRUE}
+\NormalTok{        body }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: The calculation of hat}\SpecialCharTok{\{tau\}}\StringTok{ is \textquotesingle{}}\NormalTok{,}
+                       \StringTok{\textquotesingle{}unreliable because}\CharTok{\textbackslash{}n}\StringTok{the empirical \textquotesingle{}}\NormalTok{,}
+                       \StringTok{\textquotesingle{}autocorrelations did not decay sufficiently \textquotesingle{}}\NormalTok{,}
+                       \StringTok{\textquotesingle{}quickly.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{        local\_message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(local\_message, sprintf(body, c))}
+\NormalTok{      \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{        inc\_tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
+        \ControlFlowTok{if}\NormalTok{ (inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{) \{}
+\NormalTok{          no\_inc\_tau\_hat\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ FALSE}
+\NormalTok{          local\_warning }\OperatorTok{\textless{}{-}}\NormalTok{ TRUE}
+\NormalTok{          body }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}  Chain }\SpecialCharTok{\%s}\StringTok{: Incremental hat}\SpecialCharTok{\{tau\}}\StringTok{ (}\SpecialCharTok{\%.3f}\StringTok{) is \textquotesingle{}}\NormalTok{,}
                        \StringTok{\textquotesingle{}too large.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{        local\_message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(local\_message,}
-\NormalTok{                                sprintf(body, inc\_tau\_hat))}
+\NormalTok{          local\_message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(local\_message,}
+\NormalTok{                                  sprintf(body, c, inc\_tau\_hat))}
+\NormalTok{        \}}
 \NormalTok{      \}}
 
       \CommentTok{\# Check empirical effective sample size}
@@ -1865,52 +1898,51 @@ once for each expectand of interest.
 
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\NormalTok{no\_xi\_hat\_warning) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}Large tail hat}\SpecialCharTok{\{xi\}}\StringTok{s suggest that the expectand \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}might not be sufficiently integrable.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}might not be sufficiently integrable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\NormalTok{no\_zvar\_warning) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}If the expectands are not constant then zero \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}empirical variance suggests that the Markov \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}transitions may be misbehaving.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}transitions may be misbehaving.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\NormalTok{no\_rhat\_warning) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}Split Rhat larger than 1.1 suggests that at \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}least one of the Markov chains has not reached \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}an equilibrium.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}an equilibrium.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\NormalTok{no\_inc\_tau\_hat\_warning) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}If the incremental empirical integrated \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}autocorrelation times are too large then the \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}Markov chains have not explored long enough for\textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}the autocorrelation estimates to be reliable.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}autocorrelation times are unreliable or too large \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}then the Markov chains have not explored long \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}enough for the autocorrelation estimates to be \textquotesingle{}}\NormalTok{,}
+                   \StringTok{\textquotesingle{}reliable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, desc)}
+\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
   \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\NormalTok{no\_ess\_hat\_warning) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}Small empirical effective sample sizes result in \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}imprecise Markov chain Monte Carlo estimators.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}imprecise Markov chain Monte Carlo estimators.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, desc)}
+\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
 
   \ControlFlowTok{if}\NormalTok{(no\_xi\_hat\_warning }\OperatorTok{\&}\NormalTok{ no\_zvar\_warning }\OperatorTok{\&} 
 \NormalTok{     no\_rhat\_warning }\OperatorTok{\&}\NormalTok{ no\_inc\_tau\_hat\_warning }\OperatorTok{\&}\NormalTok{ no\_ess\_hat\_warning) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}All expectands checked appear to be behaving \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}well enough for reliable Markov chain Monte \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}Carlo estimation.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}Carlo estimation.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc)}
 \NormalTok{  \}}
 
 \NormalTok{  cat(message)}
 \NormalTok{\}}
-
-\CommentTok{\# Summarize all expectand{-}specific diagnostics.}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1920,6 +1952,8 @@ we can summarize the output more compactly.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Summarize all expectand{-}specific diagnostics.}
+\CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
 \CommentTok{\#                            the second dimension indexes the sequential}
@@ -2006,9 +2040,9 @@ we can summarize the output more compactly.
 \NormalTok{      tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ compute\_tau\_hat(expectand\_vals[c,])}
 
       \CommentTok{\# Check incremental empirical integrated autocorrelation time}
-\NormalTok{      inc\_tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
-
-      \ControlFlowTok{if}\NormalTok{ (inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{) \{}
+      \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.infinite(tau\_hat) }\OperatorTok{|}
+          \KeywordTok{is}\NormalTok{.nan(tau\_hat)      }\OperatorTok{|}
+\NormalTok{          (tau\_hat }\OperatorTok{/}\NormalTok{ S) }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{      ) \{}
 \NormalTok{        failed\_names }\OperatorTok{\textless{}{-}}\NormalTok{ c(failed\_names, name)}
 \NormalTok{        failed\_inc\_tau\_hat\_names }\OperatorTok{\textless{}{-}}\NormalTok{ c(failed\_inc\_tau\_hat\_names, name)}
 \NormalTok{      \}}
@@ -2028,16 +2062,16 @@ we can summarize the output more compactly.
 \NormalTok{  failed\_names }\OperatorTok{\textless{}{-}}\NormalTok{ unique(failed\_names)}
   \ControlFlowTok{if}\NormalTok{ (length(failed\_names)) \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}} 
-\NormalTok{      sprintf(}\StringTok{\textquotesingle{}The expectands }\SpecialCharTok{\%s}\StringTok{ triggered diagnostic warnings.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{,}
+\NormalTok{      sprintf(}\StringTok{\textquotesingle{}The expectands }\SpecialCharTok{\%s}\StringTok{ triggered diagnostic warnings.\textquotesingle{}}\NormalTok{,}
 \NormalTok{              paste(failed\_names, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{))}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(}\StringTok{\textquotesingle{}All expectands checked appear to be behaving \textquotesingle{}}\NormalTok{,}
                    \StringTok{\textquotesingle{}well enough for reliable Markov chain Monte \textquotesingle{}}\NormalTok{,}
-                   \StringTok{\textquotesingle{}Carlo estimation.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+                   \StringTok{\textquotesingle{}Carlo estimation.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc)}
+\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
 
 \NormalTok{  failed\_xi\_hat\_names }\OperatorTok{\textless{}{-}}\NormalTok{ unique(failed\_xi\_hat\_names)}
@@ -2046,7 +2080,7 @@ we can summarize the output more compactly.
 \NormalTok{      paste0(sprintf(}\StringTok{\textquotesingle{}The expectands }\SpecialCharTok{\%s}\StringTok{ triggered hat}\SpecialCharTok{\{xi\}}\StringTok{ warnings.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{,}
 \NormalTok{             paste(failed\_xi\_hat\_names, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{)),}
              \StringTok{\textquotesingle{}  Large tail hat}\SpecialCharTok{\{xi\}}\StringTok{s suggest that the expectand \textquotesingle{}}\NormalTok{,}
-             \StringTok{\textquotesingle{}might not be sufficiently integrable.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+             \StringTok{\textquotesingle{}might not be sufficiently integrable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
@@ -2060,7 +2094,7 @@ we can summarize the output more compactly.
              \StringTok{\textquotesingle{}empirical variance suggests that the Markov \textquotesingle{}}\NormalTok{,}
              \StringTok{\textquotesingle{}transitions may be misbehaving.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
   
 \NormalTok{  failed\_rhat\_names }\OperatorTok{\textless{}{-}}\NormalTok{ unique(failed\_rhat\_names)}
@@ -2070,7 +2104,7 @@ we can summarize the output more compactly.
 \NormalTok{             paste(failed\_rhat\_names, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{)),}
              \StringTok{\textquotesingle{}  Split Rhat larger than 1.1 suggests that at \textquotesingle{}}\NormalTok{,}
              \StringTok{\textquotesingle{}least one of the Markov chains has not reached \textquotesingle{}}\NormalTok{,}
-             \StringTok{\textquotesingle{}an equilibrium.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+             \StringTok{\textquotesingle{}an equilibrium.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
@@ -2082,10 +2116,11 @@ we can summarize the output more compactly.
                      \StringTok{\textquotesingle{}hat}\SpecialCharTok{\{tau\}}\StringTok{ warnings.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{      paste0(sprintf(body,}
 \NormalTok{                     paste(failed\_inc\_tau\_hat\_names, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{)),}
-             \StringTok{\textquotesingle{}If the incremental empirical integrated autocorrelation \textquotesingle{}}\NormalTok{,}
-             \StringTok{\textquotesingle{}times are too large then the Markov chains have not \textquotesingle{}}\NormalTok{,}
-             \StringTok{\textquotesingle{}explored long enough for the autocorrelation estimates \textquotesingle{}}\NormalTok{,}
-             \StringTok{\textquotesingle{}to be reliable.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+             \StringTok{\textquotesingle{}If the incremental empirical integrated \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}autocorrelation times are unreliable or too large \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}then the Markov chains have not explored long \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}enough for the autocorrelation estimates to be \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}reliable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
@@ -2096,14 +2131,13 @@ we can summarize the output more compactly.
 \NormalTok{      paste0(sprintf(}\StringTok{\textquotesingle{}The expectands }\SpecialCharTok{\%s}\StringTok{ triggered hat}\SpecialCharTok{\{ESS\}}\StringTok{ warnings.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{,}
 \NormalTok{             paste(failed\_ess\_hat\_names, collapse}\OperatorTok{=}\StringTok{", "}\NormalTok{)),}
              \StringTok{\textquotesingle{}Small empirical effective sample sizes result in \textquotesingle{}}\NormalTok{,}
-             \StringTok{\textquotesingle{}imprecise Markov chain Monte Carlo estimators.}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+             \StringTok{\textquotesingle{}imprecise Markov chain Monte Carlo estimators.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(strwrap(desc, max\_width, }\DecValTok{0}\NormalTok{), collapse}\OperatorTok{=}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{    message }\OperatorTok{\textless{}{-}}\NormalTok{ paste0(message, desc, }\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{  \}}
   
 \NormalTok{  cat(message)}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2112,6 +2146,7 @@ immediate interest.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Filter \textasciigrave{}expectand\_vals\_list\textasciigrave{} object by name.}
 \CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
@@ -2178,7 +2213,6 @@ immediate interest.
   
 \NormalTok{  expectand\_vals\_list[good\_names]}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2192,6 +2226,7 @@ provides a useful visualization of these estimates.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Compute empirical autocorrelations for a given Markov chain sequence}
 \CommentTok{\# @parmas vals A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return A one{-}dimensional array of empirical autocorrelations at each}
 \CommentTok{\#         lag up to the length of the sequence.}
@@ -2199,9 +2234,6 @@ provides a useful visualization of these estimates.
   \CommentTok{\# Compute empirical autocorrelations}
 \NormalTok{  N }\OperatorTok{\textless{}{-}}\NormalTok{ length(vals)}
 \NormalTok{  zs }\OperatorTok{\textless{}{-}}\NormalTok{ vals }\OperatorTok{{-}}\NormalTok{ mean(vals)}
-  
-  \ControlFlowTok{if}\NormalTok{ (var(vals) }\OperatorTok{\textless{}} \FloatTok{1e{-}10}\NormalTok{)}
-    \ControlFlowTok{return}\NormalTok{(rep(}\DecValTok{1}\NormalTok{, N))}
 
 \NormalTok{  B }\OperatorTok{\textless{}{-}} \DecValTok{2}\OperatorTok{**}\NormalTok{ceiling(log2(N)) }\CommentTok{\# Next power of 2 after N}
 \NormalTok{  zs\_buff }\OperatorTok{\textless{}{-}}\NormalTok{ c(zs, rep(}\DecValTok{0}\NormalTok{, B }\OperatorTok{{-}}\NormalTok{ N))}
@@ -2211,6 +2243,10 @@ provides a useful visualization of these estimates.
 \NormalTok{  Rs }\OperatorTok{\textless{}{-}}\NormalTok{ fft(Ss, inverse}\OperatorTok{=}\NormalTok{TRUE)}
 
 \NormalTok{  acov\_buff }\OperatorTok{\textless{}{-}}\NormalTok{ Re(Rs)}
+
+  \ControlFlowTok{if}\NormalTok{ (acov\_buff[}\DecValTok{1}\NormalTok{] }\OperatorTok{==} \DecValTok{0}\NormalTok{)}
+    \ControlFlowTok{return}\NormalTok{(Inf)}
+
 \NormalTok{  rhos }\OperatorTok{\textless{}{-}}\NormalTok{ head(acov\_buff, N) }\OperatorTok{/}\NormalTok{ acov\_buff[}\DecValTok{1}\NormalTok{]}
 
   \CommentTok{\# Drop last lag if (L + 1) is odd so that the}
@@ -2245,12 +2281,12 @@ provides a useful visualization of these estimates.
 \NormalTok{  \}}
   \ControlFlowTok{return}\NormalTok{(rhos)}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Plot empirical correlograms for a given expectand across a Markov }
 \CommentTok{\# chain ensemble.}
 \CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
@@ -2282,7 +2318,6 @@ provides a useful visualization of these estimates.
 \NormalTok{    lines(xs, pad\_rhos, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{, col}\OperatorTok{=}\NormalTok{colors[c])}
 \NormalTok{  \}}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2297,6 +2332,7 @@ chaotic spray of colors.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Visualize the projection of a Markov chain ensemble along two }
 \CommentTok{\# expectands as a pairs plot.  Point colors darken along each Markov }
 \CommentTok{\# chain to visualize the autocorrelation.}
 \CommentTok{\# @param expectand1\_vals A two{-}dimensional array of expectand values}
@@ -2350,7 +2386,6 @@ chaotic spray of colors.
 \NormalTok{           col}\OperatorTok{=}\NormalTok{cmap, pch}\OperatorTok{=}\DecValTok{16}\NormalTok{, cex}\OperatorTok{=}\FloatTok{1.0}\NormalTok{)}
 \NormalTok{  \}}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2368,6 +2403,7 @@ functions with a single input variable.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Evaluate an expectand on the values of a one{-}dimensional input}
 \CommentTok{\# variable.}
 \CommentTok{\# @param input\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                   the first dimension indexing the Markov chains}
@@ -2385,7 +2421,6 @@ functions with a single input variable.
     \BuiltInTok{apply}\NormalTok{(input\_vals, }\DecValTok{2}\NormalTok{, expectand)}
 \NormalTok{  \}}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2394,6 +2429,7 @@ trickier to implement.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Create array of element names from the specified dimensions.}
 \CommentTok{\# For example \textasciigrave{}name\_array(\textquotesingle{}x\textquotesingle{}, c(2, 3)))\textasciigrave{} returns the array}
 \CommentTok{\# \textgreater{}\textgreater{}      [,1]     [,2]     [,3]}
 \CommentTok{\# \textgreater{}\textgreater{} [1,] "x[1,1]" "x[1,2]" "x[1,3]"}
@@ -2416,12 +2452,12 @@ trickier to implement.
 \NormalTok{  names }\OperatorTok{\textless{}{-}}\NormalTok{ elem\_names(base, dims)}
 \NormalTok{  array(names, dims)}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Evaluate a list of expectands on the values of an arbitrary number of}
 \CommentTok{\# input variables.  Expectands must all return a scalar numeric or}
 \CommentTok{\# logical output.}
 \CommentTok{\#}
@@ -2556,12 +2592,12 @@ trickier to implement.
 
   \ControlFlowTok{return}\NormalTok{(pushforward\_vals)}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Evaluate an expectand on the values of an arbitrary number of input}
 \CommentTok{\# variables.  Expectand must return a scalar numeric or logical output.}
 \CommentTok{\#}
 \CommentTok{\# By default expectand argument values are accessed by name}
@@ -2591,7 +2627,6 @@ trickier to implement.
 \NormalTok{                                                  alt\_arg\_names)}
 \NormalTok{  pushforward\_vals[[}\DecValTok{1}\NormalTok{]]}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2603,6 +2638,7 @@ ensemble of Markov chains.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Estimate expectand expectation value from a single Markov chain.}
 \CommentTok{\# @param vals A one{-}dimensional array of sequential expectand values.}
 \CommentTok{\# @return The Markov chain Monte Carlo estimate, its estimated standard }
 \CommentTok{\#         error, and empirical effective sample size.}
@@ -2622,12 +2658,12 @@ ensemble of Markov chains.
 \NormalTok{  ess\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ S }\OperatorTok{/}\NormalTok{ tau\_hat}
   \ControlFlowTok{return}\NormalTok{(c(summary[}\DecValTok{1}\NormalTok{], sqrt(summary[}\DecValTok{2}\NormalTok{] }\OperatorTok{/}\NormalTok{ ess\_hat), ess\_hat))}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Estimate expectand expectation value from a Markov chain ensemble.}
 \CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
@@ -2669,7 +2705,6 @@ ensemble of Markov chains.
   
 \NormalTok{  c(mean, sqrt(var }\OperatorTok{/}\NormalTok{ total\_ess), total\_ess)}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2683,6 +2718,7 @@ into a dedicated function.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Estimate the probability allocated to a subset implicitly defined by}
 \CommentTok{\# an indicator function.}
 \CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays.}
 \CommentTok{\#                            The first dimension of each element indexes}
@@ -2723,7 +2759,6 @@ into a dedicated function.
   \CommentTok{\# Return probability as expectation value of indicator function}
 \NormalTok{  ensemble\_mcmc\_est(indicator\_samples)[}\DecValTok{1}\NormalTok{:}\DecValTok{2}\NormalTok{]}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2751,6 +2786,7 @@ not reported here.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Estimate expectand pushforward quantiles from a Markov chain ensemble.}
 \CommentTok{\# @param expectand\_vals A two{-}dimensional array of expectand values with}
 \CommentTok{\#                       the first dimension indexing the Markov chains}
 \CommentTok{\#                       and the second dimension indexing the sequential}
@@ -2776,7 +2812,6 @@ not reported here.
 
   \ControlFlowTok{return}\NormalTok{(q)}
 \NormalTok{\}}
-
 \end{Highlighting}
 \end{Shaded}
 
@@ -2785,6 +2820,7 @@ estimating the target probabilities in histogram bins.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Visualize pushforward distribution along a given expectand as a}
 \CommentTok{\# sequence of bin probabilities weighted by bin widths that approximates}
 \CommentTok{\# the pushforward probability density function.  Markov chain Monte}
 \CommentTok{\# Carlo estimates the output bin probabilities from the input samples,}
@@ -4178,7 +4214,7 @@ CXX14=clang++ -arch x86_64 -ftemplate-depth-256
 \begin{verbatim}
 R version 4.3.2 (2023-10-31)
 Platform: x86_64-apple-darwin20 (64-bit)
-Running under: macOS Sonoma 14.4.1
+Running under: macOS Sonoma 14.7.5
 
 Matrix products: default
 BLAS:   /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRblas.0.dylib 

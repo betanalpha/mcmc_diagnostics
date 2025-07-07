@@ -1497,11 +1497,8 @@ time \(\hat{\tau}[f]\).
   \CommentTok{"""Compute empirical integrated autocorrelation time for a sequence"""}
   \CommentTok{\# Compute empirical autocorrelations}
 \NormalTok{  N }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(vals)}
-\NormalTok{  m, v }\OperatorTok{=}\NormalTok{ welford\_summary(vals)}
+\NormalTok{  m }\OperatorTok{=}\NormalTok{ welford\_summary(vals)[}\DecValTok{0}\NormalTok{]}
 \NormalTok{  zs }\OperatorTok{=}\NormalTok{ [ val }\OperatorTok{{-}}\NormalTok{ m }\ControlFlowTok{for}\NormalTok{ val }\KeywordTok{in}\NormalTok{ vals ]}
-
-  \ControlFlowTok{if}\NormalTok{ v }\OperatorTok{\textless{}} \FloatTok{1e{-}10}\NormalTok{:}
-    \ControlFlowTok{return}\NormalTok{ math.inf}
 
 \NormalTok{  B }\OperatorTok{=} \DecValTok{2}\OperatorTok{**}\NormalTok{math.ceil(math.log2(N)) }\CommentTok{\# Next power of 2 after N}
 \NormalTok{  zs\_buff }\OperatorTok{=}\NormalTok{ zs }\OperatorTok{+}\NormalTok{ [}\DecValTok{0}\NormalTok{] }\OperatorTok{*}\NormalTok{ (B }\OperatorTok{{-}}\NormalTok{ N)}
@@ -1511,6 +1508,9 @@ time \(\hat{\tau}[f]\).
 \NormalTok{  Rs }\OperatorTok{=}\NormalTok{ numpy.fft.ifft(Ss)}
 
 \NormalTok{  acov\_buff }\OperatorTok{=}\NormalTok{ numpy.real(Rs)}
+  \ControlFlowTok{if}\NormalTok{ acov\_buff[}\DecValTok{0}\NormalTok{] }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
+    \ControlFlowTok{return}\NormalTok{ math.inf}
+
 \NormalTok{  rhos }\OperatorTok{=}\NormalTok{ acov\_buff[}\DecValTok{0}\NormalTok{:N] }\OperatorTok{/}\NormalTok{ acov\_buff[}\DecValTok{0}\NormalTok{]}
 
   \CommentTok{\# Drop last lag if (L + 1) is odd so that the lag pairs are complete}
@@ -1540,9 +1540,8 @@ time \(\hat{\tau}[f]\).
 \NormalTok{      rhos[}\DecValTok{2} \OperatorTok{*}\NormalTok{ p]     }\OperatorTok{=} \FloatTok{0.5} \OperatorTok{*}\NormalTok{ old\_pair\_sum}
 \NormalTok{      rhos[}\DecValTok{2} \OperatorTok{*}\NormalTok{ p }\OperatorTok{+} \DecValTok{1}\NormalTok{] }\OperatorTok{=} \FloatTok{0.5} \OperatorTok{*}\NormalTok{ old\_pair\_sum}
 
-    \CommentTok{\# if p == P:}
-      \CommentTok{\# throw some kind of error when autocorrelation}
-      \CommentTok{\# sequence doesn\textquotesingle{}t get terminated}
+    \ControlFlowTok{if}\NormalTok{ p }\OperatorTok{==}\NormalTok{ P:}
+      \ControlFlowTok{return}\NormalTok{ math.nan}
 
 \NormalTok{    old\_pair\_sum }\OperatorTok{=}\NormalTok{ current\_pair\_sum}
 
@@ -1579,24 +1578,39 @@ time cannot be larger than five, \[
 
   \ControlFlowTok{for}\NormalTok{ c }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(C):}
 \NormalTok{    tau\_hat }\OperatorTok{=}\NormalTok{ compute\_tau\_hat(expectand\_vals[c,:])}
+
+    \ControlFlowTok{if}\NormalTok{ math.isinf(tau\_hat):}
+      \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: The calculation of hat}\CharTok{\{\{}\SpecialStringTok{tau}\CharTok{\}\}}\SpecialStringTok{ is \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}unreliable because}\CharTok{\textbackslash{}n}\StringTok{the empirical variance \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}is zero.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
+    \ControlFlowTok{elif}\NormalTok{ math.isnan(tau\_hat):}
+      \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: The calculation of hat}\CharTok{\{\{}\SpecialStringTok{tau}\CharTok{\}\}}\SpecialStringTok{ is \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}unreliable because}\CharTok{\textbackslash{}n}\StringTok{the empirical \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}autocorrelations did not decay sufficiently \textquotesingle{}}\NormalTok{,}
+             \StringTok{\textquotesingle{}quickly.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
+
 \NormalTok{    inc\_tau\_hat }\OperatorTok{=}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
     \ControlFlowTok{if}\NormalTok{ inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{:}
-      \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: The incremental empirical integrated \textquotesingle{}}
-            \SpecialStringTok{f\textquotesingle{}autocorrelation time }\SpecialCharTok{\{}\NormalTok{inc\_tau\_hat }\SpecialCharTok{:.3f\}}\SpecialStringTok{ is too large.\textquotesingle{}}\NormalTok{)}
+      \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Incremental hat}\CharTok{\{\{}\SpecialStringTok{tau}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
+            \SpecialStringTok{f\textquotesingle{}(}\SpecialCharTok{\{}\NormalTok{inc\_tau\_hat }\SpecialCharTok{:.3f\}}\SpecialStringTok{) is too large.}\CharTok{\textbackslash{}n}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{      no\_warning }\OperatorTok{=} \VariableTok{False}
 
   \ControlFlowTok{if}\NormalTok{ no\_warning:}
-\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}The incremental empirical integrated autocorrelation \textquotesingle{}}
-            \StringTok{\textquotesingle{}time is small enough for the empirical autocorrelation \textquotesingle{}}
-            \StringTok{\textquotesingle{}estimates to be reliable.\textquotesingle{}}\NormalTok{)}
+\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}The incremental empirical integrated \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}autocorrelation time is sufficiently well{-}behaved \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}for the empirical autocorrelation estimates to be \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}reliable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
   \ControlFlowTok{else}\NormalTok{:}
-\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}If the incremental empirical integrated autocorrelation \textquotesingle{}}
-            \StringTok{\textquotesingle{}times are too large then the Markov \textquotesingle{}}
-            \StringTok{\textquotesingle{}chains have not explored long enough for the \textquotesingle{}}
-            \StringTok{\textquotesingle{}autocorrelation estimates to be reliable.\textquotesingle{}}\NormalTok{)}
+\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}If the incremental empirical integrated \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}autocorrelation times are unreliable or too large \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}then the Markov chains have not explored long \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}enough for the autocorrelation estimates to be \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}reliable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
@@ -1826,12 +1840,27 @@ once for each expectand of interest.
 \NormalTok{      tau\_hat }\OperatorTok{=}\NormalTok{ compute\_tau\_hat(expectand\_vals[c,:])}
 
       \CommentTok{\# Check incremental empirical integrated autocorrelation time}
-\NormalTok{      inc\_tau\_hat }\OperatorTok{=}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
-      \ControlFlowTok{if}\NormalTok{ inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{:}
+      \ControlFlowTok{if}\NormalTok{ math.isinf(tau\_hat):}
 \NormalTok{        no\_inc\_tau\_hat\_warning }\OperatorTok{=} \VariableTok{False}
 \NormalTok{        local\_warning }\OperatorTok{=} \VariableTok{True}
-\NormalTok{        local\_message }\OperatorTok{+=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}  Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Incremental hat}\CharTok{\{\{}\SpecialStringTok{tau}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
-                          \SpecialStringTok{f\textquotesingle{}(}\SpecialCharTok{\{}\NormalTok{inc\_tau\_hat}\SpecialCharTok{:.1f\}}\SpecialStringTok{) is too large.}\CharTok{\textbackslash{}n}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{        local\_message }\OperatorTok{+=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: The calculation of \textquotesingle{}}\NormalTok{,}
+                           \StringTok{\textquotesingle{}hat}\SpecialCharTok{\{\{}\StringTok{tau}\SpecialCharTok{\}\}}\StringTok{ is unreliable because}\CharTok{\textbackslash{}n}\StringTok{the \textquotesingle{}}\NormalTok{,}
+                           \StringTok{\textquotesingle{}empirical variance is zero.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+      \ControlFlowTok{elif}\NormalTok{ math.isnan(tau\_hat):}
+\NormalTok{        no\_inc\_tau\_hat\_warning }\OperatorTok{=} \VariableTok{False}
+\NormalTok{        local\_warning }\OperatorTok{=} \VariableTok{True}
+        \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: The calculation of hat}\CharTok{\{\{}\SpecialStringTok{tau}\CharTok{\}\}}\SpecialStringTok{ is \textquotesingle{}}\NormalTok{,}
+               \StringTok{\textquotesingle{}unreliable because}\CharTok{\textbackslash{}n}\StringTok{the empirical \textquotesingle{}}\NormalTok{,}
+               \StringTok{\textquotesingle{}autocorrelations did not decay sufficiently \textquotesingle{}}\NormalTok{,}
+               \StringTok{\textquotesingle{}quickly.}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{)}
+      \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{        inc\_tau\_hat }\OperatorTok{=}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
+        \ControlFlowTok{if}\NormalTok{ inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{:}
+\NormalTok{          no\_inc\_tau\_hat\_warning }\OperatorTok{=} \VariableTok{False}
+\NormalTok{          local\_warning }\OperatorTok{=} \VariableTok{True}
+\NormalTok{          local\_message }\OperatorTok{+=}\NormalTok{ (}\SpecialStringTok{f\textquotesingle{}Chain }\SpecialCharTok{\{}\NormalTok{c }\OperatorTok{+} \DecValTok{1}\SpecialCharTok{\}}\SpecialStringTok{: Incremental hat}\CharTok{\{\{}\SpecialStringTok{tau}\CharTok{\}\}}\SpecialStringTok{ \textquotesingle{}}
+                            \SpecialStringTok{f\textquotesingle{}(}\SpecialCharTok{\{}\NormalTok{inc\_tau\_hat }\SpecialCharTok{:.31\}}\SpecialStringTok{) is too large.}\CharTok{\textbackslash{}n}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
+
       \CommentTok{\# Check empirical effective sample size}
 \NormalTok{      ess\_hat }\OperatorTok{=}\NormalTok{ S }\OperatorTok{/}\NormalTok{ tau\_hat}
       \ControlFlowTok{if}\NormalTok{ ess\_hat }\OperatorTok{\textless{}}\NormalTok{ min\_ess\_hat\_per\_chain:}
@@ -1879,10 +1908,11 @@ once for each expectand of interest.
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 
   \ControlFlowTok{if} \KeywordTok{not}\NormalTok{ no\_inc\_tau\_hat\_warning:}
-\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}If the incremental empirical integrated autocorrelation \textquotesingle{}}
-            \StringTok{\textquotesingle{}times are too large then the Markov \textquotesingle{}}
-            \StringTok{\textquotesingle{}chains have not explored long enough for the \textquotesingle{}}
-            \StringTok{\textquotesingle{}autocorrelation estimates to be reliable.\textquotesingle{}}\NormalTok{)}
+\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}If the incremental empirical integrated \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}autocorrelation times are unreliable or too large \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}then the Markov chains have not explored long \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}enough for the autocorrelation estimates to be \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}reliable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
@@ -1977,8 +2007,7 @@ we can summarize the output more compactly.
 \NormalTok{      tau\_hat }\OperatorTok{=}\NormalTok{ compute\_tau\_hat(expectand\_vals[c,:])}
 
       \CommentTok{\# Check incremental empirical integrated autocorrelation time}
-\NormalTok{      inc\_tau\_hat }\OperatorTok{=}\NormalTok{ tau\_hat }\OperatorTok{/}\NormalTok{ S}
-      \ControlFlowTok{if}\NormalTok{ inc\_tau\_hat }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{:}
+      \ControlFlowTok{if}\NormalTok{ math.isinf(tau\_hat) }\KeywordTok{or}\NormalTok{ math.isnan(tau\_hat) }\KeywordTok{or}\NormalTok{ (tau\_hat }\OperatorTok{/}\NormalTok{ S) }\OperatorTok{\textgreater{}} \DecValTok{5}\NormalTok{:}
 \NormalTok{        failed\_names.append(name)}
 \NormalTok{        failed\_inc\_tau\_hat\_names.append(name)}
 
@@ -2051,10 +2080,11 @@ we can summarize the output more compactly.
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
 
-\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}If the incremental empirical integrated autocorrelation \textquotesingle{}}
-            \StringTok{\textquotesingle{}times per iteration are too large then the Markov \textquotesingle{}}
-            \StringTok{\textquotesingle{}chains have not explored long enough for the \textquotesingle{}}
-            \StringTok{\textquotesingle{}autocorrelation estimates to be reliable.\textquotesingle{}}\NormalTok{)}
+\NormalTok{    desc }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}If the incremental empirical integrated \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}autocorrelation times are unreliable or too large \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}then the Markov chains have not explored long \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}enough for the autocorrelation estimates to be \textquotesingle{}}\NormalTok{,}
+            \StringTok{\textquotesingle{}reliable.\textquotesingle{}}\NormalTok{)}
 \NormalTok{    desc }\OperatorTok{=}\NormalTok{ textwrap.wrap(desc, max\_width)}
 \NormalTok{    desc.append(}\StringTok{\textquotesingle{} \textquotesingle{}}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\StringTok{\textquotesingle{}}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}\NormalTok{.join(desc))}
@@ -2153,11 +2183,8 @@ provides a useful visualization of these estimates.
   \CommentTok{"""Visualize empirical autocorrelations for a given sequence"""}
   \CommentTok{\# Compute empirical autocorrelations}
 \NormalTok{  N }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(vals)}
-\NormalTok{  m, v }\OperatorTok{=}\NormalTok{ welford\_summary(vals)}
+\NormalTok{  m }\OperatorTok{=}\NormalTok{ welford\_summary(vals)[}\DecValTok{0}\NormalTok{]}
 \NormalTok{  zs }\OperatorTok{=}\NormalTok{ [ val }\OperatorTok{{-}}\NormalTok{ m }\ControlFlowTok{for}\NormalTok{ val }\KeywordTok{in}\NormalTok{ vals ]}
-
-  \ControlFlowTok{if}\NormalTok{ v }\OperatorTok{\textless{}} \FloatTok{1e{-}10}\NormalTok{:}
-    \ControlFlowTok{return}\NormalTok{ [}\DecValTok{1}\NormalTok{] }\OperatorTok{*}\NormalTok{ N}
 
 \NormalTok{  B }\OperatorTok{=} \DecValTok{2}\OperatorTok{**}\NormalTok{math.ceil(math.log2(N)) }\CommentTok{\# Next power of 2 after N}
 \NormalTok{  zs\_buff }\OperatorTok{=}\NormalTok{ zs }\OperatorTok{+}\NormalTok{ [}\DecValTok{0}\NormalTok{] }\OperatorTok{*}\NormalTok{ (B }\OperatorTok{{-}}\NormalTok{ N)}
@@ -2167,6 +2194,9 @@ provides a useful visualization of these estimates.
 \NormalTok{  Rs }\OperatorTok{=}\NormalTok{ numpy.fft.ifft(Ss)}
 
 \NormalTok{  acov\_buff }\OperatorTok{=}\NormalTok{ numpy.real(Rs)}
+  \ControlFlowTok{if}\NormalTok{ acov\_buff[}\DecValTok{0}\NormalTok{] }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
+    \ControlFlowTok{return}\NormalTok{ math.inf}
+
 \NormalTok{  rhos }\OperatorTok{=}\NormalTok{ acov\_buff[}\DecValTok{0}\NormalTok{:N] }\OperatorTok{/}\NormalTok{ acov\_buff[}\DecValTok{0}\NormalTok{]}
 
   \CommentTok{\# Drop last lag if (L + 1) is odd so that the lag pairs are complete}
@@ -2866,6 +2896,7 @@ estimating the target probabilities in histogram bins.
   \ControlFlowTok{if}\NormalTok{ baseline }\KeywordTok{is} \KeywordTok{not} \VariableTok{None}\NormalTok{:}
 \NormalTok{    ax.axvline(x}\OperatorTok{=}\NormalTok{baseline, linewidth}\OperatorTok{=}\DecValTok{4}\NormalTok{, color}\OperatorTok{=}\StringTok{"white"}\NormalTok{)}
 \NormalTok{    ax.axvline(x}\OperatorTok{=}\NormalTok{baseline, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{, color}\OperatorTok{=}\NormalTok{baseline\_color)}
+
 \end{Highlighting}
 \end{Shaded}
 
@@ -4068,7 +4099,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2025-07-01T16:44:41.090380-04:00
+Last updated: 2025-07-07T14:40:01.825702-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

@@ -345,6 +345,8 @@ they have not yet expanded into that typical set.
 
 {{< include _includes/check_rhat.qmd >}}
 
+{{< include _includes/plot_rhats.qmd >}}
+
 ## Integrated Autocorrelation Time
 
 The information about the target distribution encoded within a Markov chain, and
@@ -404,6 +406,7 @@ applications even smaller effective sample sizes can yield sufficiently precise
 Markov chain Monte Carlo estimators.
 
 {{< include _includes/check_ess_hat.qmd >}}
+{{< include _includes/plot_ess_hats.qmd >}}
 
 For example empirical effective sample sizes can provide a useful way to 
 distinguish if some diagnostic failures are due to Markov chains that are 
@@ -705,9 +708,21 @@ clip_output(capture.output(util$check_all_expectand_diagnostics(samples)),
 ```
 
 Well that output restriction proved to be prescient as most of the expectands
-are encountering problems; even this compact summary is overwhelming.  To 
-avoid completely overwhelming ourselves let's focus on the four parameter 
-expectands.
+are encountering problems; even this compact summary is overwhelming.
+
+Visualizing the split $\hat{R}$ and empirical effective sample sizes
+with histograms is a bit more manageable.
+
+```{r}
+util$plot_rhats(samples)
+```
+
+```{r}
+util$plot_ess_hats(samples)
+```
+
+That said, we can also avoid overwhelming ourselves by focus on just
+the four parameter expectands.
 
 ```{r}
 base_samples <- util$filter_expectands(samples, 

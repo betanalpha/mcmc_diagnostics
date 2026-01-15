@@ -26,7 +26,7 @@ format:
     code-overflow: wrap
     monofontoptions:
       - Scale=0.5
-jupyter: pystan3_env
+jupyter: pystan3.12_env
 format-links: false
 ---
 
@@ -290,6 +290,8 @@ they have not yet expanded into that typical set.
 
 {{< include _includes/check_rhat.qmd >}}
 
+{{< include _includes/plot_rhats.qmd >}}
+
 ## Integrated Autocorrelation Time
 
 The information about the target distribution encoded within a Markov chain, and
@@ -349,6 +351,8 @@ applications even smaller effective sample sizes can yield sufficiently precise
 Markov chain Monte Carlo estimators.
 
 {{< include _includes/check_ess_hat.qmd >}}
+
+{{< include _includes/plot_ess_hats.qmd >}}
 
 For example empirical effective sample sizes can provide a useful way to 
 distinguish if some diagnostic failures are due to Markov chains that are 
@@ -650,8 +654,22 @@ looking at the expectand diagnostics summary instead of the full details.
 util.summarize_expectand_diagnostics(samples)
 ```
 
-That is a lot of diagnostic failures.  To avoid overwhelming ourselves with too
-many detailed diagnostic messages let's focus on the four parameter expectands.
+That is a lot of diagnostic failures.
+
+Visualizing the split $\hat{R}$ and empirical effective sample sizes
+with histograms is a bit more manageable.
+
+```{python}
+util.plot_rhats(plot.gca(), samples)
+plot.show()
+```
+
+```{python}
+util.plot_ess_hats(samples)
+```
+
+That said, we can also avoid overwhelming ourselves by focus on just
+the four parameter expectands.
 
 ```{python}
 base_samples = util.filter_expectands(samples, ['alpha', 'beta'], True)

@@ -1100,6 +1100,66 @@ def check_rhat(expectand_vals, max_width=72):
     desc.append(' ')
     print('\n'.join(desc))
 
+# Plot a histogram of the split hat{R}s for all expectands in
+# expectands_var_list.  Plot range and number of bins expands to
+# include the split hat{R} threshold.
+# @param ax Matplotlib axis object
+# @param expectand_vals_dict A dictionary of two-dimensional arrays for
+#                            each expectand.  The first dimension of
+#                            each element indexes the Markov chains and
+#                            the second dimension indexes the sequential
+#                            states within each Markov chain.
+# @params B The number of histogram bins
+def plot_rhats(ax, expectand_vals_dict, B=25):
+  validate_dict_of_arrays(expectand_vals_dict,
+                          'expectand_vals_dict')
+
+  N = len(expectand_vals_dict)
+  rhats = [ numpy.nan ] * N
+
+  n = 0
+  for name in expectand_vals_dict:
+    expectand_vals = expectand_vals_dict[name]
+    validate_array(expectand_vals, 'expectand_vals')
+
+    rhat = compute_split_rhat(expectand_vals)
+    if math.isfinite(rhat):
+      rhats[n] = rhat
+    n += 1
+
+  val_min = numpy.nanmin(rhats)
+  val_max = numpy.nanmax(rhats)
+
+  plot_min = min(1.1, val_min)
+  plot_max = max(1.1, val_max)
+  B = B * int((plot_max - plot_min) / (val_max - val_min))
+
+  delta = (plot_max - plot_min) / B
+  plot_min = plot_min - delta
+  plot_max = plot_max + delta
+  bins = numpy.arange(plot_min, plot_max + delta, delta)
+  B = B + 2
+
+  idxs = [ idx for idx in range(B) for r in range(2) ]
+  xs = [ bins[idx + delta] for idx in range(B) for delta in [0, 1]]
+
+  counts = numpy.histogram(rhats, bins=bins)[0]
+  max_y = max(counts)
+  ys = counts[idxs]
+
+  ax.plot(xs, ys, dark, linewidth=1)
+  ax.set_xlabel("Split hatRs")
+  ax.set_xlim([plot_min, plot_max])
+  ax.set_ylabel("")
+  ax.get_yaxis().set_visible(False)
+  ax.set_ylim([0, 1.05 * max_y])
+  ax.spines["top"].set_visible(False)
+  ax.spines["left"].set_visible(False)
+  ax.spines["right"].set_visible(False)
+
+  ax.axvline(x=1.1, linewidth=2, linestyle="dashed", color="#DDDDDD")
+
+
 # Compute empirical integrated autocorrelation time, \hat{tau}, for a
 # sequence of expectand values.
 # @param vals A one-dimensional array of expectand values.
@@ -1282,6 +1342,92 @@ def check_ess_hat(expectand_vals,
     desc = textwrap.wrap(desc, max_width)
     desc.append(' ')
     print('\n'.join(desc))
+
+
+# Plot a histogram of the empirical effective sample sizes for all
+# expectands in expectands_var_list, separated by Markov chain.
+# Plot range and number of bins expands to include the min_ess_hat
+# threshold.
+# @param expectand_vals_dict A dictionary of two-dimensional arrays for
+#                            each expectand.  The first dimension of
+#                            each element indexes the Markov chains and
+#                            the second dimension indexes the sequential
+#                            states within each Markov chain.
+# @param min_ess_hat The minimum empirical effective sample size
+# @params B The number of histogram bins
+def plot_ess_hats(expectand_vals_dict,
+                  min_ess_hat=100, B=25):
+  validate_dict_of_arrays(expectand_vals_dict,
+                          'expectand_vals_dict')
+
+  N = len(expectand_vals_dict)
+
+  [name, ev] = next(iter(expectand_vals_dict.items()))
+  validate_array(ev, f'expectand_vals_dict[{name}]')
+
+  C = ev.shape[0]
+  S = ev.shape[1]
+  ess_hats = numpy.zeros((C, N))
+
+  n = 0
+  for name in expectand_vals_dict:
+    expectand_vals = expectand_vals_dict[name]
+    validate_array(expectand_vals, 'expectand_vals')
+
+    for c in range(C):
+      tau_hat = compute_tau_hat(expectand_vals[c,:])
+      ess_hats[c, n] = S / tau_hat
+    n += 1
+
+  val_min = numpy.nanmin(ess_hats)
+  val_max = numpy.nanmax(ess_hats)
+
+  plot_min = min(1.1, val_min)
+  plot_max = max(1.1, val_max)
+  B = B * int((plot_max - plot_min) / (val_max - val_min))
+
+  delta = (plot_max - plot_min) / B
+  plot_min = plot_min - delta
+  plot_max = plot_max + delta
+  bins = numpy.arange(plot_min, plot_max + delta, delta)
+  B = B + 2
+
+  idxs = [ idx for idx in range(B) for r in range(2) ]
+  xs = [ bins[idx + delta] for idx in range(B) for delta in [0, 1]]
+
+  max_y = max([ max(numpy.histogram(ess_hats[c,:], bins=bins)[0])
+                for c in range(C) ])
+
+  N_plots = C
+  N_cols = 2
+  N_rows = math.ceil(N_plots / N_cols)
+  f, axarr = plot.subplots(N_rows, N_cols, layout="constrained")
+  k = 0
+
+  for c in range(C):
+    counts = numpy.histogram(ess_hats[c,:], bins=bins)[0]
+    ys = counts[idxs]
+
+    idx1 = k // N_cols
+    idx2 = k % N_cols
+    k += 1
+
+    axarr[idx1, idx2].plot(xs, ys, dark)
+    axarr[idx1, idx2].set_title(f'Chain {c + 1}')
+    axarr[idx1, idx2].set_xlabel("Empirical Effective Sample Sizes")
+    axarr[idx1, idx2].set_xlim([plot_min, plot_max])
+    axarr[idx1, idx2].set_ylabel("")
+    axarr[idx1, idx2].get_yaxis().set_visible(False)
+    axarr[idx1, idx2].set_ylim([0, 1.05 * max_y])
+    axarr[idx1, idx2].spines["top"].set_visible(False)
+    axarr[idx1, idx2].spines["left"].set_visible(False)
+    axarr[idx1, idx2].spines["right"].set_visible(False)
+
+    axarr[idx1, idx2].axvline(x=min_ess_hat, linewidth=2,
+                              linestyle="dashed",
+                              color="#DDDDDD")
+
+  plot.show()
 
 # Check all expectand-specific diagnostics.
 # @param expectand_vals_dict A dictionary of two-dimensional arrays for
@@ -2372,7 +2518,7 @@ def ensemble_mcmc_quantile_est(expectand_vals, probs):
 # histogram, using Markov chain Monte Carlo estimators to estimate the
 # output bin probabilities.  Bin probability estimator error is shown
 # in gray.
-# @ax Matplotlib axis object
+# @param ax Matplotlib axis object
 # @param expectand_vals A two-dimensional array of expectand values with
 #                       the first dimension indexing the Markov chains
 #                       and the second dimension indexing the sequential

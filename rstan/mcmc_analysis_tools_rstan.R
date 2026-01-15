@@ -1019,6 +1019,67 @@ check_rhat <- function(expectand_vals, max_width=72) {
   cat(message)
 }
 
+# Plot a histogram of the split hat{R}s for all expectands in
+# expectands_var_list.  Plot range and number of bins expands to
+# include the split hat{R} threshold.
+# @param expectand_vals_list A named list of two-dimensional arrays for
+#                            each expectand.  The first dimension of
+#                            each element indexes the Markov chains and
+#                            the second dimension indexes the sequential
+#                            states within each Markov chain
+# @params B The number of nominal histogram bins
+plot_rhats <- function(expectand_vals_list, B=25) {
+  validate_named_list_of_arrays(expectand_vals_list,
+                                'expectand_vals_list')
+
+  N <- length(expectand_vals_list)
+  rhats <- rep(NA, N)
+
+  n <- 1
+  for (name in names(expectand_vals_list)) {
+    expectand_vals <- expectand_vals_list[[name]]
+    if (is.null(expectand_vals)) {
+      cat(sprintf('The values for expectand `%s` are ill-formed.',
+                  name))
+      next
+    }
+
+    rhat <- compute_split_rhat(expectand_vals)
+    if (is.finite(rhat))
+      rhats[n] <- rhat
+    n <- n + 1
+  }
+
+  val_min <- min(rhats, na.rm=TRUE)
+  val_max <- max(rhats, na.rm=TRUE)
+
+  plot_min <- min(1.1, val_min)
+  plot_max <- max(1.1, val_max)
+  B <- B * (plot_max - plot_min) / (val_max - val_min)
+
+  delta <- (plot_max - plot_min) / B
+  plot_min <- plot_min - delta
+  plot_max <- plot_max + delta
+  bins <- seq(plot_min, plot_max, delta)
+  B <- B + 2
+
+  idx <- rep(1:B, each=2)
+  x <- sapply(1:length(idx), function(b) if(b %% 2 == 1) bins[idx[b]]
+              else bins[idx[b] + 1])
+
+  counts <- hist(rhats, breaks=bins, plot=FALSE)$counts
+  max_y <- max(counts)
+  y <- counts[idx]
+
+  par(mfrow=c(1, 1), mar = c(5, 2, 2, 1))
+
+  plot(x, y, type="l",  lwd=2, col=c_dark,
+       xlim=c(plot_min, plot_max), xlab="Split hat{R}s",
+       ylim=c(0, 1.05 * max_y), ylab="", yaxt="n")
+
+  abline(v=1.1, lwd=2, lty=3, col="#DDDDDD")
+}
+
 # Compute empirical integrated autocorrelation time, \hat{tau}, for a
 # sequence of expectand values.
 # @param vals A one-dimensional array of sequential expectand values.
@@ -1216,6 +1277,89 @@ check_ess_hat <- function(expectand_vals,
   }
   
   cat(message)
+}
+
+
+# Plot a histogram of the empirical effective sample sizes for all
+# expectands in expectands_var_list, separated by Markov chain.
+# Plot range and number of bins expands to include the min_ess_hat
+# threshold.
+# @param expectand_vals_list A named list of two-dimensional arrays for
+#                            each expectand.  The first dimension of
+#                            each element indexes the Markov chains and
+#                            the second dimension indexes the sequential
+#                            states within each Markov chain
+# @param min_ess_hat The minimum empirical effective sample size
+# @params B The number of histogram bins
+plot_ess_hats <- function(expectand_vals_list,
+                          min_ess_hat=100, B=25) {
+  validate_named_list_of_arrays(expectand_vals_list,
+                                'expectand_vals_list')
+
+  N <- length(expectand_vals_list)
+
+  ev <- expectand_vals_list[[1]]
+  validate_array(ev, 'expectand_vals_list[[1]]')
+
+  C <- dim(ev)[1]
+  S <- dim(ev)[2]
+  ess_hats <- matrix(NA, C, N)
+
+  n <- 1
+  for (name in names(expectand_vals_list)) {
+    expectand_vals <- expectand_vals_list[[name]]
+
+    if (is.null(expectand_vals)) {
+      cat(sprintf('The values for expectand `%s` are ill-formed.',
+                  name))
+      next
+    }
+
+    for (c in 1:C) {
+      tau_hat <- compute_tau_hat(expectand_vals[c,])
+      ess_hats[c, n] <- S / tau_hat
+    }
+    n <- n + 1
+  }
+
+  val_min <- min(ess_hats, na.rm=TRUE)
+  val_max <- max(ess_hats, na.rm=TRUE)
+
+  plot_min <- min(min_ess_hat, val_min)
+  plot_max <- max(min_ess_hat, val_max)
+  B <- B * (plot_max - plot_min) / (val_max - val_min)
+
+  delta <- (plot_max - plot_min) / B
+  plot_min <- plot_min - delta
+  plot_max <- plot_max + delta
+  bins <- seq(plot_min, plot_max, delta)
+  B <- B + 2
+
+  max_y <-
+    max(sapply(1:C,
+               function(c) max(hist(ess_hats[c,],
+                                    breaks=bins,
+                                    plot=FALSE)$counts)))
+
+  idx <- rep(1:B, each=2)
+  x <- sapply(1:length(idx), function(b) if(b %% 2 == 1) bins[idx[b]]
+              else bins[idx[b] + 1])
+
+  par(mfrow=c(2, 2), mar = c(5, 2, 2, 1))
+  colors <- c(c_dark, c_mid_highlight, c_mid, c_light_highlight)
+
+  for (c in 1:C) {
+    counts <- hist(ess_hats[c,], breaks=bins, plot=FALSE)$counts
+    y <- counts[idx]
+
+    plot(x, y, type="l", main=paste("Chain", c),
+         lwd=2, col=colors[c],
+         xlim=c(plot_min, plot_max),
+         xlab="Empirical Effective Sample Sizes",
+         ylim=c(0, 1.05 * max_y), ylab="", yaxt="n")
+
+    abline(v=min_ess_hat, lwd=2, lty=3, col="#DDDDDD")
+  }
 }
 
 # Check all expectand-specific diagnostics.

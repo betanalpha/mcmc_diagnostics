@@ -1,2 +1,2 @@
-```{.python include="mcmc_analysis_tools_pystan3.py" start-line=1286 end-line=1480}
+```{.python include="mcmc_analysis_tools_pystan3.py" start-line=1432 end-line=1626}
 ```

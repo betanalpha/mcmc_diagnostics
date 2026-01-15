@@ -1448,6 +1448,71 @@ set.
 \end{Highlighting}
 \end{Shaded}
 
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Plot a histogram of the split hat\{R\}s for all expectands in}
+\CommentTok{\# expectands\_var\_list.  Plot range and number of bins expands to}
+\CommentTok{\# include the split hat\{R\} threshold.}
+\CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
+\CommentTok{\#                            each expectand.  The first dimension of}
+\CommentTok{\#                            each element indexes the Markov chains and}
+\CommentTok{\#                            the second dimension indexes the sequential}
+\CommentTok{\#                            states within each Markov chain.}
+\CommentTok{\# @params B The number of bins for the inverse metric element histograms.}
+\NormalTok{plot\_rhats }\OperatorTok{\textless{}{-}}\NormalTok{ function(expectand\_vals\_list, B}\OperatorTok{=}\DecValTok{25}\NormalTok{) \{}
+\NormalTok{  validate\_named\_list\_of\_arrays(expectand\_vals\_list,}
+                                \StringTok{\textquotesingle{}expectand\_vals\_list\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{  N }\OperatorTok{\textless{}{-}}\NormalTok{ length(expectand\_vals\_list)}
+\NormalTok{  rhats }\OperatorTok{\textless{}{-}}\NormalTok{ rep(NA, N)}
+
+\NormalTok{  n }\OperatorTok{\textless{}{-}} \DecValTok{1}
+  \ControlFlowTok{for}\NormalTok{ (name }\KeywordTok{in}\NormalTok{ names(expectand\_vals\_list)) \{}
+\NormalTok{    expectand\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ expectand\_vals\_list[[name]]}
+    \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(expectand\_vals)) \{}
+\NormalTok{      cat(sprintf(}\StringTok{\textquotesingle{}The values for expectand \textasciigrave{}}\SpecialCharTok{\%s}\StringTok{\textasciigrave{} are ill{-}formed.\textquotesingle{}}\NormalTok{,}
+\NormalTok{                  name))}
+      \BuiltInTok{next}
+\NormalTok{    \}}
+
+\NormalTok{    rhat }\OperatorTok{\textless{}{-}}\NormalTok{ compute\_split\_rhat(expectand\_vals)}
+    \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.finite(rhat))}
+\NormalTok{      rhats[n] }\OperatorTok{\textless{}{-}}\NormalTok{ rhat}
+\NormalTok{    n }\OperatorTok{\textless{}{-}}\NormalTok{ n }\OperatorTok{+} \DecValTok{1}
+\NormalTok{  \}}
+
+\NormalTok{  val\_min }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(rhats, na.rm}\OperatorTok{=}\NormalTok{TRUE)}
+\NormalTok{  val\_max }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(rhats, na.rm}\OperatorTok{=}\NormalTok{TRUE)}
+
+\NormalTok{  plot\_min }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(}\FloatTok{1.1}\NormalTok{, val\_min)}
+\NormalTok{  plot\_max }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(}\FloatTok{1.1}\NormalTok{, val\_max)}
+\NormalTok{  B }\OperatorTok{\textless{}{-}}\NormalTok{ B }\OperatorTok{*}\NormalTok{ (plot\_max }\OperatorTok{{-}}\NormalTok{ plot\_min) }\OperatorTok{/}\NormalTok{ (val\_max }\OperatorTok{{-}}\NormalTok{ val\_min)}
+
+\NormalTok{  delta }\OperatorTok{\textless{}{-}}\NormalTok{ (plot\_max }\OperatorTok{{-}}\NormalTok{ plot\_min) }\OperatorTok{/}\NormalTok{ B}
+\NormalTok{  plot\_min }\OperatorTok{\textless{}{-}}\NormalTok{ plot\_min }\OperatorTok{{-}}\NormalTok{ delta}
+\NormalTok{  plot\_max }\OperatorTok{\textless{}{-}}\NormalTok{ plot\_max }\OperatorTok{+}\NormalTok{ delta}
+\NormalTok{  bins }\OperatorTok{\textless{}{-}}\NormalTok{ seq(plot\_min, plot\_max, delta)}
+\NormalTok{  B }\OperatorTok{\textless{}{-}}\NormalTok{ B }\OperatorTok{+} \DecValTok{2}
+
+\NormalTok{  idx }\OperatorTok{\textless{}{-}}\NormalTok{ rep(}\DecValTok{1}\NormalTok{:B, each}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+\NormalTok{  x }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(}\DecValTok{1}\NormalTok{:length(idx), function(b) }\ControlFlowTok{if}\NormalTok{(b }\OperatorTok{\%\%} \DecValTok{2} \OperatorTok{==} \DecValTok{1}\NormalTok{) bins[idx[b]]}
+              \ControlFlowTok{else}\NormalTok{ bins[idx[b] }\OperatorTok{+} \DecValTok{1}\NormalTok{])}
+
+\NormalTok{  counts }\OperatorTok{\textless{}{-}}\NormalTok{ hist(rhats, breaks}\OperatorTok{=}\NormalTok{bins, plot}\OperatorTok{=}\NormalTok{FALSE)$counts}
+\NormalTok{  max\_y }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(counts)}
+\NormalTok{  y }\OperatorTok{\textless{}{-}}\NormalTok{ counts[idx]}
+
+\NormalTok{  par(mfrow}\OperatorTok{=}\NormalTok{c(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{), mar }\OperatorTok{=}\NormalTok{ c(}\DecValTok{5}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+
+\NormalTok{  plot(x, y, }\BuiltInTok{type}\OperatorTok{=}\StringTok{"l"}\NormalTok{,  lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{, col}\OperatorTok{=}\NormalTok{c\_dark,}
+\NormalTok{       xlim}\OperatorTok{=}\NormalTok{c(plot\_min, plot\_max), xlab}\OperatorTok{=}\StringTok{"Split hat}\SpecialCharTok{\{R\}}\StringTok{s"}\NormalTok{,}
+\NormalTok{       ylim}\OperatorTok{=}\NormalTok{c(}\DecValTok{0}\NormalTok{, }\FloatTok{1.05} \OperatorTok{*}\NormalTok{ max\_y), ylab}\OperatorTok{=}\StringTok{""}\NormalTok{, yaxt}\OperatorTok{=}\StringTok{"n"}\NormalTok{)}
+
+\NormalTok{  abline(v}\OperatorTok{=}\FloatTok{1.1}\NormalTok{, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{, lty}\OperatorTok{=}\DecValTok{3}\NormalTok{, col}\OperatorTok{=}\StringTok{"\#DDDDDD"}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
 \subsection{Integrated Autocorrelation
 Time}\label{integrated-autocorrelation-time}
 
@@ -1702,6 +1767,92 @@ yield sufficiently precise Markov chain Monte Carlo estimators.
 \NormalTok{  \}}
   
 \NormalTok{  cat(message)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Plot a histogram of the empirical effective sample sizes for all}
+\CommentTok{\# expectands in expectands\_var\_list, separated by Markov chain.}
+\CommentTok{\# Plot range and number of bins expands to include the min\_ess\_hat}
+\CommentTok{\# threshold.}
+\CommentTok{\# @param expectand\_vals\_list A named list of two{-}dimensional arrays for}
+\CommentTok{\#                            each expectand.  The first dimension of}
+\CommentTok{\#                            each element indexes the Markov chains and}
+\CommentTok{\#                            the second dimension indexes the sequential}
+\CommentTok{\#                            states within each Markov chain.}
+\CommentTok{\# @param min\_ess\_hat The minimum empirical effective sample size}
+\CommentTok{\# @params B The number of bins for the inverse metric element histograms.}
+\NormalTok{plot\_ess\_hats }\OperatorTok{\textless{}{-}}\NormalTok{ function(expectand\_vals\_list,}
+\NormalTok{                          min\_ess\_hat}\OperatorTok{=}\DecValTok{100}\NormalTok{, B}\OperatorTok{=}\DecValTok{25}\NormalTok{) \{}
+\NormalTok{  validate\_named\_list\_of\_arrays(expectand\_vals\_list,}
+                                \StringTok{\textquotesingle{}expectand\_vals\_list\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{  N }\OperatorTok{\textless{}{-}}\NormalTok{ length(expectand\_vals\_list)}
+
+\NormalTok{  ev }\OperatorTok{\textless{}{-}}\NormalTok{ expectand\_vals\_list[[}\DecValTok{1}\NormalTok{]]}
+\NormalTok{  validate\_array(ev, }\StringTok{\textquotesingle{}expectand\_vals\_list[[1]]\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{  C }\OperatorTok{\textless{}{-}}\NormalTok{ dim(ev)[}\DecValTok{1}\NormalTok{]}
+\NormalTok{  S }\OperatorTok{\textless{}{-}}\NormalTok{ dim(ev)[}\DecValTok{2}\NormalTok{]}
+\NormalTok{  ess\_hats }\OperatorTok{\textless{}{-}}\NormalTok{ matrix(NA, C, N)}
+
+\NormalTok{  n }\OperatorTok{\textless{}{-}} \DecValTok{1}
+  \ControlFlowTok{for}\NormalTok{ (name }\KeywordTok{in}\NormalTok{ names(expectand\_vals\_list)) \{}
+\NormalTok{    expectand\_vals }\OperatorTok{\textless{}{-}}\NormalTok{ expectand\_vals\_list[[name]]}
+
+    \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(expectand\_vals)) \{}
+\NormalTok{      cat(sprintf(}\StringTok{\textquotesingle{}The values for expectand \textasciigrave{}}\SpecialCharTok{\%s}\StringTok{\textasciigrave{} are ill{-}formed.\textquotesingle{}}\NormalTok{,}
+\NormalTok{                  name))}
+      \BuiltInTok{next}
+\NormalTok{    \}}
+
+    \ControlFlowTok{for}\NormalTok{ (c }\KeywordTok{in} \DecValTok{1}\NormalTok{:C) \{}
+\NormalTok{      tau\_hat }\OperatorTok{\textless{}{-}}\NormalTok{ compute\_tau\_hat(expectand\_vals[c,])}
+\NormalTok{      ess\_hats[c, n] }\OperatorTok{\textless{}{-}}\NormalTok{ S }\OperatorTok{/}\NormalTok{ tau\_hat}
+\NormalTok{    \}}
+\NormalTok{    n }\OperatorTok{\textless{}{-}}\NormalTok{ n }\OperatorTok{+} \DecValTok{1}
+\NormalTok{  \}}
+
+\NormalTok{  val\_min }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(ess\_hats, na.rm}\OperatorTok{=}\NormalTok{TRUE)}
+\NormalTok{  val\_max }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(ess\_hats, na.rm}\OperatorTok{=}\NormalTok{TRUE)}
+
+\NormalTok{  plot\_min }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(min\_ess\_hat, val\_min)}
+\NormalTok{  plot\_max }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(min\_ess\_hat, val\_max)}
+\NormalTok{  B }\OperatorTok{\textless{}{-}}\NormalTok{ B }\OperatorTok{*}\NormalTok{ (plot\_max }\OperatorTok{{-}}\NormalTok{ plot\_min) }\OperatorTok{/}\NormalTok{ (val\_max }\OperatorTok{{-}}\NormalTok{ val\_min)}
+
+\NormalTok{  delta }\OperatorTok{\textless{}{-}}\NormalTok{ (plot\_max }\OperatorTok{{-}}\NormalTok{ plot\_min) }\OperatorTok{/}\NormalTok{ B}
+\NormalTok{  plot\_min }\OperatorTok{\textless{}{-}}\NormalTok{ plot\_min }\OperatorTok{{-}}\NormalTok{ delta}
+\NormalTok{  plot\_max }\OperatorTok{\textless{}{-}}\NormalTok{ plot\_max }\OperatorTok{+}\NormalTok{ delta}
+\NormalTok{  bins }\OperatorTok{\textless{}{-}}\NormalTok{ seq(plot\_min, plot\_max, delta)}
+\NormalTok{  B }\OperatorTok{\textless{}{-}}\NormalTok{ B }\OperatorTok{+} \DecValTok{2}
+
+\NormalTok{  max\_y }\OperatorTok{\textless{}{-}}
+    \BuiltInTok{max}\NormalTok{(sapply(}\DecValTok{1}\NormalTok{:C,}
+\NormalTok{               function(c) }\BuiltInTok{max}\NormalTok{(hist(ess\_hats[c,],}
+\NormalTok{                                    breaks}\OperatorTok{=}\NormalTok{bins,}
+\NormalTok{                                    plot}\OperatorTok{=}\NormalTok{FALSE)$counts)))}
+
+\NormalTok{  idx }\OperatorTok{\textless{}{-}}\NormalTok{ rep(}\DecValTok{1}\NormalTok{:B, each}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+\NormalTok{  x }\OperatorTok{\textless{}{-}}\NormalTok{ sapply(}\DecValTok{1}\NormalTok{:length(idx), function(b) }\ControlFlowTok{if}\NormalTok{(b }\OperatorTok{\%\%} \DecValTok{2} \OperatorTok{==} \DecValTok{1}\NormalTok{) bins[idx[b]]}
+              \ControlFlowTok{else}\NormalTok{ bins[idx[b] }\OperatorTok{+} \DecValTok{1}\NormalTok{])}
+
+\NormalTok{  par(mfrow}\OperatorTok{=}\NormalTok{c(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{), mar }\OperatorTok{=}\NormalTok{ c(}\DecValTok{5}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\NormalTok{  colors }\OperatorTok{\textless{}{-}}\NormalTok{ c(c\_dark, c\_mid\_highlight, c\_mid, c\_light\_highlight)}
+
+  \ControlFlowTok{for}\NormalTok{ (c }\KeywordTok{in} \DecValTok{1}\NormalTok{:C) \{}
+\NormalTok{    counts }\OperatorTok{\textless{}{-}}\NormalTok{ hist(ess\_hats[c,], breaks}\OperatorTok{=}\NormalTok{bins, plot}\OperatorTok{=}\NormalTok{FALSE)$counts}
+\NormalTok{    y }\OperatorTok{\textless{}{-}}\NormalTok{ counts[idx]}
+
+\NormalTok{    plot(x, y, }\BuiltInTok{type}\OperatorTok{=}\StringTok{"l"}\NormalTok{, main}\OperatorTok{=}\NormalTok{paste(}\StringTok{"Chain"}\NormalTok{, c),}
+\NormalTok{         lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{, col}\OperatorTok{=}\NormalTok{colors[c],}
+\NormalTok{         xlim}\OperatorTok{=}\NormalTok{c(plot\_min, plot\_max),}
+\NormalTok{         xlab}\OperatorTok{=}\StringTok{"Empirical Effective Sample Sizes"}\NormalTok{,}
+\NormalTok{         ylim}\OperatorTok{=}\NormalTok{c(}\DecValTok{0}\NormalTok{, }\FloatTok{1.05} \OperatorTok{*}\NormalTok{ max\_y), ylab}\OperatorTok{=}\StringTok{""}\NormalTok{, yaxt}\OperatorTok{=}\StringTok{"n"}\NormalTok{)}
+
+\NormalTok{    abline(v}\OperatorTok{=}\NormalTok{min\_ess\_hat, lwd}\OperatorTok{=}\DecValTok{2}\NormalTok{, lty}\OperatorTok{=}\DecValTok{3}\NormalTok{, col}\OperatorTok{=}\StringTok{"\#DDDDDD"}\NormalTok{)}
+\NormalTok{  \}}
 \NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
@@ -3902,8 +4053,29 @@ Monte Carlo estimators.
 
 Well that output restriction proved to be prescient as most of the
 expectands are encountering problems; even this compact summary is
-overwhelming. To avoid completely overwhelming ourselves let's focus on
-the four parameter expectands.
+overwhelming.
+
+Visualizing the split \(\hat{R}\) and empirical effective sample sizes
+with histograms is a bit more manageable.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_rhats}\NormalTok{(samples)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-17-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{util}\SpecialCharTok{$}\FunctionTok{plot\_ess\_hats}\NormalTok{(samples)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-18-1.pdf}
+
+That said, we can also avoid overwhelming ourselves by focus on just the
+four parameter expectands.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -3973,7 +4145,7 @@ empirical correlograms for each parameter expectand.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-18-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-20-1.pdf}
 
 Regardless of whether or not these Markov chains are stationary they are
 extremely autocorrelated. Assuming stationarity we don't start to forget
@@ -3994,7 +4166,7 @@ characteristic of a random walk.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-19-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-21-1.pdf}
 
 To more quantitatively blame the large split \(\hat{R}\)s on these
 strong autocorrelations we can plot the split \(\hat{R}\) from each
@@ -4015,7 +4187,7 @@ smallest empirical effective sample size amongst the four Markov chains.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-20-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-22-1.pdf}
 
 Every expectand with a large split \(\hat{R}\)s also exhibits a
 particularly small minimum empirical effective sample size, confirming
@@ -4047,7 +4219,7 @@ probability estimates in dark red.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-21-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-23-1.pdf}
 
 If we look at the central estimates alone we might convince ourselves of
 all kinds of interesting structure. For example potential multi-modality
@@ -4073,7 +4245,7 @@ at the same time many of the visual artifacts recede.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-22-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-24-1.pdf}
 
 When the bin indicator functions enjoy Markov chain Monte Carlo central
 limit theorems these standard error bands allow us to discriminate
@@ -4096,7 +4268,7 @@ the ground truth in simulation studies.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-23-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-25-1.pdf}
 
 Moreover the expectand pushforward histograms can be plotted on top of
 each other for a more direct comparison.
@@ -4128,7 +4300,7 @@ each other for a more direct comparison.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-24-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-26-1.pdf}
 
 Finally if we want to explore the pushforward posterior distribution of
 other expectands that have not already been evaluated in the
@@ -4152,7 +4324,7 @@ other expectands that have not already been evaluated in the
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-25-1.pdf}
+\includegraphics{rstan_demo_files/figure-pdf/unnamed-chunk-27-1.pdf}
 
 Calculating the probability allocated to implicitly-defined subsets
 proceeds similarly.
@@ -4214,7 +4386,7 @@ CXX14=clang++ -arch x86_64 -ftemplate-depth-256
 \begin{verbatim}
 R version 4.3.2 (2023-10-31)
 Platform: x86_64-apple-darwin20 (64-bit)
-Running under: macOS Sonoma 14.7.5
+Running under: macOS 15.7.3
 
 Matrix products: default
 BLAS:   /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRblas.0.dylib 
@@ -4235,7 +4407,7 @@ other attached packages:
 loaded via a namespace (and not attached):
  [1] gtable_0.3.4       jsonlite_1.8.8     compiler_4.3.2     Rcpp_1.0.11       
  [5] stringr_1.5.1      parallel_4.3.2     gridExtra_2.3      scales_1.3.0      
- [9] yaml_2.3.8         fastmap_1.1.1      ggplot2_3.4.4      R6_2.5.1          
+ [9] yaml_2.3.8         fastmap_1.1.1      ggplot2_3.4.4      R6_2.6.1          
 [13] curl_5.2.0         knitr_1.45         tibble_3.2.1       munsell_0.5.0     
 [17] pillar_1.9.0       rlang_1.1.2        utf8_1.2.4         V8_4.4.1          
 [21] stringi_1.8.3      inline_0.3.19      xfun_0.41          RcppParallel_5.1.7

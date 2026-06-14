@@ -237,8 +237,8 @@ denoting the iterations within an individual Markov chain.
 \NormalTok{  base\_names }\OperatorTok{=}\NormalTok{ stan\_fit.constrained\_param\_names}
 \NormalTok{  formatted\_names }\OperatorTok{=}\NormalTok{ []}
   \ControlFlowTok{for}\NormalTok{ base\_name }\KeywordTok{in}\NormalTok{ base\_names:}
-\NormalTok{    name }\OperatorTok{=}\NormalTok{ re.sub(}\StringTok{\textquotesingle{}\textbackslash{}.\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}[\textquotesingle{}}\NormalTok{, base\_name, count}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
-\NormalTok{    name }\OperatorTok{=}\NormalTok{ re.sub(}\StringTok{\textquotesingle{}\textbackslash{}.\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{},\textquotesingle{}}\NormalTok{, name)}
+\NormalTok{    name }\OperatorTok{=}\NormalTok{ re.sub(}\VerbatimStringTok{r\textquotesingle{}\textbackslash{}.\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}[\textquotesingle{}}\NormalTok{, base\_name, count}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
+\NormalTok{    name }\OperatorTok{=}\NormalTok{ re.sub(}\VerbatimStringTok{r\textquotesingle{}\textbackslash{}.\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{},\textquotesingle{}}\NormalTok{, name)}
     \ControlFlowTok{if} \StringTok{\textquotesingle{}[\textquotesingle{}} \KeywordTok{in}\NormalTok{ name:}
 \NormalTok{      name }\OperatorTok{+=} \StringTok{\textquotesingle{}]\textquotesingle{}}
 \NormalTok{    formatted\_names.append(name)}
@@ -2259,7 +2259,7 @@ immediate interest.
     \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ requested\_names:}
       \CommentTok{\# Search for array suffix}
 \NormalTok{      array\_names }\OperatorTok{=}\NormalTok{ [ key }\ControlFlowTok{for}\NormalTok{ key }\KeywordTok{in}\NormalTok{ expectand\_vals\_dict.keys()}
-                      \ControlFlowTok{if}\NormalTok{ re.match(}\StringTok{\textquotesingle{}\^{}\textquotesingle{}} \OperatorTok{+}\NormalTok{ name }\OperatorTok{+} \StringTok{\textquotesingle{}\textbackslash{}[\textquotesingle{}}\NormalTok{, key) ]}
+                      \ControlFlowTok{if}\NormalTok{ re.match(}\StringTok{\textquotesingle{}\^{}\textquotesingle{}} \OperatorTok{+}\NormalTok{ name }\OperatorTok{+} \VerbatimStringTok{r\textquotesingle{}\textbackslash{}[\textquotesingle{}}\NormalTok{, key) ]}
       \CommentTok{\# Append array names, if found}
       \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(array\_names) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
 \NormalTok{        good\_names }\OperatorTok{+=}\NormalTok{ array\_names}
@@ -3056,6 +3056,11 @@ First we setup our local \texttt{Python} environment.
 \ImportTok{import}\NormalTok{ stan}
 \end{Highlighting}
 \end{Shaded}
+
+\begin{verbatim}
+/Users/Betancourt/Documents/Research/Code/pystan3.12/pystan3.12_env/lib/python3.12/site-packages/stan/plugins.py:4: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+\end{verbatim}
 
 Next we source all of these diagnostics into a local namespace to avoid
 any conflicts with other functions.
@@ -4242,7 +4247,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2026-01-14T22:46:15.218668-05:00
+Last updated: 2026-06-13T21:08:48.487811-04:00
 
 Python implementation: CPython
 Python version       : 3.12.10

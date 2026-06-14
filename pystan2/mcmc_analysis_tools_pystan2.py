@@ -262,10 +262,10 @@ def plot_inv_metric(stan_fit, B=25):
   
   inv_metric_elems = [None] * C
   for c, raw_info in enumerate(chain_info):
-    clean1 = re.sub("# Adaptation terminated\n# Step size = [0-9.]*\n#",
+    clean1 = re.sub(r"# Adaptation terminated\n# Step size = [0-9.]*\n#",
                     "", raw_info)
-    clean2 = re.sub(" [a-zA-Z ]*:\n# ", "", clean1)
-    clean3 = re.sub("\n$", "", clean2)
+    clean2 = re.sub(r" [a-zA-Z ]*:\n# ", "", clean1)
+    clean3 = re.sub(r"\n$", "", clean2)
     inv_metric_elems[c] = [float(s) for s in clean3.split(',')]
   
   min_elem = min([ min(a) for a in inv_metric_elems ])
@@ -1981,7 +1981,7 @@ def filter_expectands(expectand_vals_dict, requested_names,
     for name in requested_names:
       # Search for array suffix
       array_names = [ key for key in expectand_vals_dict.keys()
-                      if re.match('^' + name + '\[', key) ]
+                      if re.match('^' + name + r'\[', key) ]
       # Append array names, if found
       if len(array_names) > 0:
         good_names += array_names

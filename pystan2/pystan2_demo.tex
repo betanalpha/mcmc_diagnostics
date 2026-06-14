@@ -551,10 +551,10 @@ different behaviors during warmup.
   
 \NormalTok{  inv\_metric\_elems }\OperatorTok{=}\NormalTok{ [}\VariableTok{None}\NormalTok{] }\OperatorTok{*}\NormalTok{ C}
   \ControlFlowTok{for}\NormalTok{ c, raw\_info }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(chain\_info):}
-\NormalTok{    clean1 }\OperatorTok{=}\NormalTok{ re.sub(}\StringTok{"\# Adaptation terminated}\CharTok{\textbackslash{}n}\StringTok{\# Step size = [0{-}9.]*}\CharTok{\textbackslash{}n}\StringTok{\#"}\NormalTok{,}
+\NormalTok{    clean1 }\OperatorTok{=}\NormalTok{ re.sub(}\VerbatimStringTok{r"\# Adaptation terminated\textbackslash{}n\# Step size = [0{-}9.]*\textbackslash{}n\#"}\NormalTok{,}
                     \StringTok{""}\NormalTok{, raw\_info)}
-\NormalTok{    clean2 }\OperatorTok{=}\NormalTok{ re.sub(}\StringTok{" [a{-}zA{-}Z ]*:}\CharTok{\textbackslash{}n}\StringTok{\# "}\NormalTok{, }\StringTok{""}\NormalTok{, clean1)}
-\NormalTok{    clean3 }\OperatorTok{=}\NormalTok{ re.sub(}\StringTok{"}\CharTok{\textbackslash{}n}\StringTok{$"}\NormalTok{, }\StringTok{""}\NormalTok{, clean2)}
+\NormalTok{    clean2 }\OperatorTok{=}\NormalTok{ re.sub(}\VerbatimStringTok{r" [a{-}zA{-}Z ]*:\textbackslash{}n\# "}\NormalTok{, }\StringTok{""}\NormalTok{, clean1)}
+\NormalTok{    clean3 }\OperatorTok{=}\NormalTok{ re.sub(}\VerbatimStringTok{r"\textbackslash{}n$"}\NormalTok{, }\StringTok{""}\NormalTok{, clean2)}
 \NormalTok{    inv\_metric\_elems[c] }\OperatorTok{=}\NormalTok{ [}\BuiltInTok{float}\NormalTok{(s) }\ControlFlowTok{for}\NormalTok{ s }\KeywordTok{in}\NormalTok{ clean3.split(}\StringTok{\textquotesingle{},\textquotesingle{}}\NormalTok{)]}
   
 \NormalTok{  min\_elem }\OperatorTok{=} \BuiltInTok{min}\NormalTok{([ }\BuiltInTok{min}\NormalTok{(a) }\ControlFlowTok{for}\NormalTok{ a }\KeywordTok{in}\NormalTok{ inv\_metric\_elems ])}
@@ -2288,7 +2288,7 @@ immediate interest.
     \ControlFlowTok{for}\NormalTok{ name }\KeywordTok{in}\NormalTok{ requested\_names:}
       \CommentTok{\# Search for array suffix}
 \NormalTok{      array\_names }\OperatorTok{=}\NormalTok{ [ key }\ControlFlowTok{for}\NormalTok{ key }\KeywordTok{in}\NormalTok{ expectand\_vals\_dict.keys()}
-                      \ControlFlowTok{if}\NormalTok{ re.match(}\StringTok{\textquotesingle{}\^{}\textquotesingle{}} \OperatorTok{+}\NormalTok{ name }\OperatorTok{+} \StringTok{\textquotesingle{}\textbackslash{}[\textquotesingle{}}\NormalTok{, key) ]}
+                      \ControlFlowTok{if}\NormalTok{ re.match(}\StringTok{\textquotesingle{}\^{}\textquotesingle{}} \OperatorTok{+}\NormalTok{ name }\OperatorTok{+} \VerbatimStringTok{r\textquotesingle{}\textbackslash{}[\textquotesingle{}}\NormalTok{, key) ]}
       \CommentTok{\# Append array names, if found}
       \ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(array\_names) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
 \NormalTok{        good\_names }\OperatorTok{+=}\NormalTok{ array\_names}
@@ -4272,7 +4272,7 @@ Environment}\label{original-computing-environment}
 \end{Shaded}
 
 \begin{verbatim}
-Last updated: 2026-01-14T22:52:54.354734-05:00
+Last updated: 2026-06-13T21:14:08.908974-04:00
 
 Python implementation: CPython
 Python version       : 3.9.6

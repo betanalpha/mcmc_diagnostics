@@ -46,8 +46,8 @@ def extract_expectand_vals(stan_fit):
   base_names = stan_fit.constrained_param_names
   formatted_names = []
   for base_name in base_names:
-    name = re.sub('\.', '[', base_name, count=1)
-    name = re.sub('\.', ',', name)
+    name = re.sub(r'\.', '[', base_name, count=1)
+    name = re.sub(r'\.', ',', name)
     if '[' in name:
       name += ']'
     formatted_names.append(name)
@@ -1982,7 +1982,7 @@ def filter_expectands(expectand_vals_dict, requested_names,
     for name in requested_names:
       # Search for array suffix
       array_names = [ key for key in expectand_vals_dict.keys()
-                      if re.match('^' + name + '\[', key) ]
+                      if re.match('^' + name + r'\[', key) ]
       # Append array names, if found
       if len(array_names) > 0:
         good_names += array_names

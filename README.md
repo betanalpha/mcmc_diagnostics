@@ -11,6 +11,6 @@ Recommendations for code optimization are welcomed and appreciated.
 
 ### Acknowledgements {-}
 
-I thank Sean Talts and Dan Waxman for Python code improvements.  Raoul Kima
-originally suggested separating divergent transitions by numerical trajectory
-length.
+I thank Sean Talts, Dan Waxman, and Justin Bois for helpful
+recommendations.  Raoul Kima originally suggested separating
+divergent transitions by numerical trajectory length.

@@ -1211,7 +1211,7 @@ def compute_tau_hat(vals):
       rhos[2 * p]     = 0.5 * old_pair_sum
       rhos[2 * p + 1] = 0.5 * old_pair_sum
 
-    if p == P:
+    if p == P - 1:
       return math.nan
     
     old_pair_sum = current_pair_sum
@@ -2482,9 +2482,9 @@ def implicit_subset_prob(expectand_vals_dict,
   # Verify outputs
   unique_vals = set(indicator_samples.flatten())
 
-  if not (  unique_vals == set([0])
-          | unique_vals == set([1])
-          | unique_vals == set([0, 1])):
+  if not (   unique_vals == set([0])
+          or unique_vals == set([1])
+          or unique_vals == set([0, 1])):
     raise ValueError('The function `indicator` must return only '
                      'logical or 0/1 numeric outputs.')
 
@@ -2552,7 +2552,14 @@ def plot_expectand_pushforward(ax, expectand_vals, B, display_name="f",
     # Automatically adjust histogram binning to range of outputs
     min_f = min(expectand_vals.flatten())
     max_f = max(expectand_vals.flatten())
+
+    if baseline is not None:
+      min_f = min(min_f, baseline)
+      max_f = max(max_f, baseline)
+
     delta = (max_f - min_f) / B
+    if delta == 0:
+      delta = 0.1
 
     # Add bounding bins
     B = B + 2

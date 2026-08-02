@@ -1457,8 +1457,8 @@ set.
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
 \CommentTok{\#                            the second dimension indexes the sequential}
-\CommentTok{\#                            states within each Markov chain.}
-\CommentTok{\# @params B The number of bins for the inverse metric element histograms.}
+\CommentTok{\#                            states within each Markov chain}
+\CommentTok{\# @params B The number of nominal histogram bins}
 \NormalTok{plot\_rhats }\OperatorTok{\textless{}{-}}\NormalTok{ function(expectand\_vals\_list, B}\OperatorTok{=}\DecValTok{25}\NormalTok{) \{}
 \NormalTok{  validate\_named\_list\_of\_arrays(expectand\_vals\_list,}
                                 \StringTok{\textquotesingle{}expectand\_vals\_list\textquotesingle{}}\NormalTok{)}
@@ -1781,9 +1781,9 @@ yield sufficiently precise Markov chain Monte Carlo estimators.
 \CommentTok{\#                            each expectand.  The first dimension of}
 \CommentTok{\#                            each element indexes the Markov chains and}
 \CommentTok{\#                            the second dimension indexes the sequential}
-\CommentTok{\#                            states within each Markov chain.}
+\CommentTok{\#                            states within each Markov chain}
 \CommentTok{\# @param min\_ess\_hat The minimum empirical effective sample size}
-\CommentTok{\# @params B The number of bins for the inverse metric element histograms.}
+\CommentTok{\# @params B The number of histogram bins}
 \NormalTok{plot\_ess\_hats }\OperatorTok{\textless{}{-}}\NormalTok{ function(expectand\_vals\_list,}
 \NormalTok{                          min\_ess\_hat}\OperatorTok{=}\DecValTok{100}\NormalTok{, B}\OperatorTok{=}\DecValTok{25}\NormalTok{) \{}
 \NormalTok{  validate\_named\_list\_of\_arrays(expectand\_vals\_list,}
@@ -3008,7 +3008,15 @@ estimating the target probabilities in histogram bins.
   \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is}\NormalTok{.null(flim)) \{}
 \NormalTok{    min\_f }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(expectand\_vals)}
 \NormalTok{    max\_f }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(expectand\_vals)}
+
+    \ControlFlowTok{if}\NormalTok{ (}\OperatorTok{!}\KeywordTok{is}\NormalTok{.null(baseline)) \{}
+\NormalTok{      min\_f }\OperatorTok{\textless{}{-}} \BuiltInTok{min}\NormalTok{(min\_f, baseline)}
+\NormalTok{      max\_f }\OperatorTok{\textless{}{-}} \BuiltInTok{max}\NormalTok{(max\_f, baseline)}
+\NormalTok{    \}}
+
 \NormalTok{    delta }\OperatorTok{\textless{}{-}}\NormalTok{ (max\_f }\OperatorTok{{-}}\NormalTok{ min\_f) }\OperatorTok{/}\NormalTok{ B}
+    \ControlFlowTok{if}\NormalTok{ (delta }\OperatorTok{==} \DecValTok{0}\NormalTok{)}
+\NormalTok{      delta }\OperatorTok{\textless{}{-}} \FloatTok{0.1}
 
     \CommentTok{\# Add bounding bins}
 \NormalTok{    B }\OperatorTok{\textless{}{-}}\NormalTok{ B }\OperatorTok{+} \DecValTok{2}
@@ -4386,7 +4394,7 @@ CXX14=clang++ -arch x86_64 -ftemplate-depth-256
 \begin{verbatim}
 R version 4.3.2 (2023-10-31)
 Platform: x86_64-apple-darwin20 (64-bit)
-Running under: macOS 15.7.3
+Running under: macOS 15.7.4
 
 Matrix products: default
 BLAS:   /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRblas.0.dylib 

@@ -4173,8 +4173,8 @@ m &lt; \frac{1}{\xi}.
 <span id="cb21-1026"><a href="#cb21-1026" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
 <span id="cb21-1027"><a href="#cb21-1027" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each element indexes the Markov chains and</span></span>
 <span id="cb21-1028"><a href="#cb21-1028" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the second dimension indexes the sequential</span></span>
-<span id="cb21-1029"><a href="#cb21-1029" aria-hidden="true" tabindex="-1"></a><span class="co">#                            states within each Markov chain.</span></span>
-<span id="cb21-1030"><a href="#cb21-1030" aria-hidden="true" tabindex="-1"></a><span class="co"># @params B The number of bins for the inverse metric element histograms.</span></span>
+<span id="cb21-1029"><a href="#cb21-1029" aria-hidden="true" tabindex="-1"></a><span class="co">#                            states within each Markov chain</span></span>
+<span id="cb21-1030"><a href="#cb21-1030" aria-hidden="true" tabindex="-1"></a><span class="co"># @params B The number of nominal histogram bins</span></span>
 <span id="cb21-1031"><a href="#cb21-1031" aria-hidden="true" tabindex="-1"></a>plot_rhats <span class="op">&lt;-</span> function(expectand_vals_list, B<span class="op">=</span><span class="dv">25</span>) {</span>
 <span id="cb21-1032"><a href="#cb21-1032" aria-hidden="true" tabindex="-1"></a>  validate_named_list_of_arrays(expectand_vals_list,</span>
 <span id="cb21-1033"><a href="#cb21-1033" aria-hidden="true" tabindex="-1"></a>                                <span class="st">&#39;expectand_vals_list&#39;</span>)</span>
@@ -4445,9 +4445,9 @@ m &lt; \frac{1}{\xi}.
 <span id="cb26-1288"><a href="#cb26-1288" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each expectand.  The first dimension of</span></span>
 <span id="cb26-1289"><a href="#cb26-1289" aria-hidden="true" tabindex="-1"></a><span class="co">#                            each element indexes the Markov chains and</span></span>
 <span id="cb26-1290"><a href="#cb26-1290" aria-hidden="true" tabindex="-1"></a><span class="co">#                            the second dimension indexes the sequential</span></span>
-<span id="cb26-1291"><a href="#cb26-1291" aria-hidden="true" tabindex="-1"></a><span class="co">#                            states within each Markov chain.</span></span>
+<span id="cb26-1291"><a href="#cb26-1291" aria-hidden="true" tabindex="-1"></a><span class="co">#                            states within each Markov chain</span></span>
 <span id="cb26-1292"><a href="#cb26-1292" aria-hidden="true" tabindex="-1"></a><span class="co"># @param min_ess_hat The minimum empirical effective sample size</span></span>
-<span id="cb26-1293"><a href="#cb26-1293" aria-hidden="true" tabindex="-1"></a><span class="co"># @params B The number of bins for the inverse metric element histograms.</span></span>
+<span id="cb26-1293"><a href="#cb26-1293" aria-hidden="true" tabindex="-1"></a><span class="co"># @params B The number of histogram bins</span></span>
 <span id="cb26-1294"><a href="#cb26-1294" aria-hidden="true" tabindex="-1"></a>plot_ess_hats <span class="op">&lt;-</span> function(expectand_vals_list,</span>
 <span id="cb26-1295"><a href="#cb26-1295" aria-hidden="true" tabindex="-1"></a>                          min_ess_hat<span class="op">=</span><span class="dv">100</span>, B<span class="op">=</span><span class="dv">25</span>) {</span>
 <span id="cb26-1296"><a href="#cb26-1296" aria-hidden="true" tabindex="-1"></a>  validate_named_list_of_arrays(expectand_vals_list,</span>
@@ -5547,97 +5547,105 @@ p
 <span id="cb41-2596"><a href="#cb41-2596" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="kw">is</span>.null(flim)) {</span>
 <span id="cb41-2597"><a href="#cb41-2597" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> <span class="bu">min</span>(expectand_vals)</span>
 <span id="cb41-2598"><a href="#cb41-2598" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> <span class="bu">max</span>(expectand_vals)</span>
-<span id="cb41-2599"><a href="#cb41-2599" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">&lt;-</span> (max_f <span class="op">-</span> min_f) <span class="op">/</span> B</span>
-<span id="cb41-2600"><a href="#cb41-2600" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2601"><a href="#cb41-2601" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add bounding bins</span></span>
-<span id="cb41-2602"><a href="#cb41-2602" aria-hidden="true" tabindex="-1"></a>    B <span class="op">&lt;-</span> B <span class="op">+</span> <span class="dv">2</span></span>
-<span id="cb41-2603"><a href="#cb41-2603" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> min_f <span class="op">-</span> delta</span>
-<span id="cb41-2604"><a href="#cb41-2604" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> max_f <span class="op">+</span> delta</span>
-<span id="cb41-2605"><a href="#cb41-2605" aria-hidden="true" tabindex="-1"></a>    flim <span class="op">&lt;-</span> c(min_f, max_f)</span>
-<span id="cb41-2606"><a href="#cb41-2606" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2607"><a href="#cb41-2607" aria-hidden="true" tabindex="-1"></a>    bins <span class="op">&lt;-</span> seq(min_f, max_f, delta)</span>
-<span id="cb41-2608"><a href="#cb41-2608" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb41-2609"><a href="#cb41-2609" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> flim[<span class="dv">1</span>]</span>
-<span id="cb41-2610"><a href="#cb41-2610" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> flim[<span class="dv">2</span>]</span>
-<span id="cb41-2611"><a href="#cb41-2611" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2612"><a href="#cb41-2612" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">&lt;-</span> (max_f <span class="op">-</span> min_f) <span class="op">/</span> B</span>
-<span id="cb41-2613"><a href="#cb41-2613" aria-hidden="true" tabindex="-1"></a>    bins <span class="op">&lt;-</span> seq(min_f, max_f, delta)</span>
-<span id="cb41-2614"><a href="#cb41-2614" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb41-2615"><a href="#cb41-2615" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2616"><a href="#cb41-2616" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check value containment</span></span>
-<span id="cb41-2617"><a href="#cb41-2617" aria-hidden="true" tabindex="-1"></a>  S <span class="op">&lt;-</span> dim(expectand_vals)[<span class="dv">1</span>] <span class="op">*</span> dim(expectand_vals)[<span class="dv">2</span>]</span>
-<span id="cb41-2618"><a href="#cb41-2618" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2619"><a href="#cb41-2619" aria-hidden="true" tabindex="-1"></a>  S_low <span class="op">&lt;-</span> <span class="bu">sum</span>(c(expectand_vals, recursive<span class="op">=</span>TRUE) <span class="op">&lt;</span> min_f)</span>
-<span id="cb41-2620"><a href="#cb41-2620" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (S_low <span class="op">==</span> <span class="dv">1</span>)</span>
-<span id="cb41-2621"><a href="#cb41-2621" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> value (</span><span class="sc">%.1f%%</span><span class="st">) fell below the histogram binning.&#39;</span>,</span>
-<span id="cb41-2622"><a href="#cb41-2622" aria-hidden="true" tabindex="-1"></a>                    S_low, <span class="dv">100</span> <span class="op">*</span> S_low <span class="op">/</span> S))</span>
-<span id="cb41-2623"><a href="#cb41-2623" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (S_low <span class="op">&gt;</span> <span class="dv">1</span>)</span>
-<span id="cb41-2624"><a href="#cb41-2624" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> values (</span><span class="sc">%.1f%%</span><span class="st">) fell below the histogram binning.&#39;</span>,</span>
-<span id="cb41-2625"><a href="#cb41-2625" aria-hidden="true" tabindex="-1"></a>                    S_low, <span class="dv">100</span> <span class="op">*</span> S_low <span class="op">/</span> S))</span>
+<span id="cb41-2599"><a href="#cb41-2599" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2600"><a href="#cb41-2600" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.null(baseline)) {</span>
+<span id="cb41-2601"><a href="#cb41-2601" aria-hidden="true" tabindex="-1"></a>      min_f <span class="op">&lt;-</span> <span class="bu">min</span>(min_f, baseline)</span>
+<span id="cb41-2602"><a href="#cb41-2602" aria-hidden="true" tabindex="-1"></a>      max_f <span class="op">&lt;-</span> <span class="bu">max</span>(max_f, baseline)</span>
+<span id="cb41-2603"><a href="#cb41-2603" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb41-2604"><a href="#cb41-2604" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2605"><a href="#cb41-2605" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">&lt;-</span> (max_f <span class="op">-</span> min_f) <span class="op">/</span> B</span>
+<span id="cb41-2606"><a href="#cb41-2606" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (delta <span class="op">==</span> <span class="dv">0</span>)</span>
+<span id="cb41-2607"><a href="#cb41-2607" aria-hidden="true" tabindex="-1"></a>      delta <span class="op">&lt;-</span> <span class="fl">0.1</span></span>
+<span id="cb41-2608"><a href="#cb41-2608" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2609"><a href="#cb41-2609" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add bounding bins</span></span>
+<span id="cb41-2610"><a href="#cb41-2610" aria-hidden="true" tabindex="-1"></a>    B <span class="op">&lt;-</span> B <span class="op">+</span> <span class="dv">2</span></span>
+<span id="cb41-2611"><a href="#cb41-2611" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> min_f <span class="op">-</span> delta</span>
+<span id="cb41-2612"><a href="#cb41-2612" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> max_f <span class="op">+</span> delta</span>
+<span id="cb41-2613"><a href="#cb41-2613" aria-hidden="true" tabindex="-1"></a>    flim <span class="op">&lt;-</span> c(min_f, max_f)</span>
+<span id="cb41-2614"><a href="#cb41-2614" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2615"><a href="#cb41-2615" aria-hidden="true" tabindex="-1"></a>    bins <span class="op">&lt;-</span> seq(min_f, max_f, delta)</span>
+<span id="cb41-2616"><a href="#cb41-2616" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb41-2617"><a href="#cb41-2617" aria-hidden="true" tabindex="-1"></a>    min_f <span class="op">&lt;-</span> flim[<span class="dv">1</span>]</span>
+<span id="cb41-2618"><a href="#cb41-2618" aria-hidden="true" tabindex="-1"></a>    max_f <span class="op">&lt;-</span> flim[<span class="dv">2</span>]</span>
+<span id="cb41-2619"><a href="#cb41-2619" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2620"><a href="#cb41-2620" aria-hidden="true" tabindex="-1"></a>    delta <span class="op">&lt;-</span> (max_f <span class="op">-</span> min_f) <span class="op">/</span> B</span>
+<span id="cb41-2621"><a href="#cb41-2621" aria-hidden="true" tabindex="-1"></a>    bins <span class="op">&lt;-</span> seq(min_f, max_f, delta)</span>
+<span id="cb41-2622"><a href="#cb41-2622" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb41-2623"><a href="#cb41-2623" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2624"><a href="#cb41-2624" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Check value containment</span></span>
+<span id="cb41-2625"><a href="#cb41-2625" aria-hidden="true" tabindex="-1"></a>  S <span class="op">&lt;-</span> dim(expectand_vals)[<span class="dv">1</span>] <span class="op">*</span> dim(expectand_vals)[<span class="dv">2</span>]</span>
 <span id="cb41-2626"><a href="#cb41-2626" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2627"><a href="#cb41-2627" aria-hidden="true" tabindex="-1"></a>  S_high <span class="op">&lt;-</span> <span class="bu">sum</span>(max_f <span class="op">&lt;</span> c(expectand_vals, recursive<span class="op">=</span>TRUE))</span>
+<span id="cb41-2627"><a href="#cb41-2627" aria-hidden="true" tabindex="-1"></a>  S_low <span class="op">&lt;-</span> <span class="bu">sum</span>(c(expectand_vals, recursive<span class="op">=</span>TRUE) <span class="op">&lt;</span> min_f)</span>
 <span id="cb41-2628"><a href="#cb41-2628" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (S_low <span class="op">==</span> <span class="dv">1</span>)</span>
-<span id="cb41-2629"><a href="#cb41-2629" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> value (</span><span class="sc">%.1f%%</span><span class="st">) fell above the histogram binning.&#39;</span>,</span>
-<span id="cb41-2630"><a href="#cb41-2630" aria-hidden="true" tabindex="-1"></a>                    S_high, <span class="dv">100</span> <span class="op">*</span> S_high <span class="op">/</span> S))</span>
+<span id="cb41-2629"><a href="#cb41-2629" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> value (</span><span class="sc">%.1f%%</span><span class="st">) fell below the histogram binning.&#39;</span>,</span>
+<span id="cb41-2630"><a href="#cb41-2630" aria-hidden="true" tabindex="-1"></a>                    S_low, <span class="dv">100</span> <span class="op">*</span> S_low <span class="op">/</span> S))</span>
 <span id="cb41-2631"><a href="#cb41-2631" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (S_low <span class="op">&gt;</span> <span class="dv">1</span>)</span>
-<span id="cb41-2632"><a href="#cb41-2632" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> values (</span><span class="sc">%.1f%%</span><span class="st">) fell above the histogram binning.&#39;</span>,</span>
-<span id="cb41-2633"><a href="#cb41-2633" aria-hidden="true" tabindex="-1"></a>                    S_high, <span class="dv">100</span> <span class="op">*</span> S_high <span class="op">/</span> S))</span>
+<span id="cb41-2632"><a href="#cb41-2632" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> values (</span><span class="sc">%.1f%%</span><span class="st">) fell below the histogram binning.&#39;</span>,</span>
+<span id="cb41-2633"><a href="#cb41-2633" aria-hidden="true" tabindex="-1"></a>                    S_low, <span class="dv">100</span> <span class="op">*</span> S_low <span class="op">/</span> S))</span>
 <span id="cb41-2634"><a href="#cb41-2634" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2635"><a href="#cb41-2635" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Compute bin heights</span></span>
-<span id="cb41-2636"><a href="#cb41-2636" aria-hidden="true" tabindex="-1"></a>  mean_p <span class="op">&lt;-</span> rep(<span class="dv">0</span>, B)</span>
-<span id="cb41-2637"><a href="#cb41-2637" aria-hidden="true" tabindex="-1"></a>  delta_p <span class="op">&lt;-</span> rep(<span class="dv">0</span>, B)</span>
-<span id="cb41-2638"><a href="#cb41-2638" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2639"><a href="#cb41-2639" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (b <span class="kw">in</span> <span class="dv">1</span>:B) {</span>
-<span id="cb41-2640"><a href="#cb41-2640" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Estimate bin probabilities</span></span>
-<span id="cb41-2641"><a href="#cb41-2641" aria-hidden="true" tabindex="-1"></a>    bin_indicator <span class="op">&lt;-</span> function(x) {</span>
-<span id="cb41-2642"><a href="#cb41-2642" aria-hidden="true" tabindex="-1"></a>      ifelse(bins[b] <span class="op">&lt;=</span> x <span class="op">&amp;</span> x <span class="op">&lt;</span> bins[b <span class="op">+</span> <span class="dv">1</span>], <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb41-2643"><a href="#cb41-2643" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb41-2644"><a href="#cb41-2644" aria-hidden="true" tabindex="-1"></a>    indicator_vals <span class="op">&lt;-</span> eval_uni_expectand_pushforward(expectand_vals,</span>
-<span id="cb41-2645"><a href="#cb41-2645" aria-hidden="true" tabindex="-1"></a>                                                     bin_indicator)</span>
-<span id="cb41-2646"><a href="#cb41-2646" aria-hidden="true" tabindex="-1"></a>    est <span class="op">&lt;-</span> ensemble_mcmc_est(indicator_vals)</span>
-<span id="cb41-2647"><a href="#cb41-2647" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2648"><a href="#cb41-2648" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Normalize bin probabilities by bin width to allow</span></span>
-<span id="cb41-2649"><a href="#cb41-2649" aria-hidden="true" tabindex="-1"></a>    <span class="co"># for direct comparison to probability density functions</span></span>
-<span id="cb41-2650"><a href="#cb41-2650" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> bins[b <span class="op">+</span> <span class="dv">1</span>] <span class="op">-</span> bins[b]</span>
-<span id="cb41-2651"><a href="#cb41-2651" aria-hidden="true" tabindex="-1"></a>    mean_p[b] <span class="op">=</span> est[<span class="dv">1</span>] <span class="op">/</span> width</span>
-<span id="cb41-2652"><a href="#cb41-2652" aria-hidden="true" tabindex="-1"></a>    delta_p[b] <span class="op">=</span> est[<span class="dv">2</span>] <span class="op">/</span> width</span>
-<span id="cb41-2653"><a href="#cb41-2653" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb41-2654"><a href="#cb41-2654" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2655"><a href="#cb41-2655" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot histogram</span></span>
-<span id="cb41-2656"><a href="#cb41-2656" aria-hidden="true" tabindex="-1"></a>  idx <span class="op">&lt;-</span> rep(<span class="dv">1</span>:B, each<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb41-2657"><a href="#cb41-2657" aria-hidden="true" tabindex="-1"></a>  x <span class="op">&lt;-</span> sapply(<span class="dv">1</span>:length(idx), function(b) <span class="cf">if</span>(b <span class="op">%%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">1</span>) bins[idx[b]]</span>
-<span id="cb41-2658"><a href="#cb41-2658" aria-hidden="true" tabindex="-1"></a>              <span class="cf">else</span> bins[idx[b] <span class="op">+</span> <span class="dv">1</span>])</span>
-<span id="cb41-2659"><a href="#cb41-2659" aria-hidden="true" tabindex="-1"></a>  lower_inter <span class="op">&lt;-</span> sapply(idx, function (n)</span>
-<span id="cb41-2660"><a href="#cb41-2660" aria-hidden="true" tabindex="-1"></a>    <span class="bu">max</span>(mean_p[n] <span class="op">-</span> <span class="dv">2</span> <span class="op">*</span> delta_p[n], <span class="dv">0</span>))</span>
-<span id="cb41-2661"><a href="#cb41-2661" aria-hidden="true" tabindex="-1"></a>  upper_inter <span class="op">&lt;-</span> sapply(idx, function (n)</span>
-<span id="cb41-2662"><a href="#cb41-2662" aria-hidden="true" tabindex="-1"></a>    <span class="bu">min</span>(mean_p[n] <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> delta_p[n], <span class="dv">1</span> <span class="op">/</span> width))</span>
-<span id="cb41-2663"><a href="#cb41-2663" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2664"><a href="#cb41-2664" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (add) {</span>
-<span id="cb41-2665"><a href="#cb41-2665" aria-hidden="true" tabindex="-1"></a>    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),</span>
-<span id="cb41-2666"><a href="#cb41-2666" aria-hidden="true" tabindex="-1"></a>            col<span class="op">=</span>border, border<span class="op">=</span>NA)</span>
-<span id="cb41-2667"><a href="#cb41-2667" aria-hidden="true" tabindex="-1"></a>    lines(x, mean_p[idx], col<span class="op">=</span>col, lwd<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb41-2668"><a href="#cb41-2668" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb41-2669"><a href="#cb41-2669" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">is</span>.null(ylim)) {</span>
-<span id="cb41-2670"><a href="#cb41-2670" aria-hidden="true" tabindex="-1"></a>      ylim<span class="op">=</span>c(<span class="dv">0</span>, <span class="bu">max</span>(<span class="fl">1.05</span> <span class="op">*</span> upper_inter))</span>
-<span id="cb41-2671"><a href="#cb41-2671" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb41-2672"><a href="#cb41-2672" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2673"><a href="#cb41-2673" aria-hidden="true" tabindex="-1"></a>    plot(<span class="dv">1</span>, <span class="bu">type</span><span class="op">=</span><span class="st">&quot;n&quot;</span>, main<span class="op">=</span>main,</span>
-<span id="cb41-2674"><a href="#cb41-2674" aria-hidden="true" tabindex="-1"></a>         xlim<span class="op">=</span>flim, xlab<span class="op">=</span>display_name,</span>
-<span id="cb41-2675"><a href="#cb41-2675" aria-hidden="true" tabindex="-1"></a>         ylim<span class="op">=</span>ylim, ylab<span class="op">=</span><span class="st">&quot;&quot;</span>, yaxt<span class="op">=</span><span class="st">&quot;n&quot;</span>)</span>
-<span id="cb41-2676"><a href="#cb41-2676" aria-hidden="true" tabindex="-1"></a>    title(ylab<span class="op">=</span><span class="st">&quot;Estimated Bin</span><span class="ch">\n</span><span class="st">Probabilities / Bin Width&quot;</span>,</span>
-<span id="cb41-2677"><a href="#cb41-2677" aria-hidden="true" tabindex="-1"></a>          mgp<span class="op">=</span>c(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
-<span id="cb41-2678"><a href="#cb41-2678" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2679"><a href="#cb41-2679" aria-hidden="true" tabindex="-1"></a>    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),</span>
-<span id="cb41-2680"><a href="#cb41-2680" aria-hidden="true" tabindex="-1"></a>            col<span class="op">=</span>border, border<span class="op">=</span>NA)</span>
-<span id="cb41-2681"><a href="#cb41-2681" aria-hidden="true" tabindex="-1"></a>    lines(x, mean_p[idx], col<span class="op">=</span>col, lwd<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb41-2682"><a href="#cb41-2682" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb41-2683"><a href="#cb41-2683" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-2684"><a href="#cb41-2684" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot baseline if applicable</span></span>
-<span id="cb41-2685"><a href="#cb41-2685" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.null(baseline)) {</span>
-<span id="cb41-2686"><a href="#cb41-2686" aria-hidden="true" tabindex="-1"></a>    abline(v<span class="op">=</span>baseline, col<span class="op">=</span><span class="st">&quot;white&quot;</span>, lty<span class="op">=</span><span class="dv">1</span>, lwd<span class="op">=</span><span class="dv">4</span>)</span>
-<span id="cb41-2687"><a href="#cb41-2687" aria-hidden="true" tabindex="-1"></a>    abline(v<span class="op">=</span>baseline, col<span class="op">=</span>baseline_col, lty<span class="op">=</span><span class="dv">1</span>, lwd<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb41-2688"><a href="#cb41-2688" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb41-2689"><a href="#cb41-2689" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb41-2635"><a href="#cb41-2635" aria-hidden="true" tabindex="-1"></a>  S_high <span class="op">&lt;-</span> <span class="bu">sum</span>(max_f <span class="op">&lt;</span> c(expectand_vals, recursive<span class="op">=</span>TRUE))</span>
+<span id="cb41-2636"><a href="#cb41-2636" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (S_low <span class="op">==</span> <span class="dv">1</span>)</span>
+<span id="cb41-2637"><a href="#cb41-2637" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> value (</span><span class="sc">%.1f%%</span><span class="st">) fell above the histogram binning.&#39;</span>,</span>
+<span id="cb41-2638"><a href="#cb41-2638" aria-hidden="true" tabindex="-1"></a>                    S_high, <span class="dv">100</span> <span class="op">*</span> S_high <span class="op">/</span> S))</span>
+<span id="cb41-2639"><a href="#cb41-2639" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (S_low <span class="op">&gt;</span> <span class="dv">1</span>)</span>
+<span id="cb41-2640"><a href="#cb41-2640" aria-hidden="true" tabindex="-1"></a>    warning(sprintf(<span class="st">&#39;</span><span class="sc">%i</span><span class="st"> values (</span><span class="sc">%.1f%%</span><span class="st">) fell above the histogram binning.&#39;</span>,</span>
+<span id="cb41-2641"><a href="#cb41-2641" aria-hidden="true" tabindex="-1"></a>                    S_high, <span class="dv">100</span> <span class="op">*</span> S_high <span class="op">/</span> S))</span>
+<span id="cb41-2642"><a href="#cb41-2642" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2643"><a href="#cb41-2643" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Compute bin heights</span></span>
+<span id="cb41-2644"><a href="#cb41-2644" aria-hidden="true" tabindex="-1"></a>  mean_p <span class="op">&lt;-</span> rep(<span class="dv">0</span>, B)</span>
+<span id="cb41-2645"><a href="#cb41-2645" aria-hidden="true" tabindex="-1"></a>  delta_p <span class="op">&lt;-</span> rep(<span class="dv">0</span>, B)</span>
+<span id="cb41-2646"><a href="#cb41-2646" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2647"><a href="#cb41-2647" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (b <span class="kw">in</span> <span class="dv">1</span>:B) {</span>
+<span id="cb41-2648"><a href="#cb41-2648" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Estimate bin probabilities</span></span>
+<span id="cb41-2649"><a href="#cb41-2649" aria-hidden="true" tabindex="-1"></a>    bin_indicator <span class="op">&lt;-</span> function(x) {</span>
+<span id="cb41-2650"><a href="#cb41-2650" aria-hidden="true" tabindex="-1"></a>      ifelse(bins[b] <span class="op">&lt;=</span> x <span class="op">&amp;</span> x <span class="op">&lt;</span> bins[b <span class="op">+</span> <span class="dv">1</span>], <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb41-2651"><a href="#cb41-2651" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb41-2652"><a href="#cb41-2652" aria-hidden="true" tabindex="-1"></a>    indicator_vals <span class="op">&lt;-</span> eval_uni_expectand_pushforward(expectand_vals,</span>
+<span id="cb41-2653"><a href="#cb41-2653" aria-hidden="true" tabindex="-1"></a>                                                     bin_indicator)</span>
+<span id="cb41-2654"><a href="#cb41-2654" aria-hidden="true" tabindex="-1"></a>    est <span class="op">&lt;-</span> ensemble_mcmc_est(indicator_vals)</span>
+<span id="cb41-2655"><a href="#cb41-2655" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2656"><a href="#cb41-2656" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Normalize bin probabilities by bin width to allow</span></span>
+<span id="cb41-2657"><a href="#cb41-2657" aria-hidden="true" tabindex="-1"></a>    <span class="co"># for direct comparison to probability density functions</span></span>
+<span id="cb41-2658"><a href="#cb41-2658" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> bins[b <span class="op">+</span> <span class="dv">1</span>] <span class="op">-</span> bins[b]</span>
+<span id="cb41-2659"><a href="#cb41-2659" aria-hidden="true" tabindex="-1"></a>    mean_p[b] <span class="op">=</span> est[<span class="dv">1</span>] <span class="op">/</span> width</span>
+<span id="cb41-2660"><a href="#cb41-2660" aria-hidden="true" tabindex="-1"></a>    delta_p[b] <span class="op">=</span> est[<span class="dv">2</span>] <span class="op">/</span> width</span>
+<span id="cb41-2661"><a href="#cb41-2661" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb41-2662"><a href="#cb41-2662" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2663"><a href="#cb41-2663" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot histogram</span></span>
+<span id="cb41-2664"><a href="#cb41-2664" aria-hidden="true" tabindex="-1"></a>  idx <span class="op">&lt;-</span> rep(<span class="dv">1</span>:B, each<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb41-2665"><a href="#cb41-2665" aria-hidden="true" tabindex="-1"></a>  x <span class="op">&lt;-</span> sapply(<span class="dv">1</span>:length(idx), function(b) <span class="cf">if</span>(b <span class="op">%%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">1</span>) bins[idx[b]]</span>
+<span id="cb41-2666"><a href="#cb41-2666" aria-hidden="true" tabindex="-1"></a>              <span class="cf">else</span> bins[idx[b] <span class="op">+</span> <span class="dv">1</span>])</span>
+<span id="cb41-2667"><a href="#cb41-2667" aria-hidden="true" tabindex="-1"></a>  lower_inter <span class="op">&lt;-</span> sapply(idx, function (n)</span>
+<span id="cb41-2668"><a href="#cb41-2668" aria-hidden="true" tabindex="-1"></a>    <span class="bu">max</span>(mean_p[n] <span class="op">-</span> <span class="dv">2</span> <span class="op">*</span> delta_p[n], <span class="dv">0</span>))</span>
+<span id="cb41-2669"><a href="#cb41-2669" aria-hidden="true" tabindex="-1"></a>  upper_inter <span class="op">&lt;-</span> sapply(idx, function (n)</span>
+<span id="cb41-2670"><a href="#cb41-2670" aria-hidden="true" tabindex="-1"></a>    <span class="bu">min</span>(mean_p[n] <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> delta_p[n], <span class="dv">1</span> <span class="op">/</span> width))</span>
+<span id="cb41-2671"><a href="#cb41-2671" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2672"><a href="#cb41-2672" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (add) {</span>
+<span id="cb41-2673"><a href="#cb41-2673" aria-hidden="true" tabindex="-1"></a>    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),</span>
+<span id="cb41-2674"><a href="#cb41-2674" aria-hidden="true" tabindex="-1"></a>            col<span class="op">=</span>border, border<span class="op">=</span>NA)</span>
+<span id="cb41-2675"><a href="#cb41-2675" aria-hidden="true" tabindex="-1"></a>    lines(x, mean_p[idx], col<span class="op">=</span>col, lwd<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb41-2676"><a href="#cb41-2676" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb41-2677"><a href="#cb41-2677" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">is</span>.null(ylim)) {</span>
+<span id="cb41-2678"><a href="#cb41-2678" aria-hidden="true" tabindex="-1"></a>      ylim<span class="op">=</span>c(<span class="dv">0</span>, <span class="bu">max</span>(<span class="fl">1.05</span> <span class="op">*</span> upper_inter))</span>
+<span id="cb41-2679"><a href="#cb41-2679" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb41-2680"><a href="#cb41-2680" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2681"><a href="#cb41-2681" aria-hidden="true" tabindex="-1"></a>    plot(<span class="dv">1</span>, <span class="bu">type</span><span class="op">=</span><span class="st">&quot;n&quot;</span>, main<span class="op">=</span>main,</span>
+<span id="cb41-2682"><a href="#cb41-2682" aria-hidden="true" tabindex="-1"></a>         xlim<span class="op">=</span>flim, xlab<span class="op">=</span>display_name,</span>
+<span id="cb41-2683"><a href="#cb41-2683" aria-hidden="true" tabindex="-1"></a>         ylim<span class="op">=</span>ylim, ylab<span class="op">=</span><span class="st">&quot;&quot;</span>, yaxt<span class="op">=</span><span class="st">&quot;n&quot;</span>)</span>
+<span id="cb41-2684"><a href="#cb41-2684" aria-hidden="true" tabindex="-1"></a>    title(ylab<span class="op">=</span><span class="st">&quot;Estimated Bin</span><span class="ch">\n</span><span class="st">Probabilities / Bin Width&quot;</span>,</span>
+<span id="cb41-2685"><a href="#cb41-2685" aria-hidden="true" tabindex="-1"></a>          mgp<span class="op">=</span>c(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
+<span id="cb41-2686"><a href="#cb41-2686" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2687"><a href="#cb41-2687" aria-hidden="true" tabindex="-1"></a>    polygon(c(x, rev(x)), c(lower_inter, rev(upper_inter)),</span>
+<span id="cb41-2688"><a href="#cb41-2688" aria-hidden="true" tabindex="-1"></a>            col<span class="op">=</span>border, border<span class="op">=</span>NA)</span>
+<span id="cb41-2689"><a href="#cb41-2689" aria-hidden="true" tabindex="-1"></a>    lines(x, mean_p[idx], col<span class="op">=</span>col, lwd<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb41-2690"><a href="#cb41-2690" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb41-2691"><a href="#cb41-2691" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-2692"><a href="#cb41-2692" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plot baseline if applicable</span></span>
+<span id="cb41-2693"><a href="#cb41-2693" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">is</span>.null(baseline)) {</span>
+<span id="cb41-2694"><a href="#cb41-2694" aria-hidden="true" tabindex="-1"></a>    abline(v<span class="op">=</span>baseline, col<span class="op">=</span><span class="st">&quot;white&quot;</span>, lty<span class="op">=</span><span class="dv">1</span>, lwd<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb41-2695"><a href="#cb41-2695" aria-hidden="true" tabindex="-1"></a>    abline(v<span class="op">=</span>baseline, col<span class="op">=</span>baseline_col, lty<span class="op">=</span><span class="dv">1</span>, lwd<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb41-2696"><a href="#cb41-2696" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb41-2697"><a href="#cb41-2697" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="demonstration" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Demonstration</h1>
@@ -6753,7 +6761,7 @@ CXX14=clang++ -arch x86_64 -ftemplate-depth-256</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>R version 4.3.2 (2023-10-31)
 Platform: x86_64-apple-darwin20 (64-bit)
-Running under: macOS 15.7.3
+Running under: macOS 15.7.4
 
 Matrix products: default
 BLAS:   /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRblas.0.dylib 

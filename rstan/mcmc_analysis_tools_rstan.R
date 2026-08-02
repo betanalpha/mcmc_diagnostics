@@ -2596,7 +2596,15 @@ plot_expectand_pushforward <- function(expectand_vals, B,
   if (is.null(flim)) {
     min_f <- min(expectand_vals)
     max_f <- max(expectand_vals)
+
+    if (!is.null(baseline)) {
+      min_f <- min(min_f, baseline)
+      max_f <- max(max_f, baseline)
+    }
+
     delta <- (max_f - min_f) / B
+    if (delta == 0)
+      delta <- 0.1
 
     # Add bounding bins
     B <- B + 2

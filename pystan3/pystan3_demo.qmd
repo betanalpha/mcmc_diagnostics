@@ -481,6 +481,8 @@ plot.show()
 plot.rcParams['figure.figsize'] = [6, 4]
 plot.rcParams['figure.dpi'] = 100
 plot.rcParams['font.family'] = "Serif"
+plot.rcParams['axes.spines.top'] = False
+plot.rcParams['axes.spines.right'] = False
 
 light="#DCBCBC"
 light_highlight="#C79999"
